@@ -1,3 +1,8 @@
+// Micropay app — product-owned Prisma schema.
+// Same DATABASE_URL Postgres instance as code/ is OK, but models/tables are
+// completely separate: this schema must NEVER include Code* / IDE tables.
+// Migrations: app/prisma/migrations (app tables only).
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"

@@ -2,12 +2,12 @@ import type { QueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '#/lib/query-keys'
 
-/** No-op for app usage stats (those live on app.micropay.website). */
+/** No-op — IDE SPA does not host the Activities UI (that lives on App; same DB). */
 export async function invalidateUsageQueries(
   _queryClient: QueryClient,
   _wallet?: string | null,
 ) {
-  /* IDE SPA does not host activities / spend UI */
+  /* IDE SPA does not host activities / spend UI (app product only) */
 }
 
 /** Chat session list and optional single-session detail. */

@@ -4,7 +4,7 @@ import {
   type ModelType,
 } from '#/data/models'
 import { providerLogoSrc } from '#/lib/provider-logos'
-import { appApiUrl } from '#/lib/app-url'
+import { apiUrl } from '#/lib/api-url'
 
 type ApiModel = {
   id: string
@@ -61,10 +61,10 @@ export type ModelsCatalog = {
   error: string | null
 }
 
-/** Fetch Micropay catalog from app (CORS-enabled). */
+/** Fetch chat catalog from the IDE API host (own backend). */
 export async function fetchModelsCatalog(): Promise<ModelsCatalog> {
   try {
-    const res = await fetch(appApiUrl('/api/v1/models'))
+    const res = await fetch(apiUrl('/api/v1/models'))
     const raw: unknown = await res.json().catch(() => ({}))
     if (!res.ok) {
       const msg =
@@ -74,7 +74,10 @@ export async function fetchModelsCatalog(): Promise<ModelsCatalog> {
         (raw as { error?: { message?: string } }).error?.message
       return {
         models: [],
-        error: msg || `Models request failed (${res.status})`,
+        error:
+          typeof msg === 'string'
+            ? msg
+            : `Models request failed (${res.status})`,
       }
     }
     const data =

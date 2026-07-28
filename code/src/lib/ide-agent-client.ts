@@ -2,7 +2,7 @@
  * Client for POST /api/v1/ide/agent — tool-calling IDE agent loop.
  */
 
-import { appApiUrl } from '#/lib/app-url'
+import { apiUrl } from '#/lib/api-url'
 import type { CompileResult } from '#/lib/puya-ts-compile'
 import { compilePuyaTsSource } from '#/lib/puya-ts-compile'
 import {
@@ -74,7 +74,7 @@ async function postIdeAgent(input: {
   assistantMessage: IdeAgentMessage | null
 }> {
   const f = input.fetchImpl ?? fetch
-  const res = await f(appApiUrl('/api/v1/ide/agent'), {
+  const res = await f(apiUrl('/api/v1/ide/agent'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -270,7 +270,8 @@ export async function executeIdeTool(
 
 /**
  * Run the IDE agent until it stops requesting tools (maxRounds).
- * Each model call is billed via /api/v1/ide/agent (activity type IDE).
+ * Each model call is billed via /api/v1/ide/agent on the API host
+ * (`VITE_PUBLIC_API_URL` → app bridge). App records Activity type "IDE".
  */
 export async function runIdeAgentLoop(input: {
   model: string

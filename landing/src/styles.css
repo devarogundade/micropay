@@ -89,3 +89,52 @@ body {
 .hero-line {
   animation: pulse-line 3.2s ease-in-out infinite;
 }
+
+/* Full-bleed hero arc */
+.hero-arc-svg {
+  display: block;
+  min-width: 100%;
+}
+
+/* Hero MicroPay bounce logo */
+.hero-logo-letter {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+.hero-logo-bouncer {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+.hero-logo-letter-shadow {
+  transform-box: fill-box;
+  transform-origin: center center;
+  opacity: 0.35;
+  filter: blur(5px);
+  will-change: transform, opacity;
+}
+
+.hero-logo-floor-light {
+  transform-box: fill-box;
+  transform-origin: center center;
+  opacity: 0.25;
+  filter: blur(8px);
+}
+
+.hero-logo-light-cone {
+  opacity: 0.28;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transform-origin: top center;
+}
+
+.hero-logo-ripple {
+  transform-origin: center center;
+  opacity: 0;
+  stroke: #10e06e;
+  stroke-width: 2;
+  fill: none;
+}

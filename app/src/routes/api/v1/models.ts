@@ -7,7 +7,7 @@ import { listRouterModels } from '#/lib/zg-router'
 /**
  * OpenAI-compatible model list.
  * Proxies 0G Compute Router GET /v1/models and also returns Micropay UI fields.
- * CORS enabled for code.micropay.website IDE host.
+ * CORS enabled while the temporary IDE→app API bridge remains.
  */
 export const Route = createFileRoute('/api/v1/models')({
   server: {

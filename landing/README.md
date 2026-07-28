@@ -7,6 +7,7 @@ Apex marketing + **authoritative GoPlausible / Bazaar merchant entry**.
 - Hosts `/.well-known/x402.json` with absolute endpoint URLs on `app.micropay.website`
 - OG / canonical meta for domain scrape (single hackathon entry)
 - Links to `app.` and `code.` product surfaces
+- Hero: animated MicroPay SVG wordmark + nested glow arcs (ported from the former in-app landing)
 
 Do **not** register `app.micropay.website` or `code.micropay.website` as separate GoPlausible merchants.
 

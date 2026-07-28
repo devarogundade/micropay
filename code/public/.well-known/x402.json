@@ -1,0 +1,34 @@
+{
+  "name": "Micropay",
+  "serviceName": "Micropay IDE",
+  "description": "AI-assisted Algorand TypeScript (puya-ts) IDE. Edit, compile, and deploy — agent calls settle in USDC via x402.",
+  "protocol": "x402",
+  "version": "2",
+  "network": "algorand:mainnet",
+  "asset": "USDC",
+  "facilitator": "https://facilitator.goplausible.xyz",
+  "tag": "x402-global-challenge",
+  "icon": "https://micropay.website/assets/brand/icon.svg",
+  "logo": "https://micropay.website/assets/brand/logo.svg",
+  "homepage": "https://code.micropay.website/",
+  "documentation": "https://code.micropay.website/",
+  "product": "code",
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "https://code.micropay.website/api/v1/ide/agent",
+      "serviceName": "Micropay IDE",
+      "description": "Micropay IDE assistant with project file tools, compile, and Algorand TypeScript knowledge.",
+      "mimeType": "application/json",
+      "tags": ["ai", "ide", "puya-ts", "x402", "algorand"]
+    },
+    {
+      "method": "POST",
+      "path": "https://code.micropay.website/api/v1/clone",
+      "serviceName": "Micropay Templates",
+      "description": "Clone an Algorand TypeScript IDE template into your workspace (0.05 USDC).",
+      "mimeType": "application/json",
+      "tags": ["ide", "templates", "puya-ts", "x402", "algorand"]
+    }
+  ]
+}

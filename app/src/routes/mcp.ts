@@ -102,7 +102,7 @@ server.registerTool(
                 method: 'POST',
                 path: '/api/v1/ide/agent',
                 x402: true,
-                note: 'Dedicated puya-ts IDE agent with project tools; activity type IDE',
+                note: 'puya-ts IDE agent; paid via x402',
               },
               {
                 method: 'GET',

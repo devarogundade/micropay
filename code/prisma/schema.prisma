@@ -1,0 +1,118 @@
+// Micropay IDE (code) — product-owned Prisma schema.
+// Same DATABASE_URL Postgres instance as app/ is OK, but models/tables live in
+// the PostgreSQL schema `code` (never app User / Activity / Chat* / …).
+// Apply with `npm run db:push` (scoped to schemas=["code"] so public/app
+// tables are never touched).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["code"]
+}
+
+enum CodeActivityStatus {
+  settled
+  verified
+  failed
+
+  @@schema("code")
+}
+
+/// IDE wallet-keyed user (not app User).
+model CodeUser {
+  id          String               @id
+  address     String               @unique
+  displayName String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  activities  CodeActivity[]
+  modelUsage  CodeUserModelUsage[]
+
+  @@schema("code")
+}
+
+/// IDE settled / failed paid usage (not app Activity).
+model CodeActivity {
+  id            String             @id @default(cuid())
+  userId        String?
+  user          CodeUser?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  walletAddress String?
+  modelSlug     String
+  modelName     String
+  type          String
+  costUsdc      Float
+  status        CodeActivityStatus
+  txId          String
+  requestId     String?
+  provider      String?
+  tokensIn      Int?
+  tokensOut     Int?
+  createdAt     DateTime           @default(now())
+
+  @@index([createdAt])
+  @@index([walletAddress, createdAt])
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([type])
+  @@schema("code")
+}
+
+/// IDE per-wallet model usage (not app UserModelUsage).
+model CodeUserModelUsage {
+  id         String   @id @default(cuid())
+  userId     String
+  user       CodeUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modelSlug  String
+  modelName  String?
+  lastUsedAt DateTime @default(now())
+  useCount   Int      @default(1)
+
+  @@unique([userId, modelSlug])
+  @@index([userId, lastUsedAt])
+  @@schema("code")
+}
+
+/// IDE project template.
+model CodeTemplate {
+  id          String              @id @default(cuid())
+  slug        String              @unique
+  name        String
+  description String
+  /// Filter facet: starter | state | asset | …
+  category    String              @default("starter")
+  projectName String
+  activePath  String
+  /// JSON: Array<{ path: string; content: string }>
+  files       Json
+  clonedCount Int                 @default(0)
+  featured    Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  clones      CodeTemplateClone[]
+
+  @@index([category])
+  @@index([clonedCount])
+  @@index([featured, clonedCount])
+  @@index([name])
+  @@schema("code")
+}
+
+/// Paid template clone event.
+model CodeTemplateClone {
+  id            String       @id @default(cuid())
+  templateId    String
+  template      CodeTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  walletAddress String?
+  txId          String
+  costUsdc      Float        @default(0.05)
+  createdAt     DateTime     @default(now())
+
+  @@index([templateId, createdAt])
+  @@index([walletAddress, createdAt])
+  @@index([createdAt])
+  @@schema("code")
+}

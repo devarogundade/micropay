@@ -6,12 +6,12 @@
 > Micropay is a pay-per-use AI gateway on Algorand (x402 / USDC).
 > Single GoPlausible / Bazaar merchant entry on the apex domain.
 
-## Product surfaces
-- Landing (merchant entry): https://micropay.website
+## Products
+- Landing: https://micropay.website
 - App (models, chat, images, audio, APIs): https://app.micropay.website
 - IDE (puya-ts): https://code.micropay.website
 
-## Merchant card
+## Discovery
 - https://micropay.website/.well-known/x402.json
 
 ## App docs

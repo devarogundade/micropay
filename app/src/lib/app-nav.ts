@@ -12,7 +12,7 @@ import {
   getCodeOrigin,
 } from '#/lib/site-meta'
 
-/** External IDE host when set; otherwise keep in-app `/ide` until extraction. */
+/** External IDE host (code product). Never in-app. */
 export const CODE_ORIGIN =
   (typeof import.meta !== 'undefined' &&
     (import.meta.env?.VITE_PUBLIC_CODE_URL as string | undefined)?.replace(
@@ -20,9 +20,7 @@ export const CODE_ORIGIN =
       '',
     )) ||
   getCodeOrigin() ||
-  ''
-
-export const USE_EXTERNAL_IDE = Boolean(CODE_ORIGIN)
+  DEFAULT_CODE_ORIGIN
 
 export type AppNavItem = {
   to: string
@@ -34,12 +32,12 @@ export type AppNavItem = {
 }
 
 export const APP_NAV: AppNavItem[] = [
-  { to: '/models', label: 'Models', icon: Boxes },
+  { to: '/', label: 'Models', icon: Boxes },
   {
-    to: USE_EXTERNAL_IDE ? CODE_ORIGIN || DEFAULT_CODE_ORIGIN : '/ide',
+    to: CODE_ORIGIN,
     label: 'IDE',
     icon: TerminalSquare,
-    external: USE_EXTERNAL_IDE,
+    external: true,
     desktopOnly: true,
   },
   { to: '/activities', label: 'Activity', icon: Activity },
@@ -51,14 +49,21 @@ export const APP_NAV: AppNavItem[] = [
 export const BOTTOM_NAV = APP_NAV.filter((item) => !item.desktopOnly)
 
 export function navActive(pathname: string, to: string) {
-  if (to === '/models') return pathname.startsWith('/models')
+  if (to === '/') {
+    return (
+      pathname === '/' ||
+      pathname === '' ||
+      pathname.startsWith('/models/')
+    )
+  }
   if (to.startsWith('http')) return false
   return pathname === to || pathname.startsWith(`${to}/`)
 }
 
 export type AppNavPath =
-  | '/models'
-  | '/ide'
+  | '/'
   | '/activities'
   | '/agents'
   | '/api-reference'
+  | '/models/$slug'
+  | '/try'

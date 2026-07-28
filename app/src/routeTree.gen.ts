@@ -9,15 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ShellIndexRouteImport } from './routes/_shell/index'
 import { Route as ShellActivitiesRouteImport } from './routes/_shell/activities'
 import { Route as ShellAgentsRouteImport } from './routes/_shell/agents'
 import { Route as ShellApiReferenceRouteImport } from './routes/_shell/api-reference'
-import { Route as ShellIdeRouteImport } from './routes/_shell/ide'
 import { Route as ShellPlaygroundRouteImport } from './routes/_shell/playground'
 import { Route as ShellTryRouteImport } from './routes/_shell/try'
 import { Route as AppSplatRouteImport } from './routes/app/$'
@@ -37,11 +36,6 @@ import { Route as ApiV1StorageUploadRouteImport } from './routes/api/v1/storage/
 import { Route as ApiV1ChatSessionsSessionIdRouteImport } from './routes/api/v1/chat/sessions/$sessionId'
 import { Route as ApiV1ImagesJobsJobIdRouteImport } from './routes/api/v1/images/jobs/$jobId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ShellRoute = ShellRouteImport.update({
   id: '/_shell',
   getParentRoute: () => rootRouteImport,
@@ -61,6 +55,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShellIndexRoute = ShellIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ShellRoute,
+} as any)
 const ShellActivitiesRoute = ShellActivitiesRouteImport.update({
   id: '/activities',
   path: '/activities',
@@ -74,11 +73,6 @@ const ShellAgentsRoute = ShellAgentsRouteImport.update({
 const ShellApiReferenceRoute = ShellApiReferenceRouteImport.update({
   id: '/api-reference',
   path: '/api-reference',
-  getParentRoute: () => ShellRoute,
-} as any)
-const ShellIdeRoute = ShellIdeRouteImport.update({
-  id: '/ide',
-  path: '/ide',
   getParentRoute: () => ShellRoute,
 } as any)
 const ShellPlaygroundRoute = ShellPlaygroundRouteImport.update({
@@ -175,14 +169,13 @@ const ApiV1ImagesJobsJobIdRoute = ApiV1ImagesJobsJobIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof ShellIndexRoute
   '/app': typeof AppRouteWithChildren
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/activities': typeof ShellActivitiesRoute
   '/agents': typeof ShellAgentsRoute
   '/api-reference': typeof ShellApiReferenceRoute
-  '/ide': typeof ShellIdeRoute
   '/playground': typeof ShellPlaygroundRoute
   '/try': typeof ShellTryRoute
   '/app/$': typeof AppSplatRoute
@@ -203,17 +196,16 @@ export interface FileRoutesByFullPath {
   '/api/v1/images/jobs/$jobId': typeof ApiV1ImagesJobsJobIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/activities': typeof ShellActivitiesRoute
   '/agents': typeof ShellAgentsRoute
   '/api-reference': typeof ShellApiReferenceRoute
-  '/ide': typeof ShellIdeRoute
   '/playground': typeof ShellPlaygroundRoute
   '/try': typeof ShellTryRoute
   '/app/$': typeof AppSplatRoute
+  '/': typeof ShellIndexRoute
   '/models/$slug': typeof ShellModelsSlugRoute
   '/api/v1/activities': typeof ApiV1ActivitiesRoute
   '/api/v1/models': typeof ApiV1ModelsRoute
@@ -232,7 +224,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_shell': typeof ShellRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/mcp': typeof McpRoute
@@ -240,10 +231,10 @@ export interface FileRoutesById {
   '/_shell/activities': typeof ShellActivitiesRoute
   '/_shell/agents': typeof ShellAgentsRoute
   '/_shell/api-reference': typeof ShellApiReferenceRoute
-  '/_shell/ide': typeof ShellIdeRoute
   '/_shell/playground': typeof ShellPlaygroundRoute
   '/_shell/try': typeof ShellTryRoute
   '/app/$': typeof AppSplatRoute
+  '/_shell/': typeof ShellIndexRoute
   '/_shell/models/$slug': typeof ShellModelsSlugRoute
   '/api/v1/activities': typeof ApiV1ActivitiesRoute
   '/api/v1/models': typeof ApiV1ModelsRoute
@@ -270,7 +261,6 @@ export interface FileRouteTypes {
     | '/activities'
     | '/agents'
     | '/api-reference'
-    | '/ide'
     | '/playground'
     | '/try'
     | '/app/$'
@@ -291,17 +281,16 @@ export interface FileRouteTypes {
     | '/api/v1/images/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/app'
     | '/mcp'
     | '/sitemap.xml'
     | '/activities'
     | '/agents'
     | '/api-reference'
-    | '/ide'
     | '/playground'
     | '/try'
     | '/app/$'
+    | '/'
     | '/models/$slug'
     | '/api/v1/activities'
     | '/api/v1/models'
@@ -319,7 +308,6 @@ export interface FileRouteTypes {
     | '/api/v1/images/jobs/$jobId'
   id:
     | '__root__'
-    | '/'
     | '/_shell'
     | '/app'
     | '/mcp'
@@ -327,10 +315,10 @@ export interface FileRouteTypes {
     | '/_shell/activities'
     | '/_shell/agents'
     | '/_shell/api-reference'
-    | '/_shell/ide'
     | '/_shell/playground'
     | '/_shell/try'
     | '/app/$'
+    | '/_shell/'
     | '/_shell/models/$slug'
     | '/api/v1/activities'
     | '/api/v1/models'
@@ -349,7 +337,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   ShellRoute: typeof ShellRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
   McpRoute: typeof McpRoute
@@ -370,13 +357,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_shell': {
       id: '/_shell'
       path: ''
@@ -405,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_shell/': {
+      id: '/_shell/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof ShellIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
     '/_shell/activities': {
       id: '/_shell/activities'
       path: '/activities'
@@ -424,13 +411,6 @@ declare module '@tanstack/react-router' {
       path: '/api-reference'
       fullPath: '/api-reference'
       preLoaderRoute: typeof ShellApiReferenceRouteImport
-      parentRoute: typeof ShellRoute
-    }
-    '/_shell/ide': {
-      id: '/_shell/ide'
-      path: '/ide'
-      fullPath: '/ide'
-      preLoaderRoute: typeof ShellIdeRouteImport
       parentRoute: typeof ShellRoute
     }
     '/_shell/playground': {
@@ -566,9 +546,9 @@ interface ShellRouteChildren {
   ShellActivitiesRoute: typeof ShellActivitiesRoute
   ShellAgentsRoute: typeof ShellAgentsRoute
   ShellApiReferenceRoute: typeof ShellApiReferenceRoute
-  ShellIdeRoute: typeof ShellIdeRoute
   ShellPlaygroundRoute: typeof ShellPlaygroundRoute
   ShellTryRoute: typeof ShellTryRoute
+  ShellIndexRoute: typeof ShellIndexRoute
   ShellModelsSlugRoute: typeof ShellModelsSlugRoute
   ShellModelsIndexRoute: typeof ShellModelsIndexRoute
 }
@@ -577,9 +557,9 @@ const ShellRouteChildren: ShellRouteChildren = {
   ShellActivitiesRoute: ShellActivitiesRoute,
   ShellAgentsRoute: ShellAgentsRoute,
   ShellApiReferenceRoute: ShellApiReferenceRoute,
-  ShellIdeRoute: ShellIdeRoute,
   ShellPlaygroundRoute: ShellPlaygroundRoute,
   ShellTryRoute: ShellTryRoute,
+  ShellIndexRoute: ShellIndexRoute,
   ShellModelsSlugRoute: ShellModelsSlugRoute,
   ShellModelsIndexRoute: ShellModelsIndexRoute,
 }
@@ -608,7 +588,6 @@ const ApiV1ChatSessionsRouteWithChildren =
   ApiV1ChatSessionsRoute._addFileChildren(ApiV1ChatSessionsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   ShellRoute: ShellRouteWithChildren,
   AppRoute: AppRouteWithChildren,
   McpRoute: McpRoute,

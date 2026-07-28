@@ -25,6 +25,7 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
 import { BrandMark } from '#/components/brand'
@@ -80,7 +81,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { Textarea } from '#/components/ui/textarea'
 import { formatUsdc, sortModelsGptFirst, type Model } from '#/data/models'
-import { getAppUrl, getSiteUrl, appApiUrl } from '#/lib/app-url'
+import { getAppUrl, getSiteUrl, apiUrl } from '#/lib/api-url'
 import {
   downloadProjectJson,
   downloadProjectZip,
@@ -103,6 +104,7 @@ import {
   templateToProjectFiles,
   type IdeTemplate,
 } from '#/lib/ide-templates'
+import { takePendingTemplate } from '#/lib/templates-client'
 import {
   compilePuyaTsSource,
   type CompileResult,
@@ -307,8 +309,30 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
   const source = active?.content ?? ''
 
   useEffect(() => {
-    const state = loadIdeProject()
-    setProject(state)
+    const pending = takePendingTemplate()
+    if (pending) {
+      const next: IdeProjectState = {
+        name: pending.projectName,
+        files: templateToProjectFiles({
+          id: pending.id,
+          name: pending.name,
+          description: pending.description,
+          projectName: pending.projectName,
+          files: pending.files,
+          activePath: pending.activePath,
+        }),
+        activePath: pending.activePath,
+        versions: [],
+        updatedAt: new Date().toISOString(),
+        github: null,
+      }
+      setProject(next)
+      saveIdeProject(next)
+      toast.success(`Loaded cloned template: ${pending.name}`)
+    } else {
+      const state = loadIdeProject()
+      setProject(state)
+    }
     setLayout(loadLayout())
     setNetwork(loadNetwork())
     setGithubPat(loadGithubPat())
@@ -418,7 +442,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
     const files = compileFileMap(current)
     const entryPath = pickEntryFile(current, entry)
     try {
-      const res = await fetch(appApiUrl('/api/v1/puya-ts/compile'), {
+      const res = await fetch(apiUrl('/api/v1/puya-ts/compile'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ files, entry: entryPath }),
@@ -615,16 +639,8 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       <div className="flex shrink-0 items-center gap-2 border-b border-brand-green/25 bg-brand-green/10 px-3 py-1.5 text-[11px] text-mist">
         <img src="/assets/usdc.png" alt="" className="size-3.5" />
         <span>
-          AI agent calls are paid in USDC via x402 on{' '}
-          <a
-            href={appUrl}
-            className="text-paper underline-offset-2 hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            app.micropay.website
-          </a>
-          — same merchant as the rest of Micropay.
+          AI agent calls settle in USDC via x402. Template clones use
+          code-owned tables (0.05 USDC).
         </span>
       </div>
       <div className="ws-body flex min-h-0 flex-1 overflow-hidden">
@@ -637,6 +653,12 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
               <BrandMark size="sm" />
             </a>
             <div className="ml-auto flex items-center gap-2">
+              <Link
+                to="/templates"
+                className="text-[11px] text-fog transition-colors hover:text-paper"
+              >
+                Templates
+              </Link>
               <a
                 href={appUrl}
                 className="text-[11px] text-fog transition-colors hover:text-paper"
@@ -1208,10 +1230,10 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Templates</DialogTitle>
+            <DialogTitle>Quick starters</DialogTitle>
             <DialogDescription>
-              Seed the file tree with a starter Algorand TypeScript project.
-              Replaces the current unsaved workspace.
+              Seed the file tree with a free local starter. Or browse the full
+              catalog (0.05 USDC to clone) for clone counts and more templates.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
@@ -1227,7 +1249,12 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
               </button>
             ))}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button asChild variant="secondary">
+              <Link to="/templates" onClick={() => setTemplatesOpen(false)}>
+                Browse catalog
+              </Link>
+            </Button>
             <Button variant="outline" onClick={() => setTemplatesOpen(false)}>
               Cancel
             </Button>

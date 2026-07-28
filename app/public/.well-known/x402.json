@@ -12,10 +12,9 @@
   "logo": "/assets/brand/logo.svg",
   "homepage": "/",
   "documentation": "/api-reference",
-  "llms": "/llms.txt",
+  "llms": "https://micropay.website/llms.txt",
   "mcp": "/mcp",
-  "note": "Authoritative GoPlausible merchant card: https://micropay.website/.well-known/x402.json — do not register this app host as a separate entry.",
-  "merchantEntry": "https://micropay.website/.well-known/x402.json",
+  "product": "app",
   "endpoints": [
     {
       "method": "POST",

@@ -593,7 +593,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
           style={{ width: layout.sidebarW }}
         >
           <div className="workspace-bar flex items-center gap-2 border-b border-border px-3">
-            <Link to="/models" className="min-w-0 no-underline">
+            <Link to="/" className="min-w-0 no-underline">
               <BrandMark size="sm" />
             </Link>
           </div>

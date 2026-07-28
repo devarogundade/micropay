@@ -98,7 +98,7 @@ function TryDemoPage() {
               </Button>
             ) : (
               <Button asChild variant="outline">
-                <Link to="/models">Browse models</Link>
+                <Link to="/">Browse models</Link>
               </Button>
             )
           }

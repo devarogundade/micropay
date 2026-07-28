@@ -3,12 +3,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { getPublicAppUrl, originFromRequest } from '#/lib/site-meta'
 
 const PATHS = [
-  { path: '/', priority: '1.0', changefreq: 'weekly' },
-  { path: '/models', priority: '0.9', changefreq: 'daily' },
+  { path: '/', priority: '1.0', changefreq: 'daily' },
   { path: '/try', priority: '0.9', changefreq: 'weekly' },
   { path: '/api-reference', priority: '0.8', changefreq: 'weekly' },
   { path: '/activities', priority: '0.7', changefreq: 'weekly' },
-  { path: '/ide', priority: '0.6', changefreq: 'weekly' },
   { path: '/agents', priority: '0.5', changefreq: 'weekly' },
   { path: '/llms.txt', priority: '0.5', changefreq: 'weekly' },
   { path: '/.well-known/x402.json', priority: '0.5', changefreq: 'weekly' },

@@ -1,7 +1,10 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
-  # Base directory in Netlify UI: landing
+  # From monorepo root (CLI --filter landing or Netlify base = repo root):
+  command = "npm run build --workspace=landing"
+  publish = "landing/dist"
+  # If Netlify UI base directory is `landing`, use instead:
+  #   command = "npm run build"
+  #   publish = "dist"
 
 [[headers]]
   for = "/.well-known/x402.json"

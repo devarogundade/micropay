@@ -9,7 +9,8 @@ import { compilePuyaTsProjectWithPuya } from '#/lib/puya-ts-compile.server'
  *   { source: string }                          — single-file (legacy)
  *   { files: Record<string,string>, entry?: string } — multi-file project
  *
- * CORS enabled for code.micropay.website IDE host.
+ * Used by the IDE product (and MCP). No separate DB — compile is stateless.
+ * Optional future: also expose from a code API host; schema remains app/prisma.
  */
 export const Route = createFileRoute('/api/v1/puya-ts/compile')({
   server: {

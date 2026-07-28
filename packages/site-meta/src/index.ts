@@ -1,11 +1,19 @@
 /**
- * Shared Micropay identity for all surfaces (landing / app / code).
+ * Shared Micropay identity constants + per-product merchant builders.
  *
- * GoPlausible / Bazaar / hackathon entry rules:
- * - ONE merchant identity: apex `micropay.website` (landing)
- * - ONE `X402_PAY_TO` across all paid APIs (lives on app)
- * - Do NOT register app. or code. as separate Bazaar / challenge merchants
- * - Merchant card + OG scrape live on the apex; endpoints point at app.
+ * Architecture:
+ * - `app` = TanStack Start fullstack (AI gateway product).
+ * - `code` = TanStack Start fullstack IDE (own deploy / merchant card).
+ * - Landing = Vite SPA marketing.
+ * - App and code may share ONE DATABASE_URL (same Postgres instance) but
+ *   own completely separate Prisma schemas, migrations, and tables.
+ * - App-owned: User, Activity, Chat*, Image*, Transcription, UserModelUsage
+ *   (app/prisma + Prisma Migrate)
+ * - Code-owned: CodeUser, CodeActivity, CodeUserModelUsage, CodeTemplate,
+ *   CodeTemplateClone (code/prisma → Postgres schema `code` via db push)
+ * - Zero shared table names / rows / Prisma models between products.
+ * - Challenge approach: GoPlausible facilitator + `x402-global-challenge`
+ *   (+ product merchant cards for discovery).
  */
 
 /** Production origins — override via env in each deployable. */
@@ -19,6 +27,10 @@ export const SITE_SERVICE_NAME = 'Micropay AI'
 export const SITE_TAGLINE = 'Pay-per-use AI gateway'
 export const SITE_DESCRIPTION =
   'Pay-per-use AI for chat, images, and audio across popular models. Pay with your Algorand wallet in USDC via x402 — no subscriptions or API keys.'
+export const CODE_SERVICE_NAME = 'Micropay IDE'
+export const CODE_TAGLINE = 'Algorand TypeScript IDE'
+export const CODE_DESCRIPTION =
+  'AI-assisted Algorand TypeScript (puya-ts) IDE. Edit, compile, and deploy — agent calls settle in USDC via x402.'
 export const SITE_KEYWORDS = [
   'Micropay',
   'x402',
@@ -42,10 +54,12 @@ export const X402_SERVICE_TAGS = [
   'openai-compatible',
 ] as const
 
+/** Same challenge tag on every independent product entry. */
 export const X402_CHALLENGE_TAG = 'x402-global-challenge'
 export const GOPLAUSIBLE_FACILITATOR = 'https://facilitator.goplausible.xyz'
 
-export const X402_ROUTE_META = {
+/** App product route meta (app backend only). */
+export const X402_APP_ROUTE_META = {
   chat: {
     serviceName: 'Micropay Chat',
     tags: ['ai', 'chat', 'llm', 'x402', 'openai-compatible'] as string[],
@@ -58,10 +72,27 @@ export const X402_ROUTE_META = {
     serviceName: 'Micropay Audio',
     tags: ['ai', 'audio', 'transcription', 'x402', 'speech-to-text'] as string[],
   },
+} as const
+
+/** IDE product route meta (code backend only). */
+export const X402_CODE_ROUTE_META = {
   ide: {
     serviceName: 'Micropay IDE',
     tags: ['ai', 'ide', 'puya-ts', 'x402', 'algorand'] as string[],
   },
+  clone: {
+    serviceName: 'Micropay Templates',
+    tags: ['ide', 'templates', 'puya-ts', 'x402', 'algorand'] as string[],
+  },
+} as const
+
+/**
+ * @deprecated Use X402_APP_ROUTE_META / X402_CODE_ROUTE_META.
+ * Kept so existing app imports keep compiling during the split.
+ */
+export const X402_ROUTE_META = {
+  ...X402_APP_ROUTE_META,
+  ...X402_CODE_ROUTE_META,
 } as const
 
 function trimOrigin(value: string | undefined): string | undefined {
@@ -116,22 +147,17 @@ export function isPublicHttpOrigin(u: URL): boolean {
   return true
 }
 
-/**
- * Apex / merchant identity origin (GoPlausible + Bazaar scrape target).
- * Prefer PUBLIC_SITE_URL; fall back to PUBLIC_APP_URL for single-site deploys.
- */
+/** Marketing apex origin (landing). Not a shared API/DB host. */
 export function getSiteOrigin(): string | undefined {
   return (
     trimOrigin(readEnv('PUBLIC_SITE_URL')) ||
     trimOrigin(readViteEnv('VITE_PUBLIC_SITE_URL')) ||
-    trimOrigin(readEnv('PUBLIC_APP_URL')) ||
-    trimOrigin(readViteEnv('VITE_PUBLIC_APP_URL')) ||
     trimOrigin(readEnv('URL')) ||
     trimOrigin(readEnv('DEPLOY_PRIME_URL'))
   )
 }
 
-/** App product surface (`app.` subdomain). */
+/** App product origin (`app.` subdomain). */
 export function getAppOrigin(): string | undefined {
   return (
     trimOrigin(readEnv('PUBLIC_APP_URL')) ||
@@ -140,7 +166,7 @@ export function getAppOrigin(): string | undefined {
   )
 }
 
-/** IDE product surface (`code.` subdomain). */
+/** IDE product origin (`code.` subdomain). */
 export function getCodeOrigin(): string | undefined {
   return (
     trimOrigin(readEnv('PUBLIC_CODE_URL')) ||
@@ -159,31 +185,41 @@ export function originFromRequest(request: Request): string | undefined {
   }
 }
 
-/** Absolute public icon for Bazaar — always prefer apex merchant origin. */
-export function getMerchantIconUrl(request?: Request): string | undefined {
+/** Absolute public icon — prefer the product host, then marketing apex. */
+export function getMerchantIconUrl(
+  request?: Request,
+  prefer: 'site' | 'app' | 'code' = 'site',
+): string | undefined {
   const origin =
+    (prefer === 'app'
+      ? getAppOrigin()
+      : prefer === 'code'
+        ? getCodeOrigin()
+        : getSiteOrigin()) ||
     getSiteOrigin() ||
     getAppOrigin() ||
+    getCodeOrigin() ||
     (request ? originFromRequest(request) : undefined)
   if (!origin) return undefined
   return `${origin}/assets/brand/icon.svg`
 }
 
-/** Absolute endpoint path on the app surface (for merchant card on apex). */
+/** Absolute endpoint path on the app surface. */
 export function appEndpointUrl(path: string, appOrigin?: string): string {
-  const base =
-    appOrigin || getAppOrigin() || DEFAULT_APP_ORIGIN
+  const base = appOrigin || getAppOrigin() || DEFAULT_APP_ORIGIN
   const p = path.startsWith('/') ? path : `/${path}`
   return `${base.replace(/\/$/, '')}${p}`
 }
 
-/**
- * Authoritative GoPlausible / Bazaar merchant card.
- * Host this at `https://micropay.website/.well-known/x402.json`.
- * Endpoint URLs are absolute on `app.micropay.website` so scrapers resolve
- * paid APIs without treating app/code as separate merchants.
- */
-export function buildMerchantCard(opts?: {
+/** Absolute endpoint path on the IDE (code) surface. */
+export function codeEndpointUrl(path: string, codeOrigin?: string): string {
+  const base = codeOrigin || getCodeOrigin() || DEFAULT_CODE_ORIGIN
+  const p = path.startsWith('/') ? path : `/${path}`
+  return `${base.replace(/\/$/, '')}${p}`
+}
+
+/** App product GoPlausible / Bazaar merchant card (chat / images / audio only). */
+export function buildAppMerchantCard(opts?: {
   siteOrigin?: string
   appOrigin?: string
 }) {
@@ -208,51 +244,128 @@ export function buildMerchantCard(opts?: {
     tag: X402_CHALLENGE_TAG,
     icon: `${site}/assets/brand/icon.svg`,
     logo: `${site}/assets/brand/logo.svg`,
-    homepage: `${site}/`,
+    homepage: `${app}/`,
     documentation: `${app}/api-reference`,
     llms: `${site}/llms.txt`,
     mcp: `${app}/mcp`,
-    products: {
-      app: `${app}/`,
-      code: `${(getCodeOrigin() || DEFAULT_CODE_ORIGIN).replace(/\/$/, '')}/`,
-    },
+    product: 'app',
     endpoints: [
       {
         method: 'POST',
         path: `${app}/api/v1/chat/completions`,
-        serviceName: X402_ROUTE_META.chat.serviceName,
+        serviceName: X402_APP_ROUTE_META.chat.serviceName,
         description:
           'OpenAI-compatible chat completions with optional SSE streaming for Micropay models (diverse popular LLMs).',
         mimeType: 'application/json',
-        tags: X402_ROUTE_META.chat.tags,
+        tags: X402_APP_ROUTE_META.chat.tags,
       },
       {
         method: 'POST',
         path: `${app}/api/v1/images/generations`,
-        serviceName: X402_ROUTE_META.images.serviceName,
+        serviceName: X402_APP_ROUTE_META.images.serviceName,
         description:
           'OpenAI-compatible image generation returning base64 PNG (b64_json) for Micropay models.',
         mimeType: 'application/json',
-        tags: X402_ROUTE_META.images.tags,
+        tags: X402_APP_ROUTE_META.images.tags,
       },
       {
         method: 'POST',
         path: `${app}/api/v1/audio/transcriptions`,
-        serviceName: X402_ROUTE_META.audio.serviceName,
+        serviceName: X402_APP_ROUTE_META.audio.serviceName,
         description:
           'OpenAI-compatible speech-to-text transcription (multipart audio upload) returning text for Micropay models.',
         mimeType: 'application/json',
-        tags: X402_ROUTE_META.audio.tags,
+        tags: X402_APP_ROUTE_META.audio.tags,
       },
+    ],
+  }
+}
+
+/** IDE product GoPlausible / Bazaar merchant card (independent of app). */
+export function buildCodeMerchantCard(opts?: {
+  siteOrigin?: string
+  codeOrigin?: string
+}) {
+  const site = (opts?.siteOrigin || getSiteOrigin() || DEFAULT_SITE_ORIGIN).replace(
+    /\/$/,
+    '',
+  )
+  const code = (opts?.codeOrigin || getCodeOrigin() || DEFAULT_CODE_ORIGIN).replace(
+    /\/$/,
+    '',
+  )
+
+  return {
+    name: SITE_NAME,
+    serviceName: CODE_SERVICE_NAME,
+    description: CODE_DESCRIPTION,
+    protocol: 'x402',
+    version: '2',
+    network: 'algorand:mainnet',
+    asset: 'USDC',
+    facilitator: GOPLAUSIBLE_FACILITATOR,
+    tag: X402_CHALLENGE_TAG,
+    icon: `${site}/assets/brand/icon.svg`,
+    logo: `${site}/assets/brand/logo.svg`,
+    homepage: `${code}/`,
+    documentation: `${code}/`,
+    product: 'code',
+    endpoints: [
       {
         method: 'POST',
-        path: `${app}/api/v1/ide/agent`,
-        serviceName: X402_ROUTE_META.ide.serviceName,
+        path: `${code}/api/v1/ide/agent`,
+        serviceName: X402_CODE_ROUTE_META.ide.serviceName,
         description:
           'Micropay IDE assistant with project file tools, compile, and Algorand TypeScript knowledge.',
         mimeType: 'application/json',
-        tags: X402_ROUTE_META.ide.tags,
+        tags: X402_CODE_ROUTE_META.ide.tags,
+      },
+      {
+        method: 'POST',
+        path: `${code}/api/v1/clone`,
+        serviceName: X402_CODE_ROUTE_META.clone.serviceName,
+        description:
+          'Clone an Algorand TypeScript IDE template into your workspace (0.05 USDC).',
+        mimeType: 'application/json',
+        tags: X402_CODE_ROUTE_META.clone.tags,
       },
     ],
+  }
+}
+
+/**
+ * @deprecated Prefer buildAppMerchantCard / buildCodeMerchantCard.
+ * Landing discovery card pointing at both products (not a shared backend).
+ */
+export function buildMerchantCard(opts?: {
+  siteOrigin?: string
+  appOrigin?: string
+  codeOrigin?: string
+}) {
+  const site = (opts?.siteOrigin || getSiteOrigin() || DEFAULT_SITE_ORIGIN).replace(
+    /\/$/,
+    '',
+  )
+  const app = (opts?.appOrigin || getAppOrigin() || DEFAULT_APP_ORIGIN).replace(
+    /\/$/,
+    '',
+  )
+  const code = (
+    opts?.codeOrigin ||
+    getCodeOrigin() ||
+    DEFAULT_CODE_ORIGIN
+  ).replace(/\/$/, '')
+
+  const appCard = buildAppMerchantCard({ siteOrigin: site, appOrigin: app })
+  return {
+    ...appCard,
+    homepage: `${site}/`,
+    products: {
+      app: `${app}/`,
+      code: `${code}/`,
+      appMerchant: `${app}/.well-known/x402.json`,
+      codeMerchant: `${code}/.well-known/x402.json`,
+    },
+    note: 'Micropay App and IDE are separate products. Each host publishes its own /.well-known/x402.json for discovery.',
   }
 }

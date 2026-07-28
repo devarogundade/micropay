@@ -24,14 +24,25 @@ import {
   APP_NAV,
   type AppNavPath,
   CODE_ORIGIN,
-  USE_EXTERNAL_IDE,
   navActive,
 } from '#/lib/app-nav'
 import { fetchUserStats } from '#/lib/activities.functions'
 import { queryKeys } from '#/lib/query-keys'
-import { DEFAULT_CODE_ORIGIN } from '#/lib/site-meta'
+import { DEFAULT_SITE_ORIGIN, getSiteOrigin } from '#/lib/site-meta'
 import { cn } from '#/lib/utils'
 import { useWallet } from '#/lib/wallet'
+
+function siteOrigin(): string {
+  return (
+    (typeof import.meta !== 'undefined' &&
+      (import.meta.env?.VITE_PUBLIC_SITE_URL as string | undefined)?.replace(
+        /\/$/,
+        '',
+      )) ||
+    getSiteOrigin() ||
+    DEFAULT_SITE_ORIGIN
+  )
+}
 
 export function AppHeader() {
   const { account, shortAddress, setConnectOpen, disconnect } = useWallet()
@@ -46,16 +57,15 @@ export function AppHeader() {
     refetchOnMount: 'always',
   })
 
-  const ideHref = USE_EXTERNAL_IDE
-    ? CODE_ORIGIN || DEFAULT_CODE_ORIGIN
-    : '/ide'
+  const ideHref = CODE_ORIGIN
+  const marketingHref = siteOrigin()
 
   const pageTitle = APP_NAV.find((item) => navActive(pathname, item.to))?.label
 
   return (
     <header className="safe-top sticky top-0 z-40 shrink-0 border-b border-border bg-void/90 backdrop-blur-md">
       <div className="app-header-bar mx-auto flex w-full max-w-[1400px] items-center gap-2 px-3 md:gap-3 md:px-6">
-        <Link to="/models" className="shrink-0 no-underline">
+        <Link to="/" className="shrink-0 no-underline">
           <BrandMark size="sm" className="hidden sm:inline-block" />
           <BrandMark
             variant="icon"
@@ -169,7 +179,7 @@ export function AppHeader() {
             shortAddress={shortAddress}
             stats={stats}
             ideHref={ideHref}
-            externalIde={USE_EXTERNAL_IDE}
+            marketingHref={marketingHref}
             onConnect={() => setConnectOpen(true)}
             onDisconnect={() => disconnect()}
           />
@@ -184,7 +194,7 @@ function OverflowMenu({
   shortAddress,
   stats,
   ideHref,
-  externalIde,
+  marketingHref,
   onConnect,
   onDisconnect,
 }: {
@@ -192,7 +202,7 @@ function OverflowMenu({
   shortAddress: string | null
   stats?: { todaySpendUsdc: number; totalSpendUsdc: number } | null
   ideHref: string
-  externalIde: boolean
+  marketingHref: string
   onConnect: () => void
   onDisconnect: () => void
 }) {
@@ -229,27 +239,19 @@ function OverflowMenu({
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {externalIde ? (
-          <DropdownMenuItem asChild>
-            <a href={ideHref}>
-              <TerminalSquare className="size-4" />
-              Open IDE
-              <ExternalLink className="ml-auto size-3.5 opacity-50" />
-            </a>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem asChild>
-            <Link to="/ide">
-              <TerminalSquare className="size-4" />
-              Open IDE
-            </Link>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem asChild>
-          <Link to="/">
+          <a href={ideHref}>
+            <TerminalSquare className="size-4" />
+            Open IDE
+            <ExternalLink className="ml-auto size-3.5 opacity-50" />
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href={marketingHref}>
             <Home className="size-4" />
             Back to site
-          </Link>
+            <ExternalLink className="ml-auto size-3.5 opacity-50" />
+          </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {account ? (

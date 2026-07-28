@@ -35,7 +35,7 @@ const TOOLS = [
   {
     name: 'micropay_endpoints',
     badge: 'free',
-    body: 'Describe the paid HTTP APIs agents can call (chat, images, audio, IDE, and more).',
+    body: 'Describe the paid HTTP APIs agents can call (chat, images, audio, IDE).',
   },
   {
     name: 'compile_puya_ts',
@@ -85,9 +85,8 @@ function McpPage() {
             MCP
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Connect agents to Micropay. Browse models and compile puya-ts for
-            free; paid chat, image, audio, and IDE agent calls still go through
-            wallet-paid HTTP APIs (same x402 merchant as the apex entry).
+            Connect agents to Micropay. Browse models for free; paid chat,
+            image, audio, and IDE agent calls settle via x402.
           </p>
         </div>
       </div>
@@ -157,7 +156,8 @@ function McpPage() {
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">
               MCP lists model info only; payment happens on these routes with a
-              wallet-capable client (@x402/fetch).
+              wallet-capable client (@x402/fetch). All settle into the shared
+              Activity table.
             </p>
           </ListCard>
         </div>

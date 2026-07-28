@@ -1,7 +1,11 @@
 {
   "name": "micropay",
   "private": true,
-  "workspaces": ["landing", "code", "packages/*"],
+  "workspaces": [
+    "landing",
+    "code",
+    "packages/*"
+  ],
   "scripts": {
     "dev:landing": "npm run dev --workspace=landing",
     "dev:code": "npm run dev --workspace=code",
@@ -9,5 +13,9 @@
     "build:code": "npm run build --workspace=code",
     "dev:app": "npm run dev --prefix app",
     "build:app": "npm run build --prefix app"
+  },
+  "dependencies": {
+    "@tanstack/router-generator": "^1.167.21",
+    "effect": "^3.22.0"
   }
 }

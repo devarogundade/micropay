@@ -2,8 +2,10 @@
  * App re-exports of shared merchant / SEO identity.
  * Canonical source: `packages/site-meta` (@micropay/site-meta).
  *
- * GoPlausible: register ONLY apex `micropay.website` (landing).
- * App + code are product surfaces sharing one X402_PAY_TO.
+ * App and IDE are separate product surfaces. This package shares
+ * challenge / identity constants. Runtime data: app owns its Prisma
+ * schema/tables; code owns Code* tables (separate schema/migrations).
+ * Same DATABASE_URL is OK; zero shared models/rows.
  */
 
 export {
@@ -16,17 +18,22 @@ export {
   SITE_NAME,
   SITE_SERVICE_NAME,
   SITE_TAGLINE,
+  X402_APP_ROUTE_META,
   X402_CHALLENGE_TAG,
+  X402_CODE_ROUTE_META,
   X402_ROUTE_META,
   X402_SERVICE_TAGS,
+  appEndpointUrl,
+  buildAppMerchantCard,
+  buildCodeMerchantCard,
   buildMerchantCard,
+  codeEndpointUrl,
   getAppOrigin,
   getCodeOrigin,
   getMerchantIconUrl,
   getSiteOrigin,
   isPublicHttpOrigin,
   originFromRequest,
-  appEndpointUrl,
 } from '@micropay/site-meta'
 
 import { getAppOrigin, getSiteOrigin } from '@micropay/site-meta'

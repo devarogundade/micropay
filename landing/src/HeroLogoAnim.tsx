@@ -1,7 +1,10 @@
-import { useId, useRef } from 'react';
+import { useId, useRef } from 'react'
 
-import { useClientGsap } from '#/lib/use-client-gsap';
-import { cn } from '#/lib/utils';
+import { useClientGsap } from './use-client-gsap'
+
+function cn(...parts: Array<string | undefined | false>) {
+  return parts.filter(Boolean).join(' ')
+}
 
 const BOUNCE_TARGETS = [
   { x: 0, y: 0, letterIndex: -1 },

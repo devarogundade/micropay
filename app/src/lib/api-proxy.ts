@@ -73,7 +73,7 @@ export async function gatePaidRequest(input: {
   priceUsdc: number
   description: string
   /** Bazaar serviceName / tags key (chat | images | audio). */
-  routeKind?: 'chat' | 'images' | 'audio'
+  routeKind?: 'chat' | 'images' | 'audio' | 'ide'
   /** Per-route Bazaar discovery metadata for facilitator cataloging. */
   extensions?: Record<string, unknown>
 }): Promise<X402GateOk | { ok: false; response: Response }> {

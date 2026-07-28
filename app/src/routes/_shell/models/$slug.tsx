@@ -33,7 +33,7 @@ function ModelDetailPage() {
           That model isn’t available. Pick another from the list.
         </p>
         <Button asChild variant="outline" className="mt-6">
-          <Link to="/models">
+          <Link to="/">
             <ArrowLeft className="size-4" />
             Back to models
           </Link>

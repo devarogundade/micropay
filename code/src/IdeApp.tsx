@@ -6,7 +6,7 @@ import { PuyaTsIde } from '#/components/puya-ts/puya-ts-ide'
 import { Button } from '#/components/ui/button'
 import { EmptyState } from '#/components/ui/empty-state'
 import { ErrorState } from '#/components/ui/error-state'
-import { getAppUrl, getSiteUrl } from '#/lib/app-url'
+import { getAppUrl, getSiteUrl } from '#/lib/api-url'
 import {
   fetchModelsCatalog,
   type ModelsCatalog,

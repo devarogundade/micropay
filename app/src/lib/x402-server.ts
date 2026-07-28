@@ -2,8 +2,8 @@
  * Framework-agnostic x402 paywall for TanStack Start API routes.
  * Uses GoPlausible facilitator verify → settle (exact USDC on Algorand).
  *
- * Composite challenge entry: shared payTo + network + USDC ASA, Bazaar discovery
- * registered once, per-route descriptions + discovery metadata, challenge tag.
+ * App product: own payTo + network + USDC ASA + Bazaar discovery on app host.
+ * IDE agent settlements belong on the code product stack (not this paywall long-term).
  */
 
 import { ExactAvmScheme } from '@x402/avm/exact/server'

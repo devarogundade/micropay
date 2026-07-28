@@ -11,12 +11,7 @@ export const Route = createFileRoute('/_shell')({
 function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isModelWorkspace = /^\/models\/[^/]+\/?$/.test(pathname)
-  const isPuyaTsIde =
-    pathname === '/ide' ||
-    pathname.startsWith('/ide/') ||
-    pathname === '/playground' ||
-    pathname.startsWith('/playground/')
-  const isFullBleed = isModelWorkspace || isPuyaTsIde
+  const isFullBleed = isModelWorkspace
   const showBottomNav = !isFullBleed
 
   return (

@@ -3,8 +3,14 @@ export type ModelType = 'Chat' | 'Image Gen' | 'Audio'
 /** Absolute floor for catalog display and x402 charges (USDC). */
 export const MIN_PAY_USDC = 0.01
 
-/** Cap for per-use catalog / x402 amounts (USDC). */
-export const MAX_PAY_USDC = 0.03
+/**
+ * Cap for per-use catalog / x402 amounts (USDC).
+ * Includes template clone (0.05); model catalog floors still max at ~0.03.
+ */
+export const MAX_PAY_USDC = 0.05
+
+/** Fixed price to clone an IDE template (USDC). */
+export const TEMPLATE_CLONE_USDC = 0.05
 
 export type Model = {
   slug: string

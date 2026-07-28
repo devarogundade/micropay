@@ -1,40 +1,39 @@
 # Code — code.micropay.website
 
-Vite + React SPA hosting the Micropay Algorand TypeScript (puya-ts) IDE.
+TanStack Start fullstack IDE (Algorand TypeScript / puya-ts), **app-style**:
+Vite + `@tanstack/react-start` + Netlify plugin, Prisma, `/certs`.
 
 ## Architecture
 
-- **UI / wallet / Monaco** run here (`code/`)
-- **Paid IDE agent** and **compile** stay on app:
-  - `POST ${VITE_PUBLIC_APP_URL}/api/v1/ide/agent` (x402 USDC, same `X402_PAY_TO`)
-  - `POST ${VITE_PUBLIC_APP_URL}/api/v1/puya-ts/compile` (free)
-  - `GET ${VITE_PUBLIC_APP_URL}/api/v1/models` (catalog)
-- Do **not** register a separate GoPlausible merchant for this host
+| Concern | Where |
+|---------|--------|
+| IDE UI / wallet / Monaco / templates | `code/` (this package) |
+| Paid IDE agent, compile, models, clone | **This host** — `/api/v1/ide/agent`, `/api/v1/puya-ts/compile`, `/api/v1/models`, `/api/v1/templates`, `/api/v1/clone` |
+| Postgres / Prisma | **This package** — `code/prisma` only, Postgres schema `code`. Same `DATABASE_URL` as app is OK; **zero shared tables/models**. Apply with `npm run db:push` |
+| IDE spend tracking | `CodeActivity` / `CodeUser` / `CodeUserModelUsage` |
+| Template clone tracking | `CodeTemplate` / `CodeTemplateClone` |
+| Merchant discovery | `public/.well-known/x402.json` |
+
+App and IDE are separate products (own Netlify site / merchant card / Prisma schema).
 
 ## Env
 
-See `.env.example`:
-
-| Variable | Purpose |
-|----------|---------|
-| `VITE_PUBLIC_SITE_URL` | Landing / merchant link |
-| `VITE_PUBLIC_APP_URL` | App API + App nav link |
-| `VITE_X402_NETWORK` | Optional `testnet` (default mainnet) |
+See `.env.example`. Requires `DATABASE_URL`, `ZG_ROUTER_*`, `X402_*`.
 
 ## Dev
 
 ```bash
-# from repo root
-npm install
+npm install   # repo root
+npm run db:generate --workspace=code
+npm run db:push --workspace=code
 npm run dev:code
 # → http://localhost:5000
 ```
 
-Point `VITE_PUBLIC_APP_URL` at a running app (`http://localhost:3000`) for local compile/agent.
-
 ## Netlify
 
 - Base directory: `code`
-- Build: `npm run build` → `dist`
+- Build: `vite build` → `dist/client`
 - Domain: `code.micropay.website`
-- See root `DEPLOYMENT.md`
+- Set `DATABASE_URL` (may match app’s Postgres URL; tables remain separate)
+- Apply code schema on setup (`npm run db:push`)

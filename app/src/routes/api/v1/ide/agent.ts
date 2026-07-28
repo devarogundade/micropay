@@ -1,26 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { recordActivity } from '#/lib/activities-store'
 import {
-  activityMetaFromModel,
-  activityMetaFromRouterPayload,
   extractProviderHeaders,
-  finalizePaidResponse,
   gatePaidRequest,
   requireRouterKey,
   routerErrorResponse,
-  txIdFromPaymentHeaders,
 } from '#/lib/api-proxy'
 import { corsPreflight, withCors } from '#/lib/cors'
 import {
   IDE_AGENT_SYSTEM_PROMPT,
   IDE_AGENT_TOOLS,
 } from '#/lib/ide-knowledge'
-import { recordModelUsage } from '#/lib/model-usage-store'
-import { extractPayerAddress } from '#/lib/users'
 import {
   X402_ROUTE_DESCRIPTIONS,
   chatDiscoveryExtension,
+  withPaymentHeaders,
 } from '#/lib/x402-server'
 import { assertModelType, resolveModelPriceUsdc } from '#/lib/zg-catalog'
 import {
@@ -31,9 +25,9 @@ import {
 /**
  * POST /api/v1/ide/agent
  *
- * Dedicated IDE agent endpoint (NOT /api/v1/chat/completions).
- * Injects puya-ts knowledge + IDE tools; records activities as type "IDE".
- * CORS enabled for code.micropay.website.
+ * Legacy/compat IDE agent on the app host. Settles x402 only — does NOT
+ * write app Activity / User. Canonical IDE + CodeActivity persistence lives
+ * on the code product (`code/` → POST /api/v1/ide/agent).
  */
 export const Route = createFileRoute('/api/v1/ide/agent')({
   server: {
@@ -130,22 +124,12 @@ export const Route = createFileRoute('/api/v1/ide/agent')({
             body: upstreamBody,
             priceUsdc,
             description: X402_ROUTE_DESCRIPTIONS.ide,
-            routeKind: 'chat',
+            routeKind: 'ide',
             extensions: chatDiscoveryExtension(),
           })
           if (!gate.ok) return respond(gate.response)
 
           const providerHeaders = extractProviderHeaders(request)
-          const activity = activityMetaFromModel(
-            model,
-            modelId,
-            'IDE',
-            priceUsdc,
-          )
-          const walletAddress = extractPayerAddress(
-            request,
-            gate.paymentPayload,
-          )
 
           if (wantStream && !tools) {
             const upstream = await createChatCompletionStream({
@@ -155,21 +139,6 @@ export const Route = createFileRoute('/api/v1/ide/agent')({
             })
 
             const paymentHeaders = await gate.settle()
-            await recordActivity({
-              ...activity,
-              status: 'settled',
-              txId: txIdFromPaymentHeaders(paymentHeaders),
-              walletAddress,
-            })
-            try {
-              await recordModelUsage({
-                walletAddress,
-                modelSlug: activity.modelSlug,
-                modelName: activity.modelName,
-              })
-            } catch (usageErr) {
-              console.error('model usage persist failed', usageErr)
-            }
 
             const headers = new Headers(upstream.headers)
             headers.delete('content-encoding')
@@ -195,16 +164,9 @@ export const Route = createFileRoute('/api/v1/ide/agent')({
             verifyTee: Boolean(body.verify_tee),
             providerHeaders,
           })
-          const fromRouter = activityMetaFromRouterPayload(data)
           const response = Response.json(data)
-          return respond(
-            await finalizePaidResponse({
-              gate,
-              response,
-              request,
-              activity: { ...activity, ...fromRouter },
-            }),
-          )
+          const paymentHeaders = await gate.settle(response)
+          return respond(withPaymentHeaders(response, paymentHeaders))
         } catch (e) {
           return respond(routerErrorResponse(e))
         }

@@ -108,7 +108,7 @@ export function ModelWorkspace({ model }: { model: Model }) {
   return (
     <div ref={rootRef} className="flex h-full min-h-0 flex-col bg-void">
       <header className="ws-header workspace-bar flex shrink-0 items-center gap-1.5 border-b border-border bg-carbon px-2 sm:gap-3 sm:px-4">
-        <Link to="/models" className="shrink-0 no-underline">
+        <Link to="/" className="shrink-0 no-underline">
           <BrandMark size="sm" className="hidden sm:inline-block" />
           <BrandMark size="sm" variant="icon" className="sm:hidden" />
         </Link>
@@ -121,7 +121,7 @@ export function ModelWorkspace({ model }: { model: Model }) {
           size="sm"
           className="h-8 shrink-0 gap-1.5 px-1.5 text-fog sm:px-2"
         >
-          <Link to="/models">
+          <Link to="/">
             <ArrowLeft className="size-4" />
             <span className="hidden sm:inline">Models</span>
           </Link>

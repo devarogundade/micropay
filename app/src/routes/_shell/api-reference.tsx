@@ -45,7 +45,7 @@ const ENDPOINTS = [
   {
     method: 'GET',
     path: '/api/v1/activities',
-    desc: 'Usage history from settled x402 requests (Postgres). Optional ?wallet= & X-Wallet-Address.',
+    desc: 'Usage history from settled x402 requests. Optional ?wallet= & X-Wallet-Address.',
   },
   {
     method: 'GET',
@@ -70,7 +70,7 @@ const ENDPOINTS = [
   {
     method: 'POST',
     path: '/api/v1/puya-ts/compile',
-    desc: 'Compile Algorand TypeScript (puya-ts) source to TEAL approval/clear programs. Body: { source: string }. Free (not x402).',
+    desc: 'Compile Algorand TypeScript (puya-ts) to TEAL. Body: { source } or { files, entry }. Free (not x402).',
   },
 ] as const
 
@@ -100,8 +100,8 @@ function ApiReferencePage() {
             <code className="text-xs">GET …/jobs/:id?stream=1</code>).
           </li>
           <li>
-            <span className="text-mist">WebSocket</span> — not used (HTTP SSE fits
-            TanStack Start routes without a custom upgrade server).
+            <span className="text-mist">WebSocket</span> — not used; HTTP SSE covers
+            streaming.
           </li>
           <li>
             <span className="text-mist">JSON poll</span> — optional fallback for
