@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Micropay",
+  "name_for_model": "micropay",
+  "description_for_human": "Pay-per-use AI for chat, images, and audio. Settle each request in USDC on Algorand via x402.",
+  "description_for_model": "Micropay is a pay-per-use AI gateway. Call OpenAI-compatible HTTP endpoints for chat completions, image generation, and audio transcription. Unpaid requests return HTTP 402 with x402 exact USDC payment requirements on Algorand (GoPlausible facilitator). After settlement, retry with PAYMENT-SIGNATURE to receive the paid response. Model catalog and prices are available via MCP tool list_models and GET-style docs at /api-reference.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "/.well-known/openapi.yaml",
+    "is_user_authenticated": false
+  },
+  "logo_url": "/assets/brand/logo.svg",
+  "contact_email": "",
+  "legal_info_url": "/"
+}

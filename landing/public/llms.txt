@@ -1,0 +1,20 @@
+# Micropay — llms.txt
+# Authoritative product entry: https://micropay.website
+# Paid APIs + MCP: https://app.micropay.website
+# IDE (extracting): https://code.micropay.website
+
+> Micropay is a pay-per-use AI gateway on Algorand (x402 / USDC).
+> Single GoPlausible / Bazaar merchant entry on the apex domain.
+
+## Product surfaces
+- Landing (merchant entry): https://micropay.website
+- App (models, chat, images, audio, APIs): https://app.micropay.website
+- IDE (puya-ts): https://code.micropay.website
+
+## Merchant card
+- https://micropay.website/.well-known/x402.json
+
+## App docs
+- https://app.micropay.website/api-reference
+- https://app.micropay.website/mcp
+- https://app.micropay.website/llms.txt

@@ -1,0 +1,35 @@
+# Micropay
+
+> Pay-per-use AI for chat, image generation, and speech-to-text. Settle each request in USDC on Algorand via the x402 protocol (GoPlausible facilitator). No subscriptions or prepaid API keys.
+
+Micropay exposes an OpenAI-compatible HTTP API and a web app. Clients connect an Algorand wallet, approve the quoted USDC amount, and receive the model response after settlement.
+
+## Product
+
+- Chat completions (streaming SSE supported) across a diverse catalog of popular models
+- Image generation (base64 PNG / b64_json)
+- Audio transcription (multipart upload → text)
+- Wallet-native USDC micropayments on Algorand Mainnet via x402
+
+## Paid HTTP endpoints (x402)
+
+- POST /api/v1/chat/completions — OpenAI-compatible chat completions; optional stream
+- POST /api/v1/images/generations — OpenAI-compatible image generation (b64_json)
+- POST /api/v1/audio/transcriptions — OpenAI-compatible speech-to-text
+
+Unauthenticated calls receive HTTP 402 with exact payment requirements (USDC ASA on Algorand). Retry with a valid PAYMENT-SIGNATURE after settling through https://facilitator.goplausible.xyz.
+
+## Discovery
+
+- Web app: /
+- API reference: /api-reference
+- Model catalog: /models
+- puya-ts IDE: /ide
+- MCP protocol: /mcp
+- MCP setup UI: /agents
+- Machine-readable merchant card: /.well-known/x402.json
+- Agent plugin manifest: /.well-known/ai-plugin.json
+
+## Contact / merchant
+
+Merchant identity for x402 Bazaar is the Algorand `payTo` address configured as X402_PAY_TO. Challenge tag: x402-global-challenge.

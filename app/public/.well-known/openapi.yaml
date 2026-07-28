@@ -1,0 +1,99 @@
+openapi: 3.1.0
+info:
+  title: Micropay API
+  version: "1.0.0"
+  description: >
+    Pay-per-use AI gateway. Unpaid calls return HTTP 402 with x402 exact USDC
+    payment requirements on Algorand (GoPlausible facilitator). After settlement,
+    retry with a PAYMENT-SIGNATURE header.
+  contact:
+    name: Micropay
+    url: /
+servers:
+  - url: /
+    description: Micropay public origin
+paths:
+  /api/v1/chat/completions:
+    post:
+      operationId: chatCompletions
+      summary: Chat completions (x402)
+      description: >
+        OpenAI-compatible chat completions with optional SSE streaming for
+        Micropay models across a diverse catalog of popular LLMs.
+      tags: [chat, x402]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model, messages]
+              properties:
+                model:
+                  type: string
+                  description: Micropay model id
+                messages:
+                  type: array
+                  description: OpenAI-style chat messages
+                stream:
+                  type: boolean
+                  description: When true, response is text/event-stream
+      responses:
+        "200":
+          description: Paid chat completion
+        "402":
+          description: Payment required (x402)
+  /api/v1/images/generations:
+    post:
+      operationId: imageGenerations
+      summary: Image generation (x402)
+      description: >
+        OpenAI-compatible image generation returning base64 PNG (b64_json)
+        for Micropay models.
+      tags: [images, x402]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model, prompt]
+              properties:
+                model:
+                  type: string
+                prompt:
+                  type: string
+                response_format:
+                  type: string
+                  enum: [b64_json]
+      responses:
+        "200":
+          description: Paid image generation
+        "402":
+          description: Payment required (x402)
+  /api/v1/audio/transcriptions:
+    post:
+      operationId: audioTranscriptions
+      summary: Audio transcription (x402)
+      description: >
+        OpenAI-compatible speech-to-text transcription (multipart audio upload)
+        returning text for Micropay models.
+      tags: [audio, x402]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                model:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Paid transcription
+        "402":
+          description: Payment required (x402)

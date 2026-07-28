@@ -1,0 +1,28 @@
+{
+  "name": "landing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/write-x402.mjs",
+    "dev": "vite --port 4000",
+    "prebuild": "node scripts/write-x402.mjs",
+    "build": "vite build",
+    "preview": "vite preview --port 4000",
+    "write-x402": "node scripts/write-x402.mjs"
+  },
+  "dependencies": {
+    "@micropay/site-meta": "*",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0"
+  }
+}

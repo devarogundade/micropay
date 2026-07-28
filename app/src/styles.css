@@ -1,0 +1,469 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..590&family=JetBrains+Mono:wght@400&display=swap");
+@import "tailwindcss";
+@plugin '@tailwindcss/typography';
+
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Linear — midnight precision instrument
+  Dark theme tokens + shadcn semantic mapping
+*/
+:root {
+  /* Primitive — Linear palette */
+  --void: #08090a;
+  --carbon: #0f1011;
+  --obsidian: #161718;
+  --graphite: #23252a;
+  --smoke: #383b3f;
+  --ash: #62666d;
+  --fog: #8a8f98;
+  --mist: #d0d6e0;
+  --bone: #e5e5e6;
+  --paper: #ffffff;
+  --acid-lime: #e4f222;
+  --pulse-green: #09c72b;
+  --brand-green: #09c72b;
+  --coral-red: #eb5757;
+  --signal-teal: #02b8cc;
+  --iris-violet: #6366f1;
+  --lavender: #8b5cf6;
+
+  /* Backward-compat aliases used across the app */
+  --lemon: var(--acid-lime);
+  --lemon-soft: color-mix(in srgb, var(--acid-lime) 35%, transparent);
+  --lemon-deep: #c4d41a;
+  --ink: var(--void);
+  --ink-soft: var(--ash);
+
+  /* Typography */
+  --font-inter-variable: "Inter", "Inter Variable", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-berkeley-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-w510: 510;
+  --font-weight-w590: 590;
+
+  /* Named radii */
+  --radius-cards: 12px;
+  --radius-pills: 9999px;
+  --radius-small: 2px;
+  --radius-badges: 4px;
+  --radius-inputs: 6px;
+  --radius-buttons: 6px;
+
+  /* Shadows — hairline / inset first */
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
+  --shadow-subtle: rgb(35, 37, 42) 0px 0px 0px 1px inset;
+  --shadow-subtle-2: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
+  --shadow-subtle-3: rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px,
+    rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px;
+  --shadow-xl: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
+  --shadow-subtle-4: rgba(255, 255, 255, 0.03) 0px 0px 0px 1px inset,
+    rgba(255, 255, 255, 0.04) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.6) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.1) 0px 4px 4px 0px;
+  --shadow-subtle-5: rgba(0, 0, 0, 0.1) 0px 0px 0px 2px;
+
+  /* Layout */
+  --page-max-width: 1200px;
+  --section-gap: 96px;
+  --card-padding: 24px;
+  --element-gap: 8px;
+  /* Shared app chrome — main header + workspace / IDE top bars */
+  --app-header-height: 3.5rem; /* 56px / h-14 */
+  --workspace-bar-height: var(--app-header-height);
+  --bottom-nav-height: 3.5rem; /* 56px — mobile tab bar */
+
+  /* shadcn semantic → Linear midnight */
+  --background: var(--void);
+  --foreground: var(--mist);
+  --card: var(--carbon);
+  --card-foreground: var(--mist);
+  --popover: var(--obsidian);
+  --popover-foreground: var(--mist);
+  --primary: var(--acid-lime);
+  --primary-foreground: var(--void);
+  --secondary: var(--obsidian);
+  --secondary-foreground: var(--mist);
+  --muted: var(--obsidian);
+  --muted-foreground: var(--fog);
+  --accent: var(--graphite);
+  --accent-foreground: var(--mist);
+  --destructive: var(--coral-red);
+  --destructive-foreground: var(--paper);
+  --border: var(--graphite);
+  --input: var(--graphite);
+  --ring: var(--acid-lime);
+  --chart-1: var(--acid-lime);
+  --chart-2: var(--mist);
+  --chart-3: var(--fog);
+  --chart-4: var(--ash);
+  --chart-5: var(--smoke);
+  --radius: 6px;
+  --sidebar: var(--carbon);
+  --sidebar-foreground: var(--mist);
+  --sidebar-primary: var(--acid-lime);
+  --sidebar-primary-foreground: var(--void);
+  --sidebar-accent: var(--obsidian);
+  --sidebar-accent-foreground: var(--mist);
+  --sidebar-border: var(--graphite);
+  --sidebar-ring: var(--acid-lime);
+}
+
+@theme inline {
+  --font-sans: var(--font-inter-variable);
+  --font-mono: var(--font-berkeley-mono);
+
+  /* Linear primitives as Tailwind colors */
+  --color-void: var(--void);
+  --color-carbon: var(--carbon);
+  --color-obsidian: var(--obsidian);
+  --color-graphite: var(--graphite);
+  --color-smoke: var(--smoke);
+  --color-ash: var(--ash);
+  --color-fog: var(--fog);
+  --color-mist: var(--mist);
+  --color-bone: var(--bone);
+  --color-paper: var(--paper);
+  --color-acid-lime: var(--acid-lime);
+  --color-pulse-green: var(--pulse-green);
+  --color-brand-green: var(--brand-green);
+  --color-coral-red: var(--coral-red);
+  --color-signal-teal: var(--signal-teal);
+  --color-iris-violet: var(--iris-violet);
+  --color-lavender: var(--lavender);
+
+  /* Compat aliases */
+  --color-lemon: var(--lemon);
+  --color-lemon-soft: var(--lemon-soft);
+  --color-lemon-deep: var(--lemon-deep);
+  --color-ink: var(--ink);
+
+  /* shadcn semantic */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Radii: buttons/inputs 6px, cards 12px, badges 4px, small 2px */
+  --radius-sm: 2px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-full: 9999px;
+
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
+  --shadow-xl: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-feature-settings: "cv01" 1, "ss03" 1, "zero" 1;
+  letter-spacing: -0.011em;
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Landing — Linear midnight void; soft mist atmosphere only */
+.landing-atmosphere {
+  background-color: var(--void);
+  background-image:
+    radial-gradient(ellipse 55% 35% at 50% 42%, rgba(255, 255, 255, 0.035), transparent 70%),
+    linear-gradient(180deg, var(--void) 0%, var(--carbon) 55%, var(--void) 100%);
+}
+
+.landing-cta {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.landing-cta:hover {
+  transform: translateY(-1px);
+}
+
+/* Full-bleed hero arc — edge to edge, soft on void */
+.hero-arc-svg {
+  display: block;
+  min-width: 100%;
+}
+
+/* Hero MicroPay bounce logo */
+.hero-logo-letter {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+.hero-logo-bouncer {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+.hero-logo-letter-shadow {
+  transform-box: fill-box;
+  transform-origin: center center;
+  opacity: 0.35;
+  filter: blur(5px);
+  will-change: transform, opacity;
+}
+
+.hero-logo-floor-light {
+  transform-box: fill-box;
+  transform-origin: center center;
+  opacity: 0.25;
+  filter: blur(8px);
+}
+
+.hero-logo-light-cone {
+  opacity: 0.28;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transform-origin: top center;
+}
+
+.hero-logo-ripple {
+  transform-origin: center center;
+  opacity: 0;
+  stroke: #10e06e;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* One place — quiet provider marks inside the moment panel */
+.moment-brands img {
+  opacity: 0.42;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.moment-brands img:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.moment-brand-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(35, 37, 42, 0.9);
+  background: color-mix(in srgb, var(--void) 70%, transparent);
+}
+
+.section-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, black 15%, transparent 72%);
+}
+
+.section-dots {
+  background-image: radial-gradient(rgba(208, 214, 224, 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 10%, transparent 70%);
+}
+
+.grid-fade {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+}
+
+/* App + workspace chrome — uniform header height */
+.app-header-bar,
+.workspace-bar {
+  height: var(--app-header-height);
+  min-height: var(--app-header-height);
+  box-sizing: border-box;
+}
+
+/* Mobile safe areas (notch / home indicator) */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav {
+  /* Keep tab bar above iOS home indicator */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Headings — paper white, capped weight (utilities can override) */
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--paper);
+    font-weight: 510;
+    letter-spacing: -0.012em;
+  }
+
+  h1 {
+    letter-spacing: -0.022em;
+  }
+}
+
+/* Cap Tailwind weight utilities at Linear's 590 max */
+@layer utilities {
+  .font-medium {
+    font-weight: 510;
+  }
+  .font-semibold,
+  .font-bold,
+  .font-extrabold,
+  .font-black {
+    font-weight: 590;
+  }
+
+  .surface-card {
+    background-color: var(--carbon);
+    border-radius: var(--radius-cards);
+    box-shadow: var(--shadow-subtle);
+  }
+}
+
+/* Swiper — Linear midnight chrome */
+.models-carousel .swiper-button-prev,
+.models-carousel .swiper-button-next,
+.image-studio-swiper .swiper-button-prev,
+.image-studio-swiper .swiper-button-next {
+  color: var(--mist);
+  --swiper-navigation-size: 18px;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-top: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--graphite);
+  background-color: var(--carbon);
+  box-shadow: var(--shadow-subtle-2);
+}
+
+.models-carousel .swiper-button-prev:hover,
+.models-carousel .swiper-button-next:hover,
+.image-studio-swiper .swiper-button-prev:hover,
+.image-studio-swiper .swiper-button-next:hover {
+  background-color: var(--obsidian);
+  border-color: var(--smoke);
+  color: var(--paper);
+}
+
+.models-carousel .swiper-button-prev::after,
+.models-carousel .swiper-button-next::after,
+.image-studio-swiper .swiper-button-prev::after,
+.image-studio-swiper .swiper-button-next::after {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.models-carousel .swiper-button-disabled,
+.image-studio-swiper .swiper-button-disabled {
+  opacity: 0.35;
+}
+
+.image-studio-swiper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.image-studio-swiper .swiper-wrapper {
+  min-width: 0;
+}
+
+.image-studio-swiper .swiper-slide {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.image-studio-swiper .swiper-pagination-bullet {
+  background: var(--ash);
+  opacity: 1;
+}
+
+.image-studio-swiper .swiper-pagination-bullet-active {
+  background: var(--acid-lime);
+}
+
+/* iOS Safari zooms focused fields under 16px — keep all text inputs ≥16px */
+@layer base {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not(
+      [type='file']
+    ):not([type='hidden']):not([type='button']):not([type='submit']):not(
+      [type='reset']
+    ):not([type='image']),
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+

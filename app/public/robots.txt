@@ -1,0 +1,5 @@
+# Micropay — allow discovery crawlers (Bazaar / agents / search)
+User-agent: *
+Allow: /
+
+Sitemap: /sitemap.xml
