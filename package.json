@@ -4,6 +4,7 @@
   "workspaces": [
     "landing",
     "code",
+    "app",
     "packages/*"
   ],
   "scripts": {
