@@ -4,6 +4,7 @@ import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import netlify from '@netlify/vite-plugin-tanstack-start'
 
 /**
  * Vite 8 + duplicate `vite` resolutions make TanStack skip its SSR middleware
@@ -98,6 +99,12 @@ const config = defineConfig(({ isSsrBuild }) => ({
   },
   plugins: [
     devtools(),
+    netlify({
+      dev: {
+        staticFiles: { enabled: false },
+        database: { enabled: false },
+      },
+    }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),

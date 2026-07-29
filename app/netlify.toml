@@ -1,9 +1,8 @@
 [build]
-  command = "vite build"
-  publish = "dist/client"
-  # Netlify site base directory: app
+  # Monorepo: Netlify cwd is repo root (packagePath only selects this config).
+  command = "npm run build --workspace=app"
+  publish = "app/dist/client"
   # Custom domain: app.micropay.website
-  # Merchant entry stays on apex landing — see ../DEPLOYMENT.md
 [dev]
   command = "npm run dev"
   targetPort = 3000

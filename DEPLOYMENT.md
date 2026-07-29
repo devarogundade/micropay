@@ -50,14 +50,16 @@ cd code && npm run db:push     # code tables
 
 ### 2) App
 
-- Base directory: `app`
+- Repo root as Netlify base (package path / config: `app/`)
+- Build: `npm run build --workspace=app` → publish `app/dist/client`
 - Domain: `app.micropay.website`
 - Env: full `app/.env.example` (`DATABASE_URL`, `X402_PAY_TO`, `ZG_ROUTER_*`, SSL certs under `app/certs` if needed)
 - Owns Prisma: `app/prisma` (+ `npm run db:migrate`)
 
 ### 3) Code (IDE)
 
-- Base directory: `code`
+- Repo root as Netlify base (package path / config: `code/`)
+- Build: `npm run build --workspace=code` → publish `code/dist/client`
 - Domain: `code.micropay.website`
 - Env: full `code/.env.example` (`DATABASE_URL`, `X402_PAY_TO`, `ZG_ROUTER_*`, certs under `code/certs` if needed)
 - Owns Prisma: `code/prisma` (+ `npm run db:push`)

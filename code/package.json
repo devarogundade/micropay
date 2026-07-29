@@ -8,9 +8,9 @@
   "scripts": {
     "dev": "dotenv -e .env.local -- vite dev --port 5000",
     "generate-routes": "tsr generate",
-    "build": "tsr generate && vite build",
+    "build": "prisma generate && tsr generate && vite build",
     "preview": "vite preview",
-    "db:generate": "dotenv -e .env.local -- prisma generate",
+    "db:generate": "prisma generate",
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:migrate": "dotenv -e .env.local -- prisma db push",
     "db:studio": "dotenv -e .env.local -- prisma studio"
