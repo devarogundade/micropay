@@ -1,9 +1,8 @@
 /**
  * Code-owned template catalog + clone tracking (CodeTemplate / CodeTemplateClone).
  * Same DATABASE_URL as app; does not use Activity/User for clones.
+ * Server/API-only — do not import from client modules (use templates-client / templates-types).
  */
-
-import 'server-only'
 
 import type { Prisma } from '../generated/prisma/client.js'
 

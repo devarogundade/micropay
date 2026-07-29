@@ -23,7 +23,7 @@ import {
   MODELS_CATALOG_STALE_MS,
   ensureModelsCatalog,
 } from '#/lib/models-catalog-query'
-import { fetchRecentlyUsedModels } from '#/lib/models.functions'
+import { fetchRecentlyUsedModels } from '#/lib/models-usage.functions'
 import { queryKeys } from '#/lib/query-keys'
 import { useClientGsap } from '#/lib/use-client-gsap'
 import { cn } from '#/lib/utils'
@@ -33,7 +33,13 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 
 export const Route = createFileRoute('/_shell/')({
-  loader: ({ context: { queryClient } }) => ensureModelsCatalog(queryClient),
+  loader: async ({ context: { queryClient } }) => {
+    try {
+      await ensureModelsCatalog(queryClient)
+    } catch (err) {
+      console.error('[models] route loader failed', err)
+    }
+  },
   staleTime: MODELS_CATALOG_STALE_MS,
   preloadStaleTime: MODELS_CATALOG_STALE_MS,
   component: ModelsPage,

@@ -1,6 +1,9 @@
 /**
  * Real Algorand wallet connect via @txnlab/use-wallet-react (Pera / Defly / Lute / Kibisis).
  * Exposes a thin Micropay-shaped API plus x402-aware fetchWithPay.
+ *
+ * WalletManager is created only in the browser — module-level construction
+ * during SSR can throw HTTPError and take down the whole Netlify function.
  */
 
 import { AlgorandClient } from '@algorandfoundation/algokit-utils/algorand-client'
@@ -92,15 +95,34 @@ const walletChainId = isTestnet
 
 const defaultNetwork = isTestnet ? NetworkId.TESTNET : NetworkId.MAINNET
 
-const walletManager = new WalletManager({
-  wallets: [
-    { id: WalletId.PERA, options: { chainId: walletChainId } },
-    { id: WalletId.DEFLY, options: { chainId: walletChainId } },
-    WalletId.LUTE,
-    WalletId.KIBISIS,
-  ],
-  defaultNetwork,
-})
+function createWalletManager() {
+  return new WalletManager({
+    wallets: [
+      { id: WalletId.PERA, options: { chainId: walletChainId } },
+      { id: WalletId.DEFLY, options: { chainId: walletChainId } },
+      WalletId.LUTE,
+      WalletId.KIBISIS,
+    ],
+    defaultNetwork,
+  })
+}
+
+const ssrWalletStub: MicropayWalletApi = {
+  account: null,
+  hasHydrated: false,
+  isConnecting: false,
+  connectOpen: false,
+  setConnectOpen: () => {},
+  connect: async () => {
+    throw new Error('Wallet is only available in the browser')
+  },
+  disconnect: async () => {},
+  shortAddress: null,
+  fetchWithPay: null,
+  signTransactions: async () => {
+    throw new Error('Wallet is only available in the browser')
+  },
+}
 
 function MicropayWalletBridge({ children }: { children: ReactNode }) {
   const {
@@ -219,8 +241,23 @@ function MicropayWalletBridge({ children }: { children: ReactNode }) {
 }
 
 export function WalletProvider({ children }: { children: ReactNode }) {
+  const [manager, setManager] = useState<WalletManager | null>(null)
+
+  useEffect(() => {
+    setManager(createWalletManager())
+  }, [])
+
+  // SSR + first client paint: stub context (no WalletManager / no network).
+  if (!manager) {
+    return (
+      <MicropayWalletContext.Provider value={ssrWalletStub}>
+        {children}
+      </MicropayWalletContext.Provider>
+    )
+  }
+
   return (
-    <TxnlabWalletProvider manager={walletManager}>
+    <TxnlabWalletProvider manager={manager}>
       <MicropayWalletBridge>{children}</MicropayWalletBridge>
     </TxnlabWalletProvider>
   )
