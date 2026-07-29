@@ -5,8 +5,10 @@
  * Live feePayer: GET https://facilitator.goplausible.xyz/supported
  *
  * Challenge / composite entry notes:
- * - Mainnet: ALGORAND_Mainnet_CAIP2, USDC ASA 31566704
- * - Testnet: ALGORAND_Testnet_CAIP2, USDC ASA 10458941 (validation only)
+ * - Mainnet: algorand:<MAINNET_GENESIS_HASH>, USDC ASA 31566704
+ * - Testnet: algorand:<TESTNET_GENESIS_HASH>, USDC ASA 10458941 (validation only)
+ * - Prefer full genesis-hash network IDs (GoPlausible `/supported`), not the
+ *   truncated official CAIP-2 refs from @x402/avm ≥2.20 (`…N73k` / `…CDe`).
  * - App paid routes share this app's X402_PAY_TO (chat / images / audio)
  * - IDE is a separate product surface; settlements still use the shared DB
  *   (same DATABASE_URL + Activity table, type "IDE")
@@ -15,8 +17,8 @@
  */
 
 import {
-  ALGORAND_MAINNET_CAIP2,
-  ALGORAND_TESTNET_CAIP2,
+  ALGORAND_MAINNET_GENESIS_HASH,
+  ALGORAND_TESTNET_GENESIS_HASH,
   USDC_MAINNET_ASA_ID,
   USDC_TESTNET_ASA_ID,
 } from '@x402/avm'
@@ -39,11 +41,18 @@ export function getX402Network(): X402Network {
   return n === 'testnet' ? 'testnet' : 'mainnet'
 }
 
-/** CAIP-2 network id (`ALGORAND_Mainnet_CAIP2` / `ALGORAND_Testnet_CAIP2`). */
+/**
+ * Network id advertised in payment requirements.
+ *
+ * GoPlausible `/supported` lists full genesis-hash IDs
+ * (`algorand:wGHE2…kit8=` / `algorand:SGO1…OiI=`).
+ * `@x402/avm` ≥2.20 changed `ALGORAND_*_CAIP2` to the truncated official
+ * CAIP-2 refs (`…N73k` / `…CDe`), which fail facilitator route validation.
+ */
 export function getX402Caip2(): string {
   return getX402Network() === 'testnet'
-    ? ALGORAND_TESTNET_CAIP2
-    : ALGORAND_MAINNET_CAIP2
+    ? `algorand:${ALGORAND_TESTNET_GENESIS_HASH}`
+    : `algorand:${ALGORAND_MAINNET_GENESIS_HASH}`
 }
 
 /** USDC ASA id — Mainnet `31566704`, Testnet `10458941`. */
