@@ -39,9 +39,8 @@ This project ships with `netlify.toml` configured for a Netlify site:
 2. Visit https://app.netlify.com/start and import the repo
 3. Netlify auto-detects the build (`vite build` → `dist/client`)
 4. Open **Site settings → Environment variables** and add anything from `.env.example` that needs a real value in production
-5. For Supabase Postgres, set `DATABASE_URL` to the **transaction pooler** URL
-   (`aws-0-<region>.pooler.supabase.com:6543`, user `postgres.<project-ref>`) —
-   not the direct `db.<ref>.supabase.co:5432` host (often unreachable from Netlify)
+5. Set `DATABASE_URL` to your Netlify DB (Neon) connection string (often
+   auto-injected by Netlify DB; otherwise copy from the Netlify dashboard)
 6. Trigger the first deploy (redeploy after any env change)
 
 Server functions and API routes run on Netlify Functions. For lower-latency request handling, see Netlify Edge Functions: https://docs.netlify.com/edge-functions/overview.

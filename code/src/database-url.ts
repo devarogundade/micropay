@@ -3,8 +3,6 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { PoolConfig } from 'pg'
 
-import { SUPABASE_ROOT_CA_2021 } from '#/lib/supabase-root-ca'
-
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 /**
@@ -64,7 +62,11 @@ export function getDatabaseUrl() {
   return databaseUrl
 }
 
-/** Strip sslmode query params — `pg` maps require→verify-full and hangs without ssl.ca. */
+/**
+ * Strip sslmode / sslrootcert from the URL.
+ * `pg` maps sslmode=require → verify-full and can hang or fail when a custom
+ * CA is also passed; we configure TLS via PoolConfig.ssl instead.
+ */
 function connectionStringForPg(raw: string): string {
   try {
     const url = new URL(raw)
@@ -76,46 +78,13 @@ function connectionStringForPg(raw: string): string {
   }
 }
 
-function resolveSslCa(): string {
-  const caPath = process.env.DATABASE_SSL_ROOT_CERT
-    ? resolve(process.env.DATABASE_SSL_ROOT_CERT)
-    : join(appRoot, 'certs', 'prod-ca-2021.crt')
-
-  if (existsSync(caPath)) {
-    return readFileSync(caPath, 'utf8')
-  }
-
-  // Always available in the server bundle (Netlify functions often lack the file).
-  return SUPABASE_ROOT_CA_2021
-}
-
-function warnIfDirectSupabaseHost(connectionString: string) {
-  if (process.env.NODE_ENV !== 'production') return
-  try {
-    const host = new URL(connectionString).hostname
-    // Direct host is often IPv6-only — unreachable from Netlify/AWS Lambda.
-    if (/^db\.[a-z0-9]+\.supabase\.co$/i.test(host)) {
-      console.warn(
-        `[db] DATABASE_URL uses direct host ${host}. Netlify serverless usually needs the Supabase transaction pooler (aws-*.pooler.supabase.com:6543, user postgres.<project-ref>). See .env.example.`,
-      )
-    }
-  } catch {
-    // ignore malformed URL — getPgPoolConfig / pg will fail clearly
-  }
-}
-
 /**
  * Pool config for node-postgres / PrismaPg.
- * Supabase requires TLS; CA comes from DATABASE_SSL_ROOT_CERT, certs/prod-ca-2021.crt,
- * or the embedded Supabase Root 2021 string (reliable on Netlify).
- *
- * Production / serverless: prefer Supabase shared pooler (port 6543, transaction mode).
- * Do not put `sslmode=require` on DATABASE_URL for this stack.
+ * Postgres is Netlify DB (Neon). TLS uses the platform trust store — do not
+ * pin a Supabase CA. Prefer Netlify-injected DATABASE_URL in production.
  */
 export function getPgPoolConfig(): PoolConfig {
   const connectionString = connectionStringForPg(getDatabaseUrl())
-  warnIfDirectSupabaseHost(connectionString)
-
   const isProd = process.env.NODE_ENV === 'production'
 
   return {
@@ -126,7 +95,6 @@ export function getPgPoolConfig(): PoolConfig {
     connectionTimeoutMillis: 15_000,
     ssl: {
       rejectUnauthorized: true,
-      ca: resolveSslCa(),
     },
   }
 }
