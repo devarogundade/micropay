@@ -35,9 +35,15 @@ import 'swiper/css/navigation'
 export const Route = createFileRoute('/_shell/')({
   loader: async ({ context: { queryClient } }) => {
     try {
-      await ensureModelsCatalog(queryClient)
+      return await ensureModelsCatalog(queryClient)
     } catch (err) {
       console.error('[models] route loader failed', err)
+      return {
+        models: [],
+        source: 'router' as const,
+        error:
+          err instanceof Error ? err.message : 'Failed to load model catalog',
+      }
     }
   },
   staleTime: MODELS_CATALOG_STALE_MS,
@@ -49,7 +55,7 @@ type SortKey = 'recommended' | 'price-asc' | 'price-desc' | 'name'
 
 function ModelsPage() {
   const catalog = Route.useLoaderData()
-  const MODELS = catalog.models
+  const MODELS = catalog?.models ?? []
   const { account } = useWallet()
   const [q, setQ] = useState('')
   const [type, setType] = useState<'all' | ModelType>('all')

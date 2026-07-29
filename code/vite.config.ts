@@ -5,17 +5,19 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import netlify from '@netlify/vite-plugin-tanstack-start'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 /**
  * Vite 8 + duplicate `vite` resolutions make TanStack skip its SSR middleware
  * (`isRunnableDevEnvironment` fails across package copies). Bridge requests via
  * the SSR environment module runner so local `vite dev` serves pages.
+ *
+ * Do not use vite-plugin-node-polyfills: its config() sets global resolve.alias
+ * (path → path-browserify), which breaks SSR with `module is not defined`.
  */
-function ssrModuleRunnerBridge() {
+function ssrModuleRunnerBridge(defaultHost = 'localhost:5000') {
   return {
     name: 'ssr-module-runner-bridge',
-    enforce: 'post',
+    enforce: 'post' as const,
     configureServer(viteDevServer) {
       return () => {
         const serverEnv = viteDevServer.environments.ssr
@@ -36,12 +38,14 @@ function ssrModuleRunnerBridge() {
               return next()
             }
 
-            const runner = serverEnv.runner || serverEnv._runner
+            const runner =
+              serverEnv.runner ||
+              (serverEnv as { _runner?: typeof serverEnv.runner })._runner
             if (!runner || typeof runner.import !== 'function') {
               return next()
             }
 
-            const url = new URL(u, `http://${req.headers.host || 'localhost:5000'}`)
+            const url = new URL(u, `http://${req.headers.host || defaultHost}`)
             const headers = new Headers()
             for (const [k, v] of Object.entries(req.headers)) {
               if (v == null) continue
@@ -53,7 +57,8 @@ function ssrModuleRunnerBridge() {
             const webReq = new Request(url, {
               method,
               headers,
-              body: hasBody ? req : undefined,
+              body: hasBody ? (req as unknown as BodyInit) : undefined,
+              // @ts-expect-error Node fetch duplex for streaming request bodies
               duplex: hasBody ? 'half' : undefined,
             })
 
@@ -91,6 +96,7 @@ const config = defineConfig(({ isSsrBuild }) => ({
   },
   optimizeDeps: {
     include: ['buffer', 'process'],
+    exclude: ['pg', 'pg-native', '@prisma/adapter-pg', '@prisma/client'],
   },
   define: isSsrBuild
     ? undefined
@@ -102,27 +108,6 @@ const config = defineConfig(({ isSsrBuild }) => ({
     strictPort: true,
   },
   plugins: [
-    // Client-only: wallet / x402 need util.deprecate, crypto, Buffer, etc.
-    // Never apply to SSR — Node builtins must stay real on the server.
-    !isSsrBuild &&
-      nodePolyfills({
-        include: [
-          'buffer',
-          'crypto',
-          'stream',
-          'util',
-          'events',
-          'process',
-          'path',
-          'string_decoder',
-        ],
-        globals: {
-          Buffer: true,
-          global: true,
-          process: true,
-        },
-        protocolImports: true,
-      }),
     devtools(),
     netlify({
       dev: {
@@ -133,7 +118,7 @@ const config = defineConfig(({ isSsrBuild }) => ({
     tailwindcss(),
     tanstackStart(),
     viteReact(),
-    ssrModuleRunnerBridge(),
+    ssrModuleRunnerBridge('localhost:5000'),
   ],
 }))
 
