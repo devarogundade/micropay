@@ -5,6 +5,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import netlify from '@netlify/vite-plugin-tanstack-start'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 /**
  * Vite 8 + duplicate `vite` resolutions make TanStack skip its SSR middleware
@@ -86,15 +87,10 @@ const config = defineConfig(({ isSsrBuild }) => ({
         __dirname,
         '../packages/site-meta/src/index.ts',
       ),
-      ...(isSsrBuild
-        ? {}
-        : {
-            buffer: 'buffer/',
-          }),
     },
   },
   optimizeDeps: {
-    include: ['buffer'],
+    include: ['buffer', 'process'],
   },
   define: isSsrBuild
     ? undefined
@@ -106,6 +102,27 @@ const config = defineConfig(({ isSsrBuild }) => ({
     strictPort: true,
   },
   plugins: [
+    // Client-only: wallet / x402 need util.deprecate, crypto, Buffer, etc.
+    // Never apply to SSR — Node builtins must stay real on the server.
+    !isSsrBuild &&
+      nodePolyfills({
+        include: [
+          'buffer',
+          'crypto',
+          'stream',
+          'util',
+          'events',
+          'process',
+          'path',
+          'string_decoder',
+        ],
+        globals: {
+          Buffer: true,
+          global: true,
+          process: true,
+        },
+        protocolImports: true,
+      }),
     devtools(),
     netlify({
       dev: {

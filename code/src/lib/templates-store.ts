@@ -3,34 +3,27 @@
  * Same DATABASE_URL as app; does not use Activity/User for clones.
  */
 
+import 'server-only'
+
 import type { Prisma } from '../generated/prisma/client.js'
 
 import { TEMPLATE_CLONE_USDC } from '#/data/models'
 import { prisma } from '#/lib/db'
 import { IDE_TEMPLATES } from '#/lib/ide-templates'
+import type {
+  TemplateDetail,
+  TemplateFile,
+  TemplateListItem,
+  TemplateSort,
+} from '#/lib/templates-types'
 
 export { TEMPLATE_CLONE_USDC }
-
-export type TemplateFile = { path: string; content: string }
-
-export type TemplateListItem = {
-  id: string
-  slug: string
-  name: string
-  description: string
-  category: string
-  projectName: string
-  activePath: string
-  clonedCount: number
-  featured: boolean
-  fileCount: number
-  createdAt: string
-  updatedAt: string
-}
-
-export type TemplateDetail = TemplateListItem & {
-  files: TemplateFile[]
-}
+export type {
+  TemplateDetail,
+  TemplateFile,
+  TemplateListItem,
+  TemplateSort,
+} from '#/lib/templates-types'
 
 const SEED_META: Record<
   string,
@@ -125,13 +118,6 @@ export async function ensureTemplatesSeeded(): Promise<void> {
   }
 }
 
-export type TemplateSort =
-  | 'popular'
-  | 'newest'
-  | 'name'
-  | 'clones-asc'
-  | 'clones-desc'
-
 export async function listTemplates(input: {
   q?: string
   category?: string
@@ -163,11 +149,12 @@ export async function listTemplates(input: {
     case 'name':
       orderBy = [{ name: 'asc' }]
       break
-    case 'clones-asc':
-      orderBy = [{ clonedCount: 'asc' }, { name: 'asc' }]
-      break
+    case 'clones':
     case 'clones-desc':
       orderBy = [{ clonedCount: 'desc' }, { name: 'asc' }]
+      break
+    case 'clones-asc':
+      orderBy = [{ clonedCount: 'asc' }, { name: 'asc' }]
       break
     case 'popular':
     default:

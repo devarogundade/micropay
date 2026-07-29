@@ -1,14 +1,15 @@
 /**
  * Client helpers for template browse + x402 clone.
+ * Must not import Prisma / templates-store (keeps DB out of the browser bundle).
  */
 
+import { TEMPLATE_CLONE_USDC } from '#/data/models'
 import { apiUrl } from '#/lib/api-url'
 import type {
   TemplateDetail,
   TemplateListItem,
   TemplateSort,
-} from '#/lib/templates-store'
-import { TEMPLATE_CLONE_USDC } from '#/lib/templates-store'
+} from '#/lib/templates-types'
 
 export { TEMPLATE_CLONE_USDC }
 export type { TemplateDetail, TemplateListItem, TemplateSort }
