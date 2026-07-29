@@ -86,7 +86,15 @@ const config = defineConfig(({ isSsrBuild }) => ({
         __dirname,
         '../packages/site-meta/src/index.ts',
       ),
+      ...(isSsrBuild
+        ? {}
+        : {
+            buffer: 'buffer/',
+          }),
     },
+  },
+  optimizeDeps: {
+    include: ['buffer'],
   },
   define: isSsrBuild
     ? undefined

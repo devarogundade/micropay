@@ -54,6 +54,7 @@
     "@x402/extensions": "2.19.0",
     "@x402/fetch": "^2.19.0",
     "algosdk": "^3.6.0",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "^3.15.0",

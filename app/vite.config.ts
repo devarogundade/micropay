@@ -16,7 +16,15 @@ const config = defineConfig(({ isSsrBuild }) => ({
         __dirname,
         '../packages/site-meta/src/index.ts',
       ),
+      ...(isSsrBuild
+        ? {}
+        : {
+            buffer: 'buffer/',
+          }),
     },
+  },
+  optimizeDeps: {
+    include: ['buffer'],
   },
   // Pera/Defly WalletConnect v1 reads `global.WebSocket` at module init.
   // Without this, the production client bundle leaves WalletConnect's default
