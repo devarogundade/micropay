@@ -1,9 +1,8 @@
 import { defineConfig, env } from 'prisma/config'
 
 /**
- * IDE product DB config. May share DATABASE_URL with app/, but tables live in
- * PostgreSQL schema `code` (see schema.prisma schemas=["code"]).
- * `db push` only manages that schema — never drops app/public tables.
+ * IDE product DB config. May share DATABASE_URL with app/.
+ * Tables are Code* in public — never app User / Activity / Chat*.
  */
 export default defineConfig({
   schema: './prisma/schema.prisma',

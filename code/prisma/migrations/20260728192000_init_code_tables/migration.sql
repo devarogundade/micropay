@@ -1,16 +1,14 @@
--- Baseline DDL for code-owned tables in PostgreSQL schema "code".
--- Applied via `npm run db:push` from code/ (scoped to schemas=["code"]).
--- App tables remain in public and are never touched by this package.
-
-CREATE SCHEMA IF NOT EXISTS "code";
+-- Baseline DDL for code-owned tables in public.
+-- Apply via `npm run db:migrate` / `db:push` from code/.
+-- Table names are Code* so they never collide with app User / Activity / Chat*.
 
 DO $$ BEGIN
-    CREATE TYPE "code"."CodeActivityStatus" AS ENUM ('settled', 'verified', 'failed');
+    CREATE TYPE "CodeActivityStatus" AS ENUM ('settled', 'verified', 'failed');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
-CREATE TABLE IF NOT EXISTS "code"."CodeUser" (
+CREATE TABLE IF NOT EXISTS "CodeUser" (
     "id" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "displayName" TEXT,
@@ -19,7 +17,7 @@ CREATE TABLE IF NOT EXISTS "code"."CodeUser" (
     CONSTRAINT "CodeUser_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "code"."CodeActivity" (
+CREATE TABLE IF NOT EXISTS "CodeActivity" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "walletAddress" TEXT,
@@ -27,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "code"."CodeActivity" (
     "modelName" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "costUsdc" DOUBLE PRECISION NOT NULL,
-    "status" "code"."CodeActivityStatus" NOT NULL,
+    "status" "CodeActivityStatus" NOT NULL,
     "txId" TEXT NOT NULL,
     "requestId" TEXT,
     "provider" TEXT,
@@ -37,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "code"."CodeActivity" (
     CONSTRAINT "CodeActivity_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "code"."CodeUserModelUsage" (
+CREATE TABLE IF NOT EXISTS "CodeUserModelUsage" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "modelSlug" TEXT NOT NULL,
@@ -47,7 +45,7 @@ CREATE TABLE IF NOT EXISTS "code"."CodeUserModelUsage" (
     CONSTRAINT "CodeUserModelUsage_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "code"."CodeTemplate" (
+CREATE TABLE IF NOT EXISTS "CodeTemplate" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -63,7 +61,7 @@ CREATE TABLE IF NOT EXISTS "code"."CodeTemplate" (
     CONSTRAINT "CodeTemplate_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "code"."CodeTemplateClone" (
+CREATE TABLE IF NOT EXISTS "CodeTemplateClone" (
     "id" TEXT NOT NULL,
     "templateId" TEXT NOT NULL,
     "walletAddress" TEXT,
@@ -72,3 +70,39 @@ CREATE TABLE IF NOT EXISTS "code"."CodeTemplateClone" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "CodeTemplateClone_pkey" PRIMARY KEY ("id")
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS "CodeUser_address_key" ON "CodeUser"("address");
+
+CREATE INDEX IF NOT EXISTS "CodeActivity_createdAt_idx" ON "CodeActivity"("createdAt");
+CREATE INDEX IF NOT EXISTS "CodeActivity_walletAddress_createdAt_idx" ON "CodeActivity"("walletAddress", "createdAt");
+CREATE INDEX IF NOT EXISTS "CodeActivity_userId_createdAt_idx" ON "CodeActivity"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "CodeActivity_status_idx" ON "CodeActivity"("status");
+CREATE INDEX IF NOT EXISTS "CodeActivity_type_idx" ON "CodeActivity"("type");
+
+CREATE UNIQUE INDEX IF NOT EXISTS "CodeUserModelUsage_userId_modelSlug_key" ON "CodeUserModelUsage"("userId", "modelSlug");
+CREATE INDEX IF NOT EXISTS "CodeUserModelUsage_userId_lastUsedAt_idx" ON "CodeUserModelUsage"("userId", "lastUsedAt");
+
+CREATE UNIQUE INDEX IF NOT EXISTS "CodeTemplate_slug_key" ON "CodeTemplate"("slug");
+CREATE INDEX IF NOT EXISTS "CodeTemplate_category_idx" ON "CodeTemplate"("category");
+CREATE INDEX IF NOT EXISTS "CodeTemplate_clonedCount_idx" ON "CodeTemplate"("clonedCount");
+CREATE INDEX IF NOT EXISTS "CodeTemplate_featured_clonedCount_idx" ON "CodeTemplate"("featured", "clonedCount");
+CREATE INDEX IF NOT EXISTS "CodeTemplate_name_idx" ON "CodeTemplate"("name");
+
+CREATE INDEX IF NOT EXISTS "CodeTemplateClone_templateId_createdAt_idx" ON "CodeTemplateClone"("templateId", "createdAt");
+CREATE INDEX IF NOT EXISTS "CodeTemplateClone_walletAddress_createdAt_idx" ON "CodeTemplateClone"("walletAddress", "createdAt");
+CREATE INDEX IF NOT EXISTS "CodeTemplateClone_createdAt_idx" ON "CodeTemplateClone"("createdAt");
+
+DO $$ BEGIN
+    ALTER TABLE "CodeActivity" ADD CONSTRAINT "CodeActivity_userId_fkey" FOREIGN KEY ("userId") REFERENCES "CodeUser"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    ALTER TABLE "CodeUserModelUsage" ADD CONSTRAINT "CodeUserModelUsage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "CodeUser"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    ALTER TABLE "CodeTemplateClone" ADD CONSTRAINT "CodeTemplateClone_templateId_fkey" FOREIGN KEY ("templateId") REFERENCES "CodeTemplate"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;

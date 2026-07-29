@@ -1,8 +1,6 @@
 // Micropay IDE (code) — product-owned Prisma schema.
-// Same DATABASE_URL Postgres instance as app/ is OK, but models/tables live in
-// the PostgreSQL schema `code` (never app User / Activity / Chat* / …).
-// Apply with `npm run db:push` (scoped to schemas=["code"] so public/app
-// tables are never touched).
+// Tables live in public with Code* names (never app User / Activity / Chat*).
+// Same DATABASE_URL as app/ is OK — names do not collide.
 
 generator client {
   provider = "prisma-client"
@@ -11,15 +9,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["code"]
 }
 
 enum CodeActivityStatus {
   settled
   verified
   failed
-
-  @@schema("code")
 }
 
 /// IDE wallet-keyed user (not app User).
@@ -31,8 +26,6 @@ model CodeUser {
   updatedAt   DateTime             @updatedAt
   activities  CodeActivity[]
   modelUsage  CodeUserModelUsage[]
-
-  @@schema("code")
 }
 
 /// IDE settled / failed paid usage (not app Activity).
@@ -58,7 +51,6 @@ model CodeActivity {
   @@index([userId, createdAt])
   @@index([status])
   @@index([type])
-  @@schema("code")
 }
 
 /// IDE per-wallet model usage (not app UserModelUsage).
@@ -73,7 +65,6 @@ model CodeUserModelUsage {
 
   @@unique([userId, modelSlug])
   @@index([userId, lastUsedAt])
-  @@schema("code")
 }
 
 /// IDE project template.
@@ -98,7 +89,6 @@ model CodeTemplate {
   @@index([clonedCount])
   @@index([featured, clonedCount])
   @@index([name])
-  @@schema("code")
 }
 
 /// Paid template clone event.
@@ -114,5 +104,4 @@ model CodeTemplateClone {
   @@index([templateId, createdAt])
   @@index([walletAddress, createdAt])
   @@index([createdAt])
-  @@schema("code")
 }
