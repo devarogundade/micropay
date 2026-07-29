@@ -636,13 +636,6 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
 
   return (
     <div ref={rootRef} className="flex h-full min-h-0 flex-col bg-void">
-      <div className="flex shrink-0 items-center gap-2 border-b border-brand-green/25 bg-brand-green/10 px-3 py-1.5 text-[11px] text-mist">
-        <img src="/assets/usdc.png" alt="" className="size-3.5" />
-        <span>
-          AI agent calls settle in USDC via x402. Template clones use
-          code-owned tables (0.05 USDC).
-        </span>
-      </div>
       <div className="ws-body flex min-h-0 flex-1 overflow-hidden">
         <aside
           className="hidden min-h-0 shrink-0 flex-col border-r border-border bg-carbon md:flex"
