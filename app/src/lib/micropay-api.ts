@@ -1,5 +1,6 @@
-/** Browser → Micropay server proxy (never talks to upstream with sk- directly). */
+/** Browser → Micropay Nest API (or same-origin Start proxy). */
 
+import { apiUrl } from '#/lib/api-url'
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '#/lib/storage-limits'
 
 export type StorageUploadResult = {
@@ -25,6 +26,9 @@ function errorMessage(raw: unknown, fallback: string): string {
   if (isRecord(err) && typeof err.message === 'string' && err.message) {
     return err.message
   }
+  if (typeof err === 'string' && err) return err
+  // Nest envelope sometimes puts message at top level under error.code
+  if (typeof raw.message === 'string' && raw.message) return raw.message
   return fallback
 }
 
@@ -48,7 +52,7 @@ export async function uploadToStorage(input: {
   )
   if (input.folder) form.append('folder', input.folder)
 
-  const res = await fetch('/api/v1/storage/upload', {
+  const res = await fetch(apiUrl('/api/v1/storage/upload'), {
     method: 'POST',
     body: form,
     signal: input.signal,
@@ -57,16 +61,30 @@ export async function uploadToStorage(input: {
   if (!res.ok) {
     throw new Error(errorMessage(raw, `Upload failed (${res.status})`))
   }
-  if (!isRecord(raw) || typeof raw.url !== 'string') {
+  // Support legacy flat shape and Nest `{ success, data }` envelope.
+  const payload =
+    isRecord(raw) && raw.success === true && isRecord(raw.data)
+      ? raw.data
+      : raw
+  if (!isRecord(payload) || typeof payload.url !== 'string') {
     throw new Error('Upload failed: invalid response')
   }
   return {
-    url: raw.url,
-    storagePath: String(raw.storagePath ?? ''),
-    size: typeof raw.size === 'number' ? raw.size : input.file.size,
-    mimeType: String(raw.mimeType ?? ''),
-    name: String(raw.name ?? input.filename ?? 'upload'),
-    bucket: String(raw.bucket ?? ''),
+    url: payload.url,
+    storagePath: String(
+      payload.storagePath ?? payload.key ?? '',
+    ),
+    size:
+      typeof payload.size === 'number'
+        ? payload.size
+        : typeof payload.sizeBytes === 'number'
+          ? payload.sizeBytes
+          : input.file.size,
+    mimeType: String(payload.mimeType ?? ''),
+    name: String(
+      payload.name ?? payload.originalName ?? input.filename ?? 'upload',
+    ),
+    bucket: String(payload.bucket ?? ''),
   }
 }
 
@@ -175,21 +193,33 @@ export async function proxyChatCompletions(input: {
   messages: ChatMessage[]
   verifyTee?: boolean
   stream?: boolean
+  /** Allowlist of server builtin tool names. */
+  toolNames?: string[]
+  /** OpenAI tools array; null disables tools. */
+  tools?: unknown[] | null
+  /** Prefer async job + WS (returns jobId when true). */
+  async?: boolean
   fetchImpl?: PaidFetch | null
   signal?: AbortSignal
-}): Promise<ProxyChatResult> {
-  if (input.stream) {
+}): Promise<ProxyChatResult & { jobId?: string }> {
+  if (input.stream && !input.async) {
     return streamChatCompletions(input)
   }
 
-  const res = await paidFetch(input.fetchImpl, '/api/v1/chat/completions', {
+  const res = await paidFetch(input.fetchImpl, apiUrl('/api/v1/chat/completions'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(input.async ? { 'x-async': '1' } : {}),
+    },
     body: JSON.stringify({
       model: input.model,
       messages: input.messages,
       verify_tee: input.verifyTee || undefined,
       stream: false,
+      async: input.async || undefined,
+      ...(input.toolNames ? { tool_names: input.toolNames } : {}),
+      ...(input.tools !== undefined ? { tools: input.tools } : {}),
     }),
     signal: input.signal,
   })
@@ -198,12 +228,27 @@ export async function proxyChatCompletions(input: {
   const raw = await readJson(res)
   const data = asChatCompletionJson(raw)
 
-  if (!res.ok) {
+  if (!res.ok && res.status !== 202) {
     return {
       ok: false,
       status: res.status,
       content: '',
       error: errorMessage(raw, `Request failed (${res.status})`),
+      raw,
+      paymentResponse,
+    }
+  }
+
+  if (
+    isRecord(raw) &&
+    typeof raw.jobId === 'string' &&
+    (res.status === 202 || input.async)
+  ) {
+    return {
+      ok: true,
+      status: res.status,
+      content: '',
+      jobId: raw.jobId,
       raw,
       paymentResponse,
     }
@@ -233,11 +278,13 @@ export async function streamChatCompletions(input: {
   model: string
   messages: ChatMessage[]
   verifyTee?: boolean
+  toolNames?: string[]
+  tools?: unknown[] | null
   fetchImpl?: PaidFetch | null
   signal?: AbortSignal
   onDelta?: (delta: { content?: string; reasoning?: string }) => void
 }): Promise<ProxyChatResult> {
-  const res = await paidFetch(input.fetchImpl, '/api/v1/chat/completions', {
+  const res = await paidFetch(input.fetchImpl, apiUrl('/api/v1/chat/completions'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -245,6 +292,8 @@ export async function streamChatCompletions(input: {
       messages: input.messages,
       verify_tee: input.verifyTee || undefined,
       stream: true,
+      ...(input.toolNames ? { tool_names: input.toolNames } : {}),
+      ...(input.tools !== undefined ? { tools: input.tools } : {}),
     }),
     signal: input.signal,
   })
@@ -410,27 +459,9 @@ function collectImageUrls(raw: unknown): string[] {
   return images
 }
 
-/** Friendly status label from an SSE job event payload. */
-function imageJobLabel(raw: unknown, fallback: string): string {
-  if (!isRecord(raw)) return fallback
-  if (typeof raw.label === 'string' && raw.label) return raw.label
-  if (typeof raw.status === 'string' && raw.status) {
-    const st = raw.status.toLowerCase()
-    if (st === 'queued' || st === 'pending') return 'Waiting in line…'
-    if (st === 'running' || st === 'processing' || st === 'in_progress') {
-      return 'Generating image…'
-    }
-    if (st === 'completed' || st === 'succeeded' || st === 'success') {
-      return 'Image ready'
-    }
-    if (st === 'failed' || st === 'error') return 'Generation failed'
-  }
-  return fallback
-}
-
 /**
- * Pay → submit async job → follow SSE status until images are ready.
- * Falls back to sync generations if the router returns images inline.
+ * Pay → submit async job → follow WebSocket `job.*` until images are ready.
+ * Falls back to HTTP job poll when realtime is unavailable.
  */
 export async function proxyImageGeneration(input: {
   model: string
@@ -440,6 +471,7 @@ export async function proxyImageGeneration(input: {
   fetchImpl?: PaidFetch | null
   signal?: AbortSignal
   onStatus?: (label: string) => void
+  walletAddress?: string
 }): Promise<{
   ok: boolean
   status: number
@@ -451,7 +483,7 @@ export async function proxyImageGeneration(input: {
   input.onStatus?.('Confirming payment…')
   const res = await paidFetch(
     input.fetchImpl,
-    '/api/v1/images/generations?async=1',
+    apiUrl('/api/v1/images/generations?async=1'),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -467,7 +499,7 @@ export async function proxyImageGeneration(input: {
   )
 
   const raw = await readJson(res)
-  if (!res.ok) {
+  if (!res.ok && res.status !== 202) {
     return {
       ok: false,
       status: res.status,
@@ -499,143 +531,65 @@ export async function proxyImageGeneration(input: {
     }
   }
 
-  const providerAddress =
-    typeof payload.provider_address === 'string'
-      ? payload.provider_address
-      : undefined
-  const qs = new URLSearchParams({ stream: '1', model: input.model })
-  if (providerAddress) qs.set('provider_address', providerAddress)
-
   input.onStatus?.('Waiting in line…')
-  const streamRes = await paidFetch(
-    input.fetchImpl,
-    `/api/v1/images/jobs/${encodeURIComponent(jobId)}?${qs}`,
-    {
-      method: 'GET',
-      headers: { Accept: 'text/event-stream' },
-      signal: input.signal,
-    },
-  )
 
-  if (!streamRes.ok) {
-    const errBody = await readJson(streamRes)
-    return {
-      ok: false,
-      status: streamRes.status,
-      images: [],
-      error: errorMessage(errBody, `Job stream failed (${streamRes.status})`),
-      raw: errBody,
-      jobId,
-    }
-  }
+  const { waitForJob } = await import('#/lib/realtime')
+  const waited = await waitForJob({
+    jobId,
+    walletAddress: input.walletAddress,
+    signal: input.signal,
+    onStatus: (label) => input.onStatus?.(label),
+    pollUrl: apiUrl(`/api/v1/images/jobs/${encodeURIComponent(jobId)}`),
+    fetchImpl: input.fetchImpl ?? undefined,
+  })
 
-  if (!streamRes.body) {
-    return {
-      ok: false,
-      status: streamRes.status,
-      images: [],
-      error: 'Empty job stream',
-      jobId,
-    }
-  }
-
-  const reader = streamRes.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-  let eventName = 'message'
-  let lastPayload: unknown
-  let completedPayload: unknown
-  let failedMessage: string | undefined
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split(/\r?\n/)
-      buffer = lines.pop() ?? ''
-
-      for (const line of lines) {
-        const trimmed = line.trimEnd()
-        if (!trimmed) {
-          eventName = 'message'
-          continue
-        }
-        if (trimmed.startsWith(':')) continue
-        if (trimmed.startsWith('event:')) {
-          eventName = trimmed.slice(6).trim()
-          continue
-        }
-        if (!trimmed.startsWith('data:')) continue
-        const dataStr = trimmed.slice(5).trim()
-        if (dataStr === '[DONE]') continue
-
-        let parsed: unknown = dataStr
-        try {
-          parsed = JSON.parse(dataStr) as unknown
-        } catch {
-          /* keep raw string */
-        }
-        lastPayload = parsed
-
-        if (eventName === 'status' || eventName === 'message') {
-          input.onStatus?.(imageJobLabel(parsed, 'Generating image…'))
-        } else if (eventName === 'completed') {
-          completedPayload = parsed
-          input.onStatus?.(imageJobLabel(parsed, 'Image ready'))
-        } else if (eventName === 'failed') {
-          failedMessage = errorMessage(
-            parsed,
-            imageJobLabel(parsed, 'Generation failed'),
-          )
-          if (isRecord(parsed) && isRecord(parsed.error)) {
-            const msg = parsed.error.message
-            if (typeof msg === 'string' && msg) failedMessage = msg
-          }
-        }
-      }
-    }
-  } catch (e) {
-    if (input.signal?.aborted) {
-      return {
-        ok: false,
-        status: 499,
-        images: [],
-        error: 'Stopped',
-        jobId,
-      }
-    }
-    throw e
-  }
-
-  if (failedMessage) {
+  if (!waited.ok) {
     return {
       ok: false,
       status: 502,
       images: [],
-      error: failedMessage,
-      raw: lastPayload,
+      error: waited.error || 'Image job failed',
+      raw: waited.event,
       jobId,
     }
   }
 
-  const images = collectImageUrls(completedPayload ?? lastPayload)
+  const images = collectImageUrls(waited.event?.result ?? waited.event)
   if (!images.length) {
+    // Final poll of history-shaped result or job payload
+    const pollRes = await paidFetch(
+      input.fetchImpl,
+      apiUrl(`/api/v1/images/jobs/${encodeURIComponent(jobId)}`),
+      { signal: input.signal },
+    )
+    const pollRaw = await readJson(pollRes)
+    const fromPoll = collectImageUrls(pollRaw)
+    if (fromPoll.length) {
+      input.onStatus?.('Image ready')
+      return {
+        ok: true,
+        status: 200,
+        images: fromPoll,
+        raw: pollRaw,
+        jobId,
+      }
+    }
     return {
       ok: false,
-      status: streamRes.status,
+      status: 502,
       images: [],
       error: 'No image data in job result',
-      raw: completedPayload ?? lastPayload,
+      raw: waited.event,
       jobId,
     }
   }
 
+  input.onStatus?.('Image ready')
   return {
     ok: true,
     status: 200,
     images,
-    raw: completedPayload ?? lastPayload,
+    raw: waited.event,
     jobId,
   }
 }
@@ -682,7 +636,7 @@ export async function proxyAudioTranscription(input: {
 
   const res = await paidFetch(
     input.fetchImpl,
-    '/api/v1/audio/transcriptions',
+    apiUrl('/api/v1/audio/transcriptions'),
     {
       method: 'POST',
       body: form,
@@ -737,7 +691,7 @@ export async function fetchImageHistory(input: {
   fetchImpl?: PaidFetch | null
   signal?: AbortSignal
 }): Promise<{ ok: boolean; data: ImageHistoryItem[]; error?: string }> {
-  const res = await paidFetch(input.fetchImpl, '/api/v1/images/history', {
+  const res = await paidFetch(input.fetchImpl, apiUrl('/api/v1/images/history'), {
     method: 'GET',
     signal: input.signal,
   })
@@ -765,7 +719,7 @@ export async function fetchTranscriptionHistory(input: {
   data: TranscriptionHistoryItem[]
   error?: string
 }> {
-  const res = await paidFetch(input.fetchImpl, '/api/v1/audio/history', {
+  const res = await paidFetch(input.fetchImpl, apiUrl('/api/v1/audio/history'), {
     method: 'GET',
     signal: input.signal,
   })

@@ -13,6 +13,7 @@
   "dependencies": {
     "@micropay/site-meta": "*",
     "gsap": "^3.15.0",
+    "lenis": "^1.3.25",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

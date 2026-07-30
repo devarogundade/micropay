@@ -1,7 +1,7 @@
 /**
- * Same-origin API helper for the TanStack Start IDE deploy.
- * Prefer relative paths so agent / compile / models hit this host.
- * Optional VITE_PUBLIC_API_URL bridges to another origin (e.g. local app).
+ * API helper for the IDE SPA.
+ * Set VITE_PUBLIC_API_URL to the NestJS backend (e.g. http://localhost:4000).
+ * Same-origin Start routes are thin proxies only — prefer Nest directly.
  */
 
 import { DEFAULT_APP_ORIGIN, DEFAULT_SITE_ORIGIN } from '@micropay/site-meta'

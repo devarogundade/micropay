@@ -448,6 +448,14 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
         body: JSON.stringify({ files, entry: entryPath }),
       })
       const raw: unknown = await res.json()
+      if (
+        raw &&
+        typeof raw === 'object' &&
+        'stub' in raw &&
+        (raw as { stub?: boolean }).stub
+      ) {
+        throw new Error('Server compile stub — using local preview')
+      }
       if (raw && typeof raw === 'object' && 'error' in raw && !('ok' in raw)) {
         const err = (raw as { error?: { message?: string } }).error
         throw new Error(err?.message || 'Compile request failed')

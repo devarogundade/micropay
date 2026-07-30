@@ -10,6 +10,7 @@ import {
   providerLabelFromTrace,
   type ChatMessage,
 } from '#/lib/micropay-api'
+import { IDE_AGENT_TOOLS } from '#/lib/ide-knowledge'
 import {
   createFolder,
   deletePath,
@@ -60,6 +61,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 async function postIdeAgent(input: {
   model: string
   messages: IdeAgentMessage[]
+  tools?: unknown[]
   fetchImpl?: typeof fetch | null
   signal?: AbortSignal
 }): Promise<{
@@ -81,6 +83,7 @@ async function postIdeAgent(input: {
       model: input.model,
       messages: input.messages,
       stream: false,
+      ...(input.tools ? { tools: input.tools } : {}),
     }),
     signal: input.signal,
   })
@@ -324,6 +327,7 @@ export async function runIdeAgentLoop(input: {
     const turn = await postIdeAgent({
       model: input.model,
       messages,
+      tools: IDE_AGENT_TOOLS,
       fetchImpl: input.fetchImpl,
       signal: input.signal,
     })

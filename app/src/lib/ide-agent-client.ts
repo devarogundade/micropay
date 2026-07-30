@@ -2,6 +2,7 @@
  * Client for POST /api/v1/ide/agent — tool-calling IDE agent loop.
  */
 
+import { apiUrl } from '#/lib/api-url'
 import type { CompileResult } from '#/lib/puya-ts-compile'
 import { compilePuyaTsSource } from '#/lib/puya-ts-compile'
 import {
@@ -9,6 +10,7 @@ import {
   providerLabelFromTrace,
   type ChatMessage,
 } from '#/lib/micropay-api'
+import { IDE_AGENT_TOOLS } from '#/lib/ide-knowledge'
 import {
   createFolder,
   deletePath,
@@ -59,6 +61,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 async function postIdeAgent(input: {
   model: string
   messages: IdeAgentMessage[]
+  tools?: unknown[]
   fetchImpl?: typeof fetch | null
   signal?: AbortSignal
 }): Promise<{
@@ -73,13 +76,14 @@ async function postIdeAgent(input: {
   assistantMessage: IdeAgentMessage | null
 }> {
   const f = input.fetchImpl ?? fetch
-  const res = await f('/api/v1/ide/agent', {
+  const res = await f(apiUrl('/api/v1/ide/agent'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: input.model,
       messages: input.messages,
       stream: false,
+      ...(input.tools ? { tools: input.tools } : {}),
     }),
     signal: input.signal,
   })
@@ -322,6 +326,7 @@ export async function runIdeAgentLoop(input: {
     const turn = await postIdeAgent({
       model: input.model,
       messages,
+      tools: IDE_AGENT_TOOLS,
       fetchImpl: input.fetchImpl,
       signal: input.signal,
     })

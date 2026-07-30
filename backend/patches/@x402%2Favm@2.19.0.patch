@@ -1,0 +1,130 @@
+diff --git a/dist/cjs/exact/client/index.js b/dist/cjs/exact/client/index.js
+index ee49e37cf88e7e4c4104de1d30316c0eb02806dd..93fbaf81683fa67209b5f51d1efe17e939e855df 100644
+--- a/dist/cjs/exact/client/index.js
++++ b/dist/cjs/exact/client/index.js
+@@ -55,8 +55,13 @@ var USDC_CONFIG = {
+ // src/utils.ts
+ var import_utils = require("@x402/core/utils");
+ var import_common2 = require("@algorandfoundation/algokit-utils/common");
++function bytesToBase64(bytes) {
++  let binary = "";
++  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
++  return globalThis.btoa(binary);
++}
+ function encodeTransaction(txn) {
+-  return Buffer.from(txn).toString("base64");
++  return bytesToBase64(txn instanceof Uint8Array ? txn : new Uint8Array(txn));
+ }
+ function isTestnetNetwork(network) {
+   return network === ALGORAND_TESTNET_CAIP2;
+diff --git a/dist/cjs/index.js b/dist/cjs/index.js
+index 6104a12ba28c5c7f28455d8e5b6efaa5d5f532a8..609040a7577e8a95812df109d5d65c189c34053d 100644
+--- a/dist/cjs/index.js
++++ b/dist/cjs/index.js
+@@ -96,11 +96,22 @@ function maxReasonableGroupFee(groupSize) {
+ // src/utils.ts
+ var import_utils = require("@x402/core/utils");
+ var import_common2 = require("@algorandfoundation/algokit-utils/common");
++function bytesToBase64(bytes) {
++  let binary = "";
++  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
++  return globalThis.btoa(binary);
++}
++function base64ToBytes(encoded) {
++  const binary = globalThis.atob(encoded);
++  const bytes = new Uint8Array(binary.length);
++  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
++  return bytes;
++}
+ function encodeTransaction(txn) {
+-  return Buffer.from(txn).toString("base64");
++  return bytesToBase64(txn instanceof Uint8Array ? txn : new Uint8Array(txn));
+ }
+ function decodeTransaction(encoded) {
+-  return new Uint8Array(Buffer.from(encoded, "base64"));
++  return base64ToBytes(encoded);
+ }
+ function decodeSignedTransaction(encoded) {
+   const bytes = decodeTransaction(encoded);
+@@ -156,7 +167,11 @@ function getGenesisHashFromTransaction(txn) {
+   if (!txn.genesisHash) {
+     throw new Error("Transaction does not have a genesis hash");
+   }
+-  return Buffer.from(txn.genesisHash).toString("base64");
++  return bytesToBase64(
++    txn.genesisHash instanceof Uint8Array
++      ? txn.genesisHash
++      : new Uint8Array(txn.genesisHash)
++  );
+ }
+ function validateGroupId(txns) {
+   if (txns.length <= 1) {
+@@ -165,7 +180,11 @@ function validateGroupId(txns) {
+   let expectedGroupId = null;
+   for (const txnBytes of txns) {
+     const txn = (0, import_transact.decodeTransaction)(txnBytes);
+-    const groupId = txn.group ? Buffer.from(txn.group).toString("base64") : null;
++    const groupId = txn.group
++      ? bytesToBase64(
++          txn.group instanceof Uint8Array ? txn.group : new Uint8Array(txn.group)
++        )
++      : null;
+     if (expectedGroupId === null) {
+       expectedGroupId = groupId;
+     } else if (groupId !== expectedGroupId) {
+diff --git a/dist/esm/chunk-QEY4CIDB.mjs b/dist/esm/chunk-QEY4CIDB.mjs
+index eb5ec7f1f71226fb022a76f09d7a2bd393c8576e..5ed6160dc906beba184186c9cf6afd69af337c32 100644
+--- a/dist/esm/chunk-QEY4CIDB.mjs
++++ b/dist/esm/chunk-QEY4CIDB.mjs
+@@ -12,11 +12,23 @@ import {
+ import { isValidAddress } from "@algorandfoundation/algokit-utils/common";
+ import { convertToTokenAmount, numberToDecimalString } from "@x402/core/utils";
+ import { Address, encodeAddress, decodeAddress } from "@algorandfoundation/algokit-utils/common";
++/** Browser-safe base64 helpers (avoid Node Buffer in client bundles). */
++function bytesToBase64(bytes) {
++  let binary = "";
++  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
++  return globalThis.btoa(binary);
++}
++function base64ToBytes(encoded) {
++  const binary = globalThis.atob(encoded);
++  const bytes = new Uint8Array(binary.length);
++  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
++  return bytes;
++}
+ function encodeTransaction(txn) {
+-  return Buffer.from(txn).toString("base64");
++  return bytesToBase64(txn instanceof Uint8Array ? txn : new Uint8Array(txn));
+ }
+ function decodeTransaction(encoded) {
+-  return new Uint8Array(Buffer.from(encoded, "base64"));
++  return base64ToBytes(encoded);
+ }
+ function decodeSignedTransaction(encoded) {
+   const bytes = decodeTransaction(encoded);
+@@ -72,7 +84,11 @@ function getGenesisHashFromTransaction(txn) {
+   if (!txn.genesisHash) {
+     throw new Error("Transaction does not have a genesis hash");
+   }
+-  return Buffer.from(txn.genesisHash).toString("base64");
++  return bytesToBase64(
++    txn.genesisHash instanceof Uint8Array
++      ? txn.genesisHash
++      : new Uint8Array(txn.genesisHash)
++  );
+ }
+ function validateGroupId(txns) {
+   if (txns.length <= 1) {
+@@ -81,7 +97,11 @@ function validateGroupId(txns) {
+   let expectedGroupId = null;
+   for (const txnBytes of txns) {
+     const txn = decodeUnsignedTxn(txnBytes);
+-    const groupId = txn.group ? Buffer.from(txn.group).toString("base64") : null;
++    const groupId = txn.group
++      ? bytesToBase64(
++          txn.group instanceof Uint8Array ? txn.group : new Uint8Array(txn.group)
++        )
++      : null;
+     if (expectedGroupId === null) {
+       expectedGroupId = groupId;
+     } else if (groupId !== expectedGroupId) {

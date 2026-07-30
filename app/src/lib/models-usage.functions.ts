@@ -1,47 +1,81 @@
-import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
+/**
+ * Recently used models — Nest `/api/v1/models/recent` + catalog join (no Prisma).
+ */
 
-import { listRecentModelUsage } from '#/lib/model-usage-store'
-import { getCatalogModels } from '#/lib/zg-catalog'
+import { apiUrl } from '#/lib/api-url'
 import { normalizeWalletAddress } from '#/lib/wallet-address'
+import type { Model } from '#/data/models'
+import { routerModelToUi } from '#/lib/zg-catalog'
+import type { RouterModel } from '#/lib/zg-router'
 
-export const fetchRecentlyUsedModels = createServerFn({ method: 'GET' })
-  .validator((data: unknown) =>
-    z
-      .object({
-        walletAddress: z.string().optional(),
-        limit: z.number().int().min(1).max(40).optional(),
-      })
-      .parse(data ?? {}),
+export type ModelUsageRow = {
+  modelSlug: string
+  modelName: string | null
+  lastUsedAt: string
+  useCount: number
+}
+
+function nestOrigin(): string {
+  return (
+    (typeof process !== 'undefined' &&
+      (process.env.VITE_PUBLIC_API_URL || process.env.NEST_API_URL)?.replace(
+        /\/$/,
+        '',
+      )) ||
+    apiUrl('').replace(/\/$/, '') ||
+    'http://localhost:4000'
   )
-  .handler(async ({ data }) => {
-    const empty = {
-      models: [] as Awaited<ReturnType<typeof getCatalogModels>>['models'],
-      usage: [] as Awaited<ReturnType<typeof listRecentModelUsage>>,
+}
+
+async function fetchCatalogModels(): Promise<Model[]> {
+  try {
+    const res = await fetch(`${nestOrigin()}/api/v1/models`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return []
+    const raw = (await res.json()) as {
+      data?: Array<RouterModel & { price_usdc?: number }>
     }
-    const wallet = normalizeWalletAddress(data.walletAddress)
-    if (!wallet) return empty
-
-    try {
-      const usage = await listRecentModelUsage({
-        walletAddress: wallet,
-        limit: data.limit ?? 5,
-      })
-      if (!usage.length) return { ...empty, usage }
-
-      const catalog = await getCatalogModels()
-      const bySlug = new Map(catalog.models.map((m) => [m.slug, m]))
-      for (const m of catalog.models) {
-        if (m.routerId) bySlug.set(m.routerId, m)
+    const list = Array.isArray(raw.data) ? raw.data : []
+    return list.map((rm) => {
+      const ui = routerModelToUi(rm)
+      if (typeof rm.price_usdc === 'number' && rm.price_usdc > 0) {
+        ui.priceUsdc = rm.price_usdc
       }
+      return ui
+    })
+  } catch {
+    return []
+  }
+}
 
-      const models = usage
-        .map((u) => bySlug.get(u.modelSlug))
-        .filter((m): m is NonNullable<typeof m> => Boolean(m))
+export async function fetchRecentlyUsedModels(input: {
+  data?: { walletAddress?: string; limit?: number }
+}): Promise<{ usage: ModelUsageRow[]; models: Model[] }> {
+  const empty = { usage: [] as ModelUsageRow[], models: [] as Model[] }
+  const wallet = normalizeWalletAddress(input.data?.walletAddress)
+  if (!wallet) return empty
 
-      return { models, usage }
-    } catch (err) {
-      console.error('[models] recently used unavailable', err)
-      return empty
-    }
-  })
+  const qs = new URLSearchParams()
+  if (input.data?.limit) qs.set('limit', String(input.data.limit))
+  const res = await fetch(
+    apiUrl(`/api/v1/models/recent${qs.toString() ? `?${qs}` : ''}`),
+    { headers: { 'X-Wallet-Address': wallet } },
+  )
+  if (!res.ok) return empty
+  const raw = (await res.json()) as { usage?: ModelUsageRow[] }
+  const usage = Array.isArray(raw.usage) ? raw.usage : []
+  if (!usage.length) return { ...empty, usage }
+
+  const catalog = await fetchCatalogModels()
+  const bySlug = new Map<string, Model>()
+  for (const m of catalog) {
+    bySlug.set(m.slug, m)
+    if (m.routerId) bySlug.set(m.routerId, m)
+  }
+  const models = usage
+    .map((u) => bySlug.get(u.modelSlug))
+    .filter((m): m is Model => Boolean(m))
+
+  return { models, usage }
+}

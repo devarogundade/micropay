@@ -10,10 +10,12 @@
   "scripts": {
     "dev:landing": "npm run dev --workspace=landing",
     "dev:code": "npm run dev --workspace=code",
+    "dev:app": "npm run dev --prefix app",
+    "dev:backend": "pnpm --dir backend start:dev",
     "build:landing": "npm run build --workspace=landing",
     "build:code": "npm run build --workspace=code",
-    "dev:app": "npm run dev --prefix app",
-    "build:app": "npm run build --prefix app"
+    "build:app": "npm run build --prefix app",
+    "build:backend": "pnpm --dir backend build"
   },
   "dependencies": {
     "@tanstack/router-generator": "^1.167.21",
