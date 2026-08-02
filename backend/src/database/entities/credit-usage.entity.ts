@@ -33,6 +33,12 @@ export class CreditUsageEntity {
   @Column({ type: 'bigint' })
   chargedMicros!: string;
 
+  @Column({ type: 'varchar', length: 16, default: 'reserved' })
+  status!: 'reserved' | 'consumed' | 'expired';
+
+  @Column({ type: 'timestamptz' })
+  expiresAt!: Date;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 }

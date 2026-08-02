@@ -5,6 +5,7 @@ import { ToolDefEntity } from '../../database/entities/tool-def.entity';
 import { AiModule } from '../ai/ai.module';
 import { ToolsRegistryService } from './tools-registry.service';
 import { ToolsOrchestratorService } from './tools-orchestrator.service';
+import { ToolsController } from './tools.controller';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ToolsOrchestratorService } from './tools-orchestrator.service';
     forwardRef(() => AiModule),
   ],
   providers: [ToolsRegistryService, ToolsOrchestratorService],
+  controllers: [ToolsController],
   exports: [ToolsRegistryService, ToolsOrchestratorService],
 })
 export class ToolsModule {}

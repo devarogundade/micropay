@@ -32,7 +32,38 @@ import { useWallet } from '#/lib/wallet'
 import 'swiper/css'
 import 'swiper/css/navigation'
 
+type SortKey = 'recommended' | 'price-asc' | 'price-desc' | 'name'
+type ModelTypeSearch = 'chat' | 'image' | 'audio'
+type ModelsSearch = { type?: ModelTypeSearch }
+
+function parseTypeSearch(value: unknown): ModelTypeSearch | undefined {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'chat') return 'chat'
+  if (normalized === 'image' || normalized === 'image-gen') return 'image'
+  if (normalized === 'audio') return 'audio'
+  return undefined
+}
+
+function searchToModelType(type?: ModelTypeSearch): 'all' | ModelType {
+  if (type === 'chat') return 'Chat'
+  if (type === 'image') return 'Image Gen'
+  if (type === 'audio') return 'Audio'
+  return 'all'
+}
+
+function modelTypeToSearch(type: 'all' | ModelType): ModelTypeSearch | undefined {
+  if (type === 'Chat') return 'chat'
+  if (type === 'Image Gen') return 'image'
+  if (type === 'Audio') return 'audio'
+  return undefined
+}
+
 export const Route = createFileRoute('/_shell/models/')({
+  validateSearch: (search: Record<string, unknown>): ModelsSearch => {
+    const type = parseTypeSearch(search.type)
+    return type ? { type } : {}
+  },
   loader: async ({ context: { queryClient } }) => {
     try {
       return await ensureModelsCatalog(queryClient)
@@ -51,14 +82,14 @@ export const Route = createFileRoute('/_shell/models/')({
   component: ModelsPage,
 })
 
-type SortKey = 'recommended' | 'price-asc' | 'price-desc' | 'name'
-
 function ModelsPage() {
   const catalog = Route.useLoaderData()
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
   const MODELS = catalog?.models ?? []
   const { account } = useWallet()
   const [q, setQ] = useState('')
-  const [type, setType] = useState<'all' | ModelType>('all')
+  const type = searchToModelType(search.type)
   const [sort, setSort] = useState<SortKey>('recommended')
   const root = useRef<HTMLDivElement>(null)
 
@@ -185,7 +216,16 @@ function ModelsPage() {
         </div>
         <Select
           value={type}
-          onValueChange={(v) => setType(v as 'all' | ModelType)}
+          onValueChange={(value) => {
+            const next = value as 'all' | ModelType
+            void navigate({
+              search: (previous) => ({
+                ...previous,
+                type: modelTypeToSearch(next),
+              }),
+              replace: true,
+            })
+          }}
         >
           <SelectTrigger className="h-11 w-full sm:h-9 sm:w-40" aria-label="Filter by type">
             <SelectValue placeholder="Type" />

@@ -60,7 +60,8 @@ export function ModelWorkspace({ model }: { model: Model }) {
   });
   const statsQuery = useQuery({
     queryKey: queryKeys.userStats(account?.address),
-    queryFn: () => fetchUserStats({ data: { walletAddress: account!.address } }),
+    queryFn: () =>
+      fetchUserStats({ data: { walletAddress: account!.address } }),
     enabled: Boolean(account?.address),
     staleTime: 15_000,
   });
@@ -113,19 +114,7 @@ export function ModelWorkspace({ model }: { model: Model }) {
 
   return (
     <div ref={rootRef} className="flex h-full min-h-0 flex-col bg-paper">
-      <header className="ws-header workspace-bar flex shrink-0 items-center gap-1.5 border-b border-border bg-snow px-2 sm:gap-3 sm:px-4">
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="h-8 shrink-0 gap-1.5 px-1.5 text-fog sm:px-2"
-        >
-          <Link to="/models">
-            <ArrowLeft className="size-4" />
-            <span className="hidden sm:inline">Models</span>
-          </Link>
-        </Button>
-
+      <header className="ws-header workspace-bar flex shrink-0 items-center gap-1.5 px-2 sm:gap-3 sm:px-4">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
             <ModelSwitcher current={model} models={catalog} busy={busy} />

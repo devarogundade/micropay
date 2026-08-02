@@ -102,8 +102,8 @@ export function PayConfirmDialog({
             </div>
           </div>
           <ol className="mt-4 space-y-1.5 text-xs text-muted-foreground">
-            <li>1. You confirm the amount in your wallet</li>
-            <li>2. Payment settles on Algorand</li>
+            <li>1. Your daily 0.1 USDC credit is applied first</li>
+            <li>2. You confirm only any remaining amount in your wallet</li>
             <li>3. Your result comes back</li>
           </ol>
         </div>

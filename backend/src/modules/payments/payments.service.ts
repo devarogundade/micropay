@@ -128,10 +128,13 @@ export class PaymentsService {
         })
       : null;
     const used = row ? Number(row.usedMicros) : 0;
+    const reserved = row ? Number(row.reservedMicros) : 0;
     return {
       allowanceUsdc: this.microsToUsdc(allowance),
       usedUsdc: this.microsToUsdc(used),
-      remainingUsdc: this.microsToUsdc(Math.max(0, allowance - used)),
+      remainingUsdc: this.microsToUsdc(
+        Math.max(0, allowance - used - reserved),
+      ),
       listPriceUsdc: 0,
       creditAppliedUsdc: 0,
       chargeUsdc: 0,
@@ -173,13 +176,14 @@ export class PaymentsService {
           day: existing.day,
         });
         const used = Number(daily.usedMicros);
+        const reserved = Number(daily.reservedMicros);
         const credit = Number(existing.creditMicros);
         const charged = Number(existing.chargedMicros);
         return {
           allowanceUsdc: this.microsToUsdc(Number(daily.allowanceMicros)),
           usedUsdc: this.microsToUsdc(used),
           remainingUsdc: this.microsToUsdc(
-            Math.max(0, Number(daily.allowanceMicros) - used),
+            Math.max(0, Number(daily.allowanceMicros) - used - reserved),
           ),
           listPriceUsdc: this.microsToUsdc(listMicros),
           creditAppliedUsdc: this.microsToUsdc(credit),
@@ -190,7 +194,7 @@ export class PaymentsService {
 
       const day = this.today();
       await manager.query(
-        `INSERT INTO "WalletDailyCredit" ("walletAddress", "day", "allowanceMicros", "usedMicros") VALUES ($1, $2, $3, 0) ON CONFLICT ("walletAddress", "day") DO NOTHING`,
+        `INSERT INTO "WalletDailyCredit" ("walletAddress", "day", "allowanceMicros", "usedMicros", "reservedMicros") VALUES ($1, $2, $3, 0, 0) ON CONFLICT ("walletAddress", "day") DO NOTHING`,
         [input.walletAddress, day, DAILY_CREDIT_MICROS],
       );
       const rows = (await manager.query(
@@ -201,14 +205,24 @@ export class PaymentsService {
       if (!daily) throw new Error('Unable to allocate daily credit');
       const allowance = Number(daily.allowanceMicros);
       const usedBefore = Number(daily.usedMicros);
-      const credit = Math.min(listMicros, Math.max(0, allowance - usedBefore));
+      let reservedBefore = Number(daily.reservedMicros);
+      const stale = (await manager.query(
+        `UPDATE "CreditUsage" SET "status" = 'expired' WHERE "walletAddress" = $1 AND "day" = $2 AND "status" = 'reserved' AND "expiresAt" < now() RETURNING "creditMicros"`,
+        [input.walletAddress, day],
+      )) as Array<{ creditMicros: string }>;
+      const released = stale.reduce((sum, row) => sum + Number(row.creditMicros), 0);
+      reservedBefore = Math.max(0, reservedBefore - released);
+      const credit = Math.min(
+        listMicros,
+        Math.max(0, allowance - usedBefore - reservedBefore),
+      );
       const charged = listMicros - credit;
-      const used = usedBefore + credit;
+      const reserved = reservedBefore + credit;
 
       await manager.update(
         WalletDailyCreditEntity,
         { walletAddress: input.walletAddress, day },
-        { usedMicros: String(used) },
+        { reservedMicros: String(reserved) },
       );
       await usageRepo.insert({
         requestId: input.requestId,
@@ -219,17 +233,45 @@ export class PaymentsService {
         listPriceMicros: String(listMicros),
         creditMicros: String(credit),
         chargedMicros: String(charged),
+        status: 'reserved',
+        expiresAt: new Date(Date.now() + 5 * 60_000),
       });
 
       return {
         allowanceUsdc: this.microsToUsdc(allowance),
-        usedUsdc: this.microsToUsdc(used),
-        remainingUsdc: this.microsToUsdc(Math.max(0, allowance - used)),
+        usedUsdc: this.microsToUsdc(usedBefore),
+        remainingUsdc: this.microsToUsdc(
+          Math.max(0, allowance - usedBefore - reserved),
+        ),
         listPriceUsdc: this.microsToUsdc(listMicros),
         creditAppliedUsdc: this.microsToUsdc(credit),
         chargeUsdc: this.microsToUsdc(charged),
         resetsAt: this.nextReset(),
       };
+    });
+  }
+
+  private async consumeCredit(requestId?: string): Promise<void> {
+    if (!requestId) return;
+    await this.dataSource.transaction(async (manager) => {
+      const usage = await manager.getRepository(CreditUsageEntity).findOne({
+        where: { requestId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!usage || usage.status !== 'reserved') return;
+      const daily = await manager.getRepository(WalletDailyCreditEntity).findOne({
+        where: { walletAddress: usage.walletAddress, day: usage.day },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!daily) return;
+      const credit = Number(usage.creditMicros);
+      daily.reservedMicros = String(
+        Math.max(0, Number(daily.reservedMicros) - credit),
+      );
+      daily.usedMicros = String(Number(daily.usedMicros) + credit);
+      usage.status = 'consumed';
+      await manager.save(WalletDailyCreditEntity, daily);
+      await manager.save(CreditUsageEntity, usage);
     });
   }
 
@@ -411,18 +453,21 @@ export class PaymentsService {
     if (amountToCharge === 0) {
       return {
         ok: true,
-        payTo: this.getPayTo(),
+        payTo: this.config.get<string>('x402.payTo') ?? '',
         priceUsdc: 0,
         paymentPayload: {} as PaymentPayload,
         paymentRequirements: {} as PaymentRequirements,
         credit,
-        settle: async () => ({
-          headers: {
-            'X-Credit-Applied': String(credit.creditAppliedUsdc),
-            'X-Credit-Remaining': String(credit.remainingUsdc),
-          },
-          txId: 'credit',
-        }),
+        settle: async () => {
+          await this.consumeCredit(input.requestId);
+          return {
+            headers: {
+              'X-Credit-Applied': String(credit.creditAppliedUsdc),
+              'X-Credit-Remaining': String(credit.remainingUsdc),
+            },
+            txId: 'credit',
+          };
+        },
       };
     }
 
@@ -605,7 +650,7 @@ export class PaymentsService {
     return {
       ok: true,
       payTo,
-      priceUsdc: input.priceUsdc,
+      priceUsdc: amountToCharge,
       credit,
       paymentPayload,
       paymentRequirements,
@@ -624,6 +669,7 @@ export class PaymentsService {
 
         if (settleResult.success) {
           const settleHeaders = settleResult.headers ?? {};
+          await this.consumeCredit(input.requestId);
           return {
             headers: settleHeaders,
             txId: this.txIdFromPaymentHeaders(settleHeaders),

@@ -81,6 +81,7 @@ export function ChatPanel({
   initialPrompt,
   freshSession = false,
   hideSidebar = false,
+  toolNames,
 }: {
   model: Model;
   onRequestPay: (action: () => Promise<void>) => void;
@@ -91,6 +92,8 @@ export function ChatPanel({
   freshSession?: boolean;
   /** Hide the desktop chat history sidebar (playground canvas). */
   hideSidebar?: boolean;
+  /** Explicit server selection; an empty array disables tools. */
+  toolNames?: string[];
 }) {
   const { account, fetchWithPay } = useWallet();
   const queryClient = useQueryClient();
@@ -505,11 +508,16 @@ export function ChatPanel({
       abortRef.current = ac;
 
       try {
-        const result = await streamChatCompletions({
+          const result = await streamChatCompletions({
           model: model.routerId ?? model.slug,
           messages: history.map(toApiMessage),
           fetchImpl: fetchWithPay,
-          signal: ac.signal,
+            signal: ac.signal,
+            ...(toolNames
+              ? toolNames.length
+                ? { toolNames }
+                : { tools: null }
+              : {}),
           onDelta: ({ content, reasoning }) => {
             setMessages((prev) =>
               prev.map((msg) => {

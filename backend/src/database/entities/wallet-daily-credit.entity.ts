@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 
 @Entity({ name: 'WalletDailyCredit' })
-@Check('"usedMicros" >= 0 AND "usedMicros" <= "allowanceMicros"')
+@Check('"usedMicros" >= 0 AND "reservedMicros" >= 0 AND "usedMicros" + "reservedMicros" <= "allowanceMicros"')
 export class WalletDailyCreditEntity {
   @PrimaryColumn({ type: 'varchar', length: 128 })
   walletAddress!: string;
@@ -21,6 +21,9 @@ export class WalletDailyCreditEntity {
 
   @Column({ type: 'bigint', default: '0' })
   usedMicros!: string;
+
+  @Column({ type: 'bigint', default: '0' })
+  reservedMicros!: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;

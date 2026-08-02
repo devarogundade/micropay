@@ -19,6 +19,7 @@ export const queryKeys = {
     ['recently-used-models', wallet ?? null] as const,
 
   modelsCatalog: ['models-catalog'] as const,
+  toolsCapabilities: ['tools-capabilities'] as const,
 
   chat: {
     all: ['chat'] as const,

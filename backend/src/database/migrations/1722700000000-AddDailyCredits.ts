@@ -10,10 +10,11 @@ export class AddDailyCredits1722700000000 implements MigrationInterface {
         "day" date NOT NULL,
         "allowanceMicros" bigint NOT NULL DEFAULT 100000,
         "usedMicros" bigint NOT NULL DEFAULT 0,
+        "reservedMicros" bigint NOT NULL DEFAULT 0,
         "createdAt" timestamptz NOT NULL DEFAULT now(),
         "updatedAt" timestamptz NOT NULL DEFAULT now(),
         CONSTRAINT "PK_WalletDailyCredit" PRIMARY KEY ("walletAddress", "day"),
-        CONSTRAINT "CHK_WalletDailyCredit_used" CHECK ("usedMicros" >= 0 AND "usedMicros" <= "allowanceMicros")
+        CONSTRAINT "CHK_WalletDailyCredit_used" CHECK ("usedMicros" >= 0 AND "reservedMicros" >= 0 AND "usedMicros" + "reservedMicros" <= "allowanceMicros")
       )
     `);
     await queryRunner.query(`
@@ -26,6 +27,8 @@ export class AddDailyCredits1722700000000 implements MigrationInterface {
         "listPriceMicros" bigint NOT NULL,
         "creditMicros" bigint NOT NULL,
         "chargedMicros" bigint NOT NULL,
+        "status" varchar(16) NOT NULL DEFAULT 'reserved',
+        "expiresAt" timestamptz NOT NULL,
         "createdAt" timestamptz NOT NULL DEFAULT now(),
         CONSTRAINT "PK_CreditUsage" PRIMARY KEY ("requestId")
       )

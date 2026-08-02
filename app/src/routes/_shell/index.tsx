@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -8,9 +9,7 @@ import {
   type ExploreMode,
 } from "#/components/models/playground-explore";
 import {
-  DEFAULT_PLAYGROUND_TOOLS,
   PlaygroundPromptBar,
-  type PlaygroundToolsState,
 } from "#/components/models/playground-prompt-bar";
 import {
   getSkipPayConfirm,
@@ -24,6 +23,8 @@ import {
   ensureModelsCatalog,
 } from "#/lib/models-catalog-query";
 import { useWallet } from "#/lib/wallet";
+import { fetchChatToolsCapabilities } from "#/lib/tools-capabilities";
+import { queryKeys } from "#/lib/query-keys";
 
 const ChatPanel = lazy(() =>
   import("#/components/models/chat-panel").then((m) => ({
@@ -69,9 +70,7 @@ function PlaygroundPage() {
 
   const [mode, setMode] = useState<ExploreMode>("models");
   const [input, setInput] = useState("");
-  const [tools, setTools] = useState<PlaygroundToolsState>(
-    DEFAULT_PLAYGROUND_TOOLS,
-  );
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [active, setActive] = useState(false);
   const [seedPrompt, setSeedPrompt] = useState<string | undefined>();
@@ -79,6 +78,15 @@ function PlaygroundPage() {
   const [payOpen, setPayOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const pendingRef = useRef<null | (() => Promise<void>)>(null);
+  const toolsQuery = useQuery({
+    queryKey: queryKeys.toolsCapabilities,
+    queryFn: fetchChatToolsCapabilities,
+    staleTime: 60_000,
+  });
+  const capabilities = toolsQuery.data?.tools ?? [];
+  const effectiveTools = selectedTools.filter((name) =>
+    capabilities.some((tool) => tool.name === name),
+  );
 
   const selectedModel = useMemo(() => {
     if (selectedSlug) {
@@ -184,6 +192,7 @@ function PlaygroundPage() {
               initialPrompt={seedPrompt}
               freshSession
               hideSidebar
+              toolNames={effectiveTools}
             />
           </Suspense>
         ) : (
@@ -202,8 +211,9 @@ function PlaygroundPage() {
               value={input}
               onChange={setInput}
               onRun={() => startChat(input)}
-              tools={tools}
-              onToolsChange={setTools}
+              capabilities={capabilities}
+              selectedTools={effectiveTools}
+              onSelectedToolsChange={setSelectedTools}
               onAttach={() =>
                 toast.message("Attach files after you start a chat")
               }

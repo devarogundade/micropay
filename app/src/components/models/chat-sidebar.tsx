@@ -1,30 +1,32 @@
-import { MessageSquarePlus, PanelLeftClose, PanelLeft, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-
-import type { SessionListItem } from '#/components/models/chat-types'
-import { EmptyState } from '#/components/ui/empty-state'
 import {
-  ListPagination,
-  slicePage,
-} from '#/components/ui/list-pagination'
-import { LoadingState } from '#/components/ui/loading-state'
-import { Button } from '#/components/ui/button'
-import { ScrollArea } from '#/components/ui/scroll-area'
-import { cn } from '#/lib/utils'
+  MessageSquarePlus,
+  PanelLeftClose,
+  PanelLeft,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-const PAGE_SIZE = 12
+import type { SessionListItem } from "#/components/models/chat-types";
+import { EmptyState } from "#/components/ui/empty-state";
+import { ListPagination, slicePage } from "#/components/ui/list-pagination";
+import { LoadingState } from "#/components/ui/loading-state";
+import { Button } from "#/components/ui/button";
+import { ScrollArea } from "#/components/ui/scroll-area";
+import { cn } from "#/lib/utils";
+
+const PAGE_SIZE = 12;
 
 function relativeTime(iso: string) {
-  const t = new Date(iso).getTime()
-  const diff = Date.now() - t
-  const m = Math.floor(diff / 60_000)
-  if (m < 1) return 'just now'
-  if (m < 60) return `${m}m`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h`
-  const d = Math.floor(h / 24)
-  if (d < 7) return `${d}d`
-  return new Date(iso).toLocaleDateString()
+  const t = new Date(iso).getTime();
+  const diff = Date.now() - t;
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  return new Date(iso).toLocaleDateString();
 }
 
 export function ChatSidebar({
@@ -39,42 +41,42 @@ export function ChatSidebar({
   busy,
   walletConnected,
 }: {
-  sessions: SessionListItem[]
-  activeSessionId: string | null
-  loading?: boolean
-  collapsed: boolean
-  onCollapsedChange: (v: boolean) => void
-  onSelect: (id: string) => void
-  onNewChat: () => void
-  onDelete: (id: string) => void
-  busy?: boolean
-  walletConnected: boolean
+  sessions: SessionListItem[];
+  activeSessionId: string | null;
+  loading?: boolean;
+  collapsed: boolean;
+  onCollapsedChange: (v: boolean) => void;
+  onSelect: (id: string) => void;
+  onNewChat: () => void;
+  onDelete: (id: string) => void;
+  busy?: boolean;
+  walletConnected: boolean;
 }) {
-  const [page, setPage] = useState(1)
-  const prevActiveRef = useRef<string | null>(null)
+  const [page, setPage] = useState(1);
+  const prevActiveRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(sessions.length / PAGE_SIZE))
-    if (page > totalPages) setPage(totalPages)
-  }, [sessions.length, page])
+    const totalPages = Math.max(1, Math.ceil(sessions.length / PAGE_SIZE));
+    if (page > totalPages) setPage(totalPages);
+  }, [sessions.length, page]);
 
   useEffect(() => {
-    if (!activeSessionId || activeSessionId === prevActiveRef.current) return
-    prevActiveRef.current = activeSessionId
-    const idx = sessions.findIndex((s) => s.id === activeSessionId)
-    if (idx < 0) return
-    setPage(Math.floor(idx / PAGE_SIZE) + 1)
-  }, [activeSessionId, sessions])
+    if (!activeSessionId || activeSessionId === prevActiveRef.current) return;
+    prevActiveRef.current = activeSessionId;
+    const idx = sessions.findIndex((s) => s.id === activeSessionId);
+    if (idx < 0) return;
+    setPage(Math.floor(idx / PAGE_SIZE) + 1);
+  }, [activeSessionId, sessions]);
 
   const pageSessions = useMemo(
     () => slicePage(sessions, page, PAGE_SIZE),
     [sessions, page],
-  )
+  );
 
   if (collapsed) {
     return (
-      <aside className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-snow">
-        <div className="workspace-bar flex w-full flex-col items-center justify-center gap-1 border-b border-border">
+      <aside className="flex h-full w-11 shrink-0 flex-col items-center">
+        <div className="workspace-bar flex w-full flex-col items-center justify-center gap-1">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -96,12 +98,12 @@ export function ChatSidebar({
           <MessageSquarePlus className="size-4" />
         </Button>
       </aside>
-    )
+    );
   }
 
   return (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-snow">
-      <div className="workspace-bar flex items-center gap-1 border-b border-border px-2">
+    <aside className="flex h-full w-[260px] shrink-0 flex-col">
+      <div className="workspace-bar flex items-center gap-1 px-2">
         <Button
           className="h-8 flex-1 justify-start gap-2 px-2.5 text-[13px]"
           size="sm"
@@ -142,15 +144,15 @@ export function ChatSidebar({
             />
           ) : (
             pageSessions.map((s) => {
-              const active = s.id === activeSessionId
+              const active = s.id === activeSessionId;
               return (
                 <div
                   key={s.id}
                   className={cn(
-                    'group flex items-start gap-1 rounded-md transition-colors',
+                    "group flex items-start gap-1 rounded-md transition-colors",
                     active
-                      ? 'bg-obsidian text-ink'
-                      : 'text-mist hover:bg-obsidian/60',
+                      ? "bg-obsidian text-ink"
+                      : "text-mist hover:bg-obsidian/60",
                   )}
                 >
                   <button
@@ -160,7 +162,7 @@ export function ChatSidebar({
                     disabled={busy}
                   >
                     <p className="truncate text-[13px] leading-snug">
-                      {s.title?.trim() || 'Untitled chat'}
+                      {s.title?.trim() || "Untitled chat"}
                     </p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-fog">
                       <span>{relativeTime(s.updatedAt)}</span>
@@ -176,8 +178,8 @@ export function ChatSidebar({
                     type="button"
                     className="mr-1 mt-1.5 rounded p-1 text-fog opacity-0 transition-opacity hover:bg-muted hover:text-coral-red group-hover:opacity-100"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      onDelete(s.id)
+                      e.stopPropagation();
+                      onDelete(s.id);
                     }}
                     disabled={busy}
                     aria-label="Delete chat"
@@ -185,7 +187,7 @@ export function ChatSidebar({
                     <Trash2 className="size-3.5" />
                   </button>
                 </div>
-              )
+              );
             })
           )}
         </div>
@@ -202,5 +204,5 @@ export function ChatSidebar({
         />
       ) : null}
     </aside>
-  )
+  );
 }
