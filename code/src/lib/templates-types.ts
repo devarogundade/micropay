@@ -13,6 +13,8 @@ export type TemplateListItem = {
   clonedCount: number
   featured: boolean
   fileCount: number
+  priceUsdc: number
+  priceSource?: string
   createdAt: string
   updatedAt: string
 }

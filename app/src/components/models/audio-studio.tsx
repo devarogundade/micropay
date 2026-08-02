@@ -89,6 +89,7 @@ export function AudioStudio({
   const { account, fetchWithPay } = useWallet();
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [language, setLanguage] = useState("auto");
   const [result, setResult] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -108,6 +109,16 @@ export function AudioStudio({
   useEffect(() => {
     return () => onBusyChange?.(false);
   }, [onBusyChange]);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   function loadHistory() {
     if (!account || !fetchWithPay) {
@@ -316,6 +327,18 @@ export function AudioStudio({
               <p className="mt-0.5 text-[11px] text-fog">
                 {formatBytes(file.size)}
               </p>
+              {previewUrl ? (
+                <audio
+                  key={previewUrl}
+                  controls
+                  preload="metadata"
+                  src={previewUrl}
+                  className="mt-3 h-10 w-full accent-ink"
+                  aria-label={`Preview ${file.name}`}
+                >
+                  Your browser does not support audio playback.
+                </audio>
+              ) : null}
             </div>
           ) : null}
 

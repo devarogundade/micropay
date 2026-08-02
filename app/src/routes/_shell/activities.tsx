@@ -47,7 +47,13 @@ const PAGE_SIZE = 15
 /** Algorand mainnet explorer for x402 settlement txs. */
 function explorerTxUrl(txId: string): string | null {
   const id = txId?.trim()
-  if (!id || id === '-' || id.toLowerCase() === 'unknown') return null
+  if (
+    !id ||
+    id === '-' ||
+    id.toLowerCase() === 'unknown' ||
+    id.toLowerCase() === 'credit'
+  )
+    return null
   return `https://lora.algokit.io/mainnet/transaction/${id}`
 }
 
@@ -330,14 +336,7 @@ function ActivitiesPage() {
                         </div>
                       }
                       meta={
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium tabular-nums text-foreground">
-                          <img
-                            src="/assets/usdc.png"
-                            alt=""
-                            className="size-3.5"
-                          />
-                          {formatUsdc(a.costUsdc)}
-                        </span>
+                        <ActivityCost activity={a} />
                       }
                     />
                   </ListCard>
@@ -409,14 +408,7 @@ function ActivitiesPage() {
                         <td className="px-4 py-3 font-medium">{a.modelName}</td>
                         <td className="px-4 py-3">{a.type}</td>
                         <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-1">
-                            <img
-                              src="/assets/usdc.png"
-                              alt=""
-                              className="size-3.5"
-                            />
-                            {formatUsdc(a.costUsdc)}
-                          </span>
+                          <ActivityCost activity={a} />
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge status={a.status} />
@@ -434,7 +426,7 @@ function ActivitiesPage() {
                               <ExternalLink className="size-3" />
                             </a>
                           ) : (
-                            a.txId || '—'
+                            a.txId === 'credit' ? 'No transaction' : a.txId || '—'
                           )}
                         </td>
                       </tr>
@@ -491,10 +483,7 @@ function ActivitiesPage() {
             <DetailRow
               label="Cost"
               value={
-                <span className="inline-flex items-center gap-1.5 font-medium tabular-nums">
-                  <img src="/assets/usdc.png" alt="" className="size-3.5" />
-                  {formatUsdc(selected.costUsdc)}
-                </span>
+                <ActivityCost activity={selected} />
               }
             />
             <DetailRow
@@ -505,7 +494,9 @@ function ActivitiesPage() {
               label="Transaction"
               value={
                 <span className="break-all font-mono text-xs text-muted-foreground">
-                  {selected.txId || '—'}
+                  {selected.txId === 'credit'
+                    ? 'No on-chain transaction (daily credit)'
+                    : selected.txId || '—'}
                 </span>
               }
             />
@@ -528,6 +519,22 @@ function DetailRow({
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
       <dd className="min-w-0 text-right text-ink">{value}</dd>
     </div>
+  )
+}
+
+function ActivityCost({ activity }: { activity: Activity }) {
+  if (activity.txId === 'credit' && activity.costUsdc === 0) {
+    return (
+      <span className="inline-flex items-center rounded-md bg-pulse-green/10 px-2 py-1 text-xs font-medium text-pulse-green">
+        Covered by credit
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 font-medium tabular-nums text-foreground">
+      <img src="/assets/usdc.png" alt="" className="size-3.5" />
+      {formatUsdc(activity.costUsdc)}
+    </span>
   )
 }
 

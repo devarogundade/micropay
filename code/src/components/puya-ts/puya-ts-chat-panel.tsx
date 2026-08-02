@@ -284,6 +284,14 @@ export function PuyaTsChatPanel({
         return
       }
 
+      if (result.creditAppliedUsdc) {
+        toast.success(
+          result.walletChargeUsdc
+            ? `${formatUsdc(result.creditAppliedUsdc)} credit + ${formatUsdc(result.walletChargeUsdc)} wallet charge`
+            : `Covered by ${formatUsdc(result.creditAppliedUsdc)} daily credit`,
+        )
+      }
+
       const finalContent = result.content || ''
       setMessages((prev) =>
         prev.map((m) =>

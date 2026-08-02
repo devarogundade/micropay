@@ -91,6 +91,7 @@ export class IdeController {
     return res!.status(200).json({
       template: result.template,
       costUsdc: result.costUsdc,
+      credit: result.credit,
       txId: result.txId,
     });
   }

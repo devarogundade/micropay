@@ -29,6 +29,16 @@ export type ClonedTemplatePayload = {
   featured: boolean
 }
 
+export type CreditBreakdown = {
+  allowanceUsdc: number
+  usedUsdc: number
+  remainingUsdc: number
+  listPriceUsdc: number
+  creditAppliedUsdc: number
+  chargeUsdc: number
+  resetsAt: string
+}
+
 export async function fetchTemplates(input?: {
   q?: string
   category?: string
@@ -77,6 +87,7 @@ export async function cloneTemplate(input: {
   template: ClonedTemplatePayload
   costUsdc: number
   txId?: string
+  credit?: CreditBreakdown
 }> {
   const f = input.fetchImpl ?? fetch
   const res = await f(apiUrl('/api/v1/clone'), {
@@ -88,6 +99,7 @@ export async function cloneTemplate(input: {
     template?: ClonedTemplatePayload
     costUsdc?: number
     txId?: string
+    credit?: CreditBreakdown
     error?: { message?: string }
   } | null
   if (!res.ok || !body?.template) {
@@ -99,6 +111,7 @@ export async function cloneTemplate(input: {
     template: body.template,
     costUsdc: body.costUsdc ?? TEMPLATE_CLONE_USDC,
     txId: body.txId,
+    credit: body.credit,
   }
 }
 

@@ -19,6 +19,9 @@ import {
   stashPendingTemplate,
 } from '#/lib/templates-client'
 import { useWallet } from '#/lib/wallet'
+import { fetchCreditStats } from '#/lib/credit-stats'
+import { queryKeys } from '#/lib/query-keys'
+import { invalidateUsageQueries } from '#/lib/query-invalidation'
 
 export const Route = createFileRoute('/templates/$id')({
   component: TemplateDetailPage,
@@ -44,11 +47,21 @@ function TemplateDetailPage() {
     queryKey: ['template', id],
     queryFn: () => fetchTemplate(id),
   })
+  const creditQuery = useQuery({
+    queryKey: queryKeys.userStats(account?.address),
+    queryFn: () => fetchCreditStats(account!.address),
+    enabled: Boolean(account?.address),
+    staleTime: 15_000,
+  })
 
   const template = query.data
   const previewPath =
     activeFile ?? template?.activePath ?? template?.files[0]?.path ?? null
   const previewFile = template?.files.find((f) => f.path === previewPath)
+  const listPrice = template?.priceUsdc ?? TEMPLATE_CLONE_USDC
+  const availableCredit = creditQuery.data?.dailyCreditRemainingUsdc ?? 0
+  const estimatedCredit = Math.min(listPrice, availableCredit)
+  const estimatedCharge = Math.max(0, listPrice - estimatedCredit)
 
   const cloneMutation = useMutation({
     mutationFn: async () => {
@@ -69,8 +82,14 @@ function TemplateDetailPage() {
       stashPendingTemplate(result.template)
       void queryClient.invalidateQueries({ queryKey: ['templates'] })
       void queryClient.invalidateQueries({ queryKey: ['template', id] })
+      void invalidateUsageQueries(queryClient, account?.address)
       toast.success(`Cloned ${result.template.name}`, {
-        description: `Charged ${formatUsdc(result.costUsdc)}. Opening IDE…`,
+        description:
+          result.credit && result.credit.creditAppliedUsdc > 0
+            ? result.costUsdc === 0
+              ? `Covered by ${formatUsdc(result.credit.creditAppliedUsdc)} daily credit. Opening IDE…`
+              : `${formatUsdc(result.credit.creditAppliedUsdc)} credit + ${formatUsdc(result.costUsdc)} wallet charge. Opening IDE…`
+            : `Charged ${formatUsdc(result.costUsdc)}. Opening IDE…`,
       })
       void navigate({ to: '/' })
     },
@@ -162,12 +181,24 @@ function TemplateDetailPage() {
             <div className="rounded-md border border-border bg-carbon px-4 py-4">
               <p className="text-xs text-fog">Clone price</p>
               <p className="mt-1 text-lg font-semibold text-paper">
-                {formatUsdc(TEMPLATE_CLONE_USDC)}
+                {formatUsdc(listPrice)}
               </p>
-              <p className="mt-2 text-[12px] text-muted-foreground">
-                Pays via x402 (Algorand USDC). Loads the project into your local
-                IDE workspace.
-              </p>
+              {account && creditQuery.data ? (
+                <div className="mt-3 space-y-1.5 rounded-xl border border-border bg-void p-3 text-[11px]">
+                  <div className="flex justify-between gap-3 text-fog">
+                    <span>Daily credit</span>
+                    <span className="text-pulse-green">-{formatUsdc(estimatedCredit)}</span>
+                  </div>
+                  <div className="flex justify-between gap-3 font-medium text-paper">
+                    <span>Due from wallet</span>
+                    <span>{formatUsdc(estimatedCharge)}</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-[12px] text-muted-foreground">
+                  Connect to apply your daily credit. Any remainder settles via x402.
+                </p>
+              )}
               <Button
                 className="mt-4 w-full"
                 disabled={cloneMutation.isPending}
@@ -183,7 +214,9 @@ function TemplateDetailPage() {
                 {cloneMutation.isPending
                   ? 'Cloning…'
                   : account
-                    ? `Clone · ${formatUsdc(TEMPLATE_CLONE_USDC)}`
+                    ? estimatedCharge === 0
+                      ? 'Clone with credit'
+                      : `Clone · ${formatUsdc(estimatedCharge)}`
                     : 'Connect to clone'}
               </Button>
             </div>

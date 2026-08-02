@@ -52,6 +52,8 @@ export type IdeAgentTurnResult = {
   provider?: string
   error?: string
   raw?: unknown
+  creditAppliedUsdc?: number
+  walletChargeUsdc?: number
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -74,6 +76,8 @@ async function postIdeAgent(input: {
   error?: string
   raw?: unknown
   assistantMessage: IdeAgentMessage | null
+  creditAppliedUsdc?: number
+  walletChargeUsdc?: number
 }> {
   const f = input.fetchImpl ?? fetch
   const res = await f(apiUrl('/api/v1/ide/agent'), {
@@ -122,6 +126,9 @@ async function postIdeAgent(input: {
     isRecord(raw) && isRecord(raw.x_0g_trace)
       ? (raw.x_0g_trace as Record<string, unknown>)
       : undefined
+  const credit = isRecord(raw) && isRecord(raw.micropay_credit)
+    ? raw.micropay_credit
+    : undefined
 
   const assistantMessage: IdeAgentMessage = {
     role: 'assistant',
@@ -137,6 +144,14 @@ async function postIdeAgent(input: {
     costUsdc: costUsdcFromTrace(trace),
     provider: providerLabelFromTrace(trace),
     raw,
+    creditAppliedUsdc:
+      credit && typeof credit.creditAppliedUsdc === 'number'
+        ? credit.creditAppliedUsdc
+        : undefined,
+    walletChargeUsdc:
+      credit && typeof credit.chargeUsdc === 'number'
+        ? credit.chargeUsdc
+        : undefined,
     assistantMessage,
   }
 }
@@ -301,6 +316,8 @@ export async function runIdeAgentLoop(input: {
   let lastProvider: string | undefined
   let lastStatus = 200
   let lastRaw: unknown
+  let totalCreditApplied = 0
+  let totalWalletCharge = 0
 
   const exec: IdeToolExecutor = {
     ...input.exec,
@@ -335,6 +352,8 @@ export async function runIdeAgentLoop(input: {
     lastRaw = turn.raw
     if (turn.costUsdc) totalCost += turn.costUsdc
     if (turn.provider) lastProvider = turn.provider
+    if (turn.creditAppliedUsdc) totalCreditApplied += turn.creditAppliedUsdc
+    if (turn.walletChargeUsdc) totalWalletCharge += turn.walletChargeUsdc
 
     if (!turn.ok || !turn.assistantMessage) {
       return {
@@ -366,6 +385,8 @@ export async function runIdeAgentLoop(input: {
         costUsdc: totalCost || undefined,
         provider: lastProvider,
         raw: lastRaw,
+        creditAppliedUsdc: totalCreditApplied || undefined,
+        walletChargeUsdc: totalWalletCharge || undefined,
       }
     }
 
@@ -392,6 +413,8 @@ export async function runIdeAgentLoop(input: {
     costUsdc: totalCost || undefined,
     provider: lastProvider,
     raw: lastRaw,
+    creditAppliedUsdc: totalCreditApplied || undefined,
+    walletChargeUsdc: totalWalletCharge || undefined,
   }
 }
 

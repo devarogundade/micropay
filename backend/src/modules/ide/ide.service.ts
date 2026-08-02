@@ -173,7 +173,16 @@ export class IdeService {
 
   async getTemplate(idOrSlug: string) {
     const row = await this.findTemplateEntity(idOrSlug);
-    return { template: this.toDetail(row) };
+    const priced = await this.pricing.resolveAmountForTemplate(row.slug, {
+      slug: row.slug,
+    });
+    return {
+      template: {
+        ...this.toDetail(row),
+        priceUsdc: priced.amount,
+        priceSource: priced.source,
+      },
+    };
   }
 
   async createTemplate(dto: CreateTemplateDto) {
@@ -318,6 +327,7 @@ export class IdeService {
       paymentRequired: false as const,
       template: this.toDetail(template),
       costUsdc: gate.priceUsdc,
+      credit: gate.credit,
       txId,
       paymentHeaders,
     };
@@ -429,6 +439,7 @@ export class IdeService {
           jobId: job.id,
           status: AiJobStatus.queued,
           type: AiJobType.ide_agent,
+          micropay_credit: gate.credit,
         },
         paymentHeaders,
       };
@@ -444,7 +455,10 @@ export class IdeService {
       return {
         paymentRequired: false as const,
         status: completion.status,
-        body: completion.data,
+        body: {
+          ...completion.data,
+          micropay_credit: gate.credit,
+        },
         paymentHeaders,
       };
     } catch (err) {
