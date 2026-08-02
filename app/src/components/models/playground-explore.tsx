@@ -21,7 +21,6 @@ const MODEL_CARDS: {
   icon: LucideIcon;
   accent: string;
   href?: string;
-  prompt?: string;
 }[] = [
   {
     id: "featured",
@@ -37,7 +36,6 @@ const MODEL_CARDS: {
     description: "Stream replies from frontier LLMs. Pay only when you run.",
     icon: Code2,
     accent: "bg-sky-100 text-sky-700",
-    prompt: "Explain how micropayments work for AI APIs in two sentences.",
     href: "https://code.micropay.website",
   },
   {
@@ -71,7 +69,6 @@ const MODEL_CARDS: {
       "Toggle structured outputs, search, and function calling in Tools.",
     icon: Bot,
     accent: "bg-emerald-100 text-emerald-700",
-    prompt: "List three ways agents can call paid MicroPay endpoints.",
     href: "/api-reference",
   },
 ];
@@ -115,11 +112,9 @@ const AGENT_CARDS: {
 export function PlaygroundExplore({
   mode,
   onModeChange,
-  onPrompt,
 }: {
   mode: ExploreMode;
   onModeChange: (mode: ExploreMode) => void;
-  onPrompt: (prompt: string) => void;
 }) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col px-4 pb-40 pt-8 sm:px-6 md:pt-12">
@@ -174,19 +169,6 @@ export function PlaygroundExplore({
                 </>
               );
 
-              if (card.prompt) {
-                return (
-                  <button
-                    key={card.id}
-                    type="button"
-                    onClick={() => onPrompt(card.prompt!)}
-                    className="surface-card rounded-2xl border border-border p-4 text-left transition-colors hover:border-smoke hover:bg-snow"
-                  >
-                    {inner}
-                  </button>
-                );
-              }
-
               return card.href && card.href.startsWith("http") ? (
                 <a
                   key={card.id}
@@ -219,7 +201,7 @@ export function PlaygroundExplore({
             return (
               <Link
                 key={card.id}
-                to={card.href as "/agents" | "/api-reference"}
+                to={card.href}
                 className="surface-card block rounded-2xl border border-border p-4 no-underline transition-colors hover:border-smoke hover:bg-snow"
               >
                 <span

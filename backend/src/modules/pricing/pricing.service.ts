@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,6 +31,17 @@ export class PricingService {
     private readonly repo: Repository<PricingRuleEntity>,
     private readonly config: ConfigService,
   ) {}
+
+  private validAmount(value: unknown, key: string): number {
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new InternalServerErrorException({
+        code: 'invalid_pricing',
+        message: `Pricing rule ${key} has an invalid USDC amount`,
+      });
+    }
+    return amount;
+  }
 
   /** Fallback USDC amount when a model/template has no active PricingRule. */
   getDefaultAmount(): number {
@@ -117,7 +132,7 @@ export class PricingService {
     const row = await qb.getOne();
     if (row) {
       return {
-        amount: row.priceUsdc,
+        amount: this.validAmount(row.priceUsdc, row.key),
         source: PriceResolveSource.rule,
         keyType: opts?.keyType,
         key: row.key,

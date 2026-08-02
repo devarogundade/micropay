@@ -201,10 +201,6 @@ function PlaygroundPage() {
               <PlaygroundExplore
                 mode={mode}
                 onModeChange={setMode}
-                onPrompt={(p) => {
-                  setInput(p);
-                  startChat(p);
-                }}
               />
             </div>
             <PlaygroundPromptBar

@@ -18,6 +18,7 @@ import {
   ChatIslandDock,
   chatIslandShellClassName,
 } from "#/components/models/chat-composer-island";
+import { ChatToolsSelector } from "#/components/models/chat-tools-selector";
 import { ChatSidebar } from "#/components/models/chat-sidebar";
 import { MarkdownMessage } from "#/components/models/markdown-message";
 import { ThinkingBlock } from "#/components/models/thinking-block";
@@ -66,6 +67,7 @@ import { queryKeys } from "#/lib/query-keys";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "#/lib/storage-limits";
 import { cn } from "#/lib/utils";
 import { useWallet } from "#/lib/wallet";
+import { fetchChatToolsCapabilities } from "#/lib/tools-capabilities";
 
 const NEAR_BOTTOM_PX = 96;
 
@@ -102,6 +104,7 @@ export function ChatPanel({
   const clearChatHistoryMutation = useClearChatHistoryMutation();
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const [workspaceTools, setWorkspaceTools] = useState<string[]>([]);
   const [busy, setBusyState] = useState(false);
 
   function setBusy(next: boolean) {
@@ -125,6 +128,15 @@ export function ChatPanel({
   }>({ content: "" });
   const modelKey = model.routerId ?? model.slug;
   const walletAddress = account?.address ?? null;
+  const toolsQuery = useQuery({
+    queryKey: queryKeys.toolsCapabilities,
+    queryFn: fetchChatToolsCapabilities,
+    staleTime: 60_000,
+  });
+  const capabilities = toolsQuery.data?.tools ?? [];
+  const effectiveToolNames = (toolNames ?? workspaceTools).filter((name) =>
+    capabilities.some((tool) => tool.name === name),
+  );
 
   const sessionsQuery = useQuery({
     queryKey: queryKeys.chat.sessions(walletAddress, modelKey),
@@ -513,9 +525,9 @@ export function ChatPanel({
           messages: history.map(toApiMessage),
           fetchImpl: fetchWithPay,
             signal: ac.signal,
-            ...(toolNames
-              ? toolNames.length
-                ? { toolNames }
+            ...(toolNames !== undefined || capabilities.length
+              ? effectiveToolNames.length
+                ? { toolNames: effectiveToolNames }
                 : { tools: null }
               : {}),
           onDelta: ({ content, reasoning }) => {
@@ -975,6 +987,14 @@ export function ChatPanel({
           ) : null}
 
           <div className={chatIslandShellClassName}>
+            {toolNames === undefined ? (
+              <ChatToolsSelector
+                capabilities={capabilities}
+                selectedTools={effectiveToolNames}
+                onSelectedToolsChange={setWorkspaceTools}
+                disabled={busy}
+              />
+            ) : null}
             <Button
               type="button"
               variant="ghost"

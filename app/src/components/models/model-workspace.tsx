@@ -1,6 +1,5 @@
-import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LogOut, Wallet } from "lucide-react";
+import { LogOut, Wallet } from "lucide-react";
 import { lazy, Suspense, useRef, useState } from "react";
 import { toast } from "sonner";
 

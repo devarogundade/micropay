@@ -113,11 +113,29 @@ export class PaymentsService {
   }
 
   private microsToUsdc(micros: number): number {
+    if (!Number.isSafeInteger(micros) || micros < 0) {
+      throw new Error('Credit ledger contains an invalid micro-USDC amount');
+    }
     return Number((micros / 1_000_000).toFixed(6));
   }
 
   private usdcToMicros(amount: number): number {
-    return Math.max(0, Math.round(amount * 1_000_000));
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error('Payment price must be a finite positive USDC amount');
+    }
+    const micros = Math.round(amount * 1_000_000);
+    if (!Number.isSafeInteger(micros) || micros <= 0) {
+      throw new Error('Payment price is outside the supported USDC range');
+    }
+    return micros;
+  }
+
+  private ledgerMicros(value: unknown, field: string): number {
+    const micros = Number(value);
+    if (!Number.isSafeInteger(micros) || micros < 0) {
+      throw new Error(`Credit ledger field ${field} is invalid`);
+    }
+    return micros;
   }
 
   async getDailyCredit(walletAddress?: string): Promise<CreditBreakdown> {
@@ -127,8 +145,10 @@ export class PaymentsService {
           where: { walletAddress, day: this.today() },
         })
       : null;
-    const used = row ? Number(row.usedMicros) : 0;
-    const reserved = row ? Number(row.reservedMicros) : 0;
+    const used = row ? this.ledgerMicros(row.usedMicros, 'usedMicros') : 0;
+    const reserved = row
+      ? this.ledgerMicros(row.reservedMicros, 'reservedMicros')
+      : 0;
     return {
       allowanceUsdc: this.microsToUsdc(allowance),
       usedUsdc: this.microsToUsdc(used),
@@ -167,7 +187,8 @@ export class PaymentsService {
       if (existing) {
         if (
           existing.walletAddress !== input.walletAddress ||
-          Number(existing.listPriceMicros) !== listMicros
+          this.ledgerMicros(existing.listPriceMicros, 'listPriceMicros') !==
+            listMicros
         ) {
           throw new Error('Credit request ID was reused for a different request');
         }
@@ -175,15 +196,25 @@ export class PaymentsService {
           walletAddress: existing.walletAddress,
           day: existing.day,
         });
-        const used = Number(daily.usedMicros);
-        const reserved = Number(daily.reservedMicros);
-        const credit = Number(existing.creditMicros);
-        const charged = Number(existing.chargedMicros);
+        const allowance = this.ledgerMicros(
+          daily.allowanceMicros,
+          'allowanceMicros',
+        );
+        const used = this.ledgerMicros(daily.usedMicros, 'usedMicros');
+        const reserved = this.ledgerMicros(
+          daily.reservedMicros,
+          'reservedMicros',
+        );
+        const credit = this.ledgerMicros(existing.creditMicros, 'creditMicros');
+        const charged = this.ledgerMicros(
+          existing.chargedMicros,
+          'chargedMicros',
+        );
         return {
-          allowanceUsdc: this.microsToUsdc(Number(daily.allowanceMicros)),
+          allowanceUsdc: this.microsToUsdc(allowance),
           usedUsdc: this.microsToUsdc(used),
           remainingUsdc: this.microsToUsdc(
-            Math.max(0, Number(daily.allowanceMicros) - used - reserved),
+            Math.max(0, allowance - used - reserved),
           ),
           listPriceUsdc: this.microsToUsdc(listMicros),
           creditAppliedUsdc: this.microsToUsdc(credit),
@@ -203,14 +234,24 @@ export class PaymentsService {
       )) as WalletDailyCreditEntity[];
       const daily = rows[0];
       if (!daily) throw new Error('Unable to allocate daily credit');
-      const allowance = Number(daily.allowanceMicros);
-      const usedBefore = Number(daily.usedMicros);
-      let reservedBefore = Number(daily.reservedMicros);
+      const allowance = this.ledgerMicros(
+        daily.allowanceMicros,
+        'allowanceMicros',
+      );
+      const usedBefore = this.ledgerMicros(daily.usedMicros, 'usedMicros');
+      let reservedBefore = this.ledgerMicros(
+        daily.reservedMicros,
+        'reservedMicros',
+      );
       const stale = (await manager.query(
         `UPDATE "CreditUsage" SET "status" = 'expired' WHERE "walletAddress" = $1 AND "day" = $2 AND "status" = 'reserved' AND "expiresAt" < now() RETURNING "creditMicros"`,
         [input.walletAddress, day],
       )) as Array<{ creditMicros: string }>;
-      const released = stale.reduce((sum, row) => sum + Number(row.creditMicros), 0);
+      const released = stale.reduce(
+        (sum, row) =>
+          sum + this.ledgerMicros(row.creditMicros, 'creditMicros'),
+        0,
+      );
       reservedBefore = Math.max(0, reservedBefore - released);
       const credit = Math.min(
         listMicros,
@@ -264,11 +305,16 @@ export class PaymentsService {
         lock: { mode: 'pessimistic_write' },
       });
       if (!daily) return;
-      const credit = Number(usage.creditMicros);
-      daily.reservedMicros = String(
-        Math.max(0, Number(daily.reservedMicros) - credit),
+      const credit = this.ledgerMicros(usage.creditMicros, 'creditMicros');
+      const reserved = this.ledgerMicros(
+        daily.reservedMicros,
+        'reservedMicros',
       );
-      daily.usedMicros = String(Number(daily.usedMicros) + credit);
+      const used = this.ledgerMicros(daily.usedMicros, 'usedMicros');
+      daily.reservedMicros = String(
+        Math.max(0, reserved - credit),
+      );
+      daily.usedMicros = String(used + credit);
       usage.status = 'consumed';
       await manager.save(WalletDailyCreditEntity, daily);
       await manager.save(CreditUsageEntity, usage);
