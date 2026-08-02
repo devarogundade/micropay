@@ -1,9 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Blocks,
+  Coins,
   History,
+  KeyRound,
   Loader2,
   Send,
   Square,
+  Vote,
   Wrench,
 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -21,7 +25,6 @@ import {
   type Msg,
   type SessionListItem,
 } from '#/components/models/chat-types'
-import { EmptyState } from '#/components/ui/empty-state'
 import { Button } from '#/components/ui/button'
 import {
   Sheet,
@@ -197,8 +200,8 @@ export function PuyaTsChatPanel({
     }
   }
 
-  function send() {
-    const text = input.trim()
+  function send(prompt?: string) {
+    const text = (prompt ?? input).trim()
     if (!text || busy) return
     if (!account || !fetchWithPay) {
       toast.message('Connect a wallet to pay')
@@ -419,13 +422,37 @@ export function PuyaTsChatPanel({
               Loading…
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center text-center">
-              <EmptyState
-                compact
-                className="mx-auto max-w-sm text-center"
-                title="Ask the assistant"
-                description="Edit files, create folders, compile your project, or list contract methods — just ask in plain language."
-              />
+            <div className="flex flex-1 items-center justify-center py-6">
+              <div className="mx-auto w-full max-w-lg">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-paper">Build from an idea</p>
+                  <p className="mt-1 text-xs text-fog">
+                    Pick a starter and the assistant will create the files, explain the design,
+                    and compile it.
+                  </p>
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {IDE_STARTER_PROMPTS.map(({ title, description, prompt, icon: Icon }) => (
+                    <button
+                      key={title}
+                      type="button"
+                      className="group rounded-xl border border-border bg-carbon p-3 text-left transition-colors hover:border-smoke hover:bg-obsidian"
+                      onClick={() => send(prompt)}
+                      disabled={busy}
+                    >
+                      <span className="flex size-8 items-center justify-center rounded-lg bg-graphite text-acid-lime">
+                        <Icon className="size-4" />
+                      </span>
+                      <span className="mt-2 block text-[13px] font-medium text-paper">
+                        {title}
+                      </span>
+                      <span className="mt-1 block text-[11px] leading-snug text-fog">
+                        {description}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -497,7 +524,7 @@ export function PuyaTsChatPanel({
               <Button
                 size="icon"
                 className="size-10 shrink-0 rounded-full"
-                onClick={send}
+                onClick={() => send()}
                 disabled={!input.trim()}
                 aria-label="Send"
               >
@@ -510,3 +537,34 @@ export function PuyaTsChatPanel({
     </div>
   )
 }
+
+const IDE_STARTER_PROMPTS = [
+  {
+    title: 'Milestone escrow',
+    description: 'Staged releases for grants, bounties, and freelance work.',
+    icon: Coins,
+    prompt:
+      'Create a polished multi-file Algorand TypeScript milestone escrow project. Include a contract state machine for staged approvals and releases, a README with security assumptions, then compile it and fix any diagnostics.',
+  },
+  {
+    title: 'Community voting',
+    description: 'Weighted proposals with room for box-backed voter receipts.',
+    icon: Vote,
+    prompt:
+      'Scaffold a multi-file Algorand TypeScript community voting project with proposal state, weighted yes/no votes, a README describing duplicate-vote protection with boxes, then compile and fix it.',
+  },
+  {
+    title: 'Token-gated club',
+    description: 'ASA membership tiers and rotating access epochs.',
+    icon: KeyRound,
+    prompt:
+      'Build a multi-file Algorand TypeScript token-gated membership project with configurable ASA and minimum balance, access epochs, extension notes for tiers, then compile and fix all diagnostics.',
+  },
+  {
+    title: 'API credit meter',
+    description: 'Prepaid usage for AI agents and machine-to-machine APIs.',
+    icon: Blocks,
+    prompt:
+      'Create a multi-file Algorand TypeScript prepaid API credit meter with issued, consumed, and remaining credit state, a README for per-user box storage and authorization, then compile and fix it.',
+  },
+] as const

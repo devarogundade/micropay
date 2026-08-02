@@ -25,6 +25,7 @@ import {
 import { useWallet } from "#/lib/wallet";
 import { fetchChatToolsCapabilities } from "#/lib/tools-capabilities";
 import { queryKeys } from "#/lib/query-keys";
+import { fetchUserStats } from "#/lib/activities.functions";
 
 const ChatPanel = lazy(() =>
   import("#/components/models/chat-panel").then((m) => ({
@@ -83,6 +84,12 @@ function PlaygroundPage() {
     queryFn: fetchChatToolsCapabilities,
     staleTime: 60_000,
   });
+  const statsQuery = useQuery({
+    queryKey: queryKeys.userStats(account?.address),
+    queryFn: () => fetchUserStats({ data: { walletAddress: account!.address } }),
+    enabled: Boolean(account?.address),
+    staleTime: 15_000,
+  });
   const capabilities = toolsQuery.data?.tools ?? [];
   const effectiveTools = selectedTools.filter((name) =>
     capabilities.some((tool) => tool.name === name),
@@ -113,7 +120,12 @@ function PlaygroundPage() {
       toast.message("Connect a wallet to pay");
       return;
     }
-    if (getSkipPayConfirm()) {
+    if (
+      getSkipPayConfirm() ||
+      (selectedModel &&
+        (statsQuery.data?.dailyCreditRemainingUsdc ?? 0) >=
+          selectedModel.priceUsdc)
+    ) {
       runPaidAction(action);
       return;
     }

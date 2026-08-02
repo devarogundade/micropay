@@ -243,10 +243,16 @@ export class PaymentsService {
         daily.reservedMicros,
         'reservedMicros',
       );
-      const stale = (await manager.query(
+      const staleResult = (await manager.query(
         `UPDATE "CreditUsage" SET "status" = 'expired' WHERE "walletAddress" = $1 AND "day" = $2 AND "status" = 'reserved' AND "expiresAt" < now() RETURNING "creditMicros"`,
         [input.walletAddress, day],
-      )) as Array<{ creditMicros: string }>;
+      )) as unknown;
+      // TypeORM's Postgres driver can return UPDATE results as [rows, count].
+      const stale = (
+        Array.isArray(staleResult) && Array.isArray(staleResult[0])
+          ? staleResult[0]
+          : staleResult
+      ) as Array<{ creditMicros: string }>;
       const released = stale.reduce(
         (sum, row) =>
           sum + this.ledgerMicros(row.creditMicros, 'creditMicros'),

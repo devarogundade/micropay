@@ -26,6 +26,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from 'react'
 import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
 
 import { BrandMark } from '#/components/brand'
 import { ModelSwitcher } from '#/components/models/model-switcher'
@@ -123,6 +124,8 @@ import {
 import { useClientGsap } from '#/lib/use-client-gsap'
 import { cn } from '#/lib/utils'
 import { useWallet } from '#/lib/wallet'
+import { fetchUserStats } from '#/lib/activities.functions'
+import { queryKeys } from '#/lib/query-keys'
 
 const LAYOUT_KEY = 'micropay.puya-ts.ide.layout.v1'
 const NETWORK_KEY = 'micropay.puya-ts.ide.network.v1'
@@ -295,6 +298,12 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
     fetchWithPay,
     signTransactions,
   } = useWallet()
+  const creditQuery = useQuery({
+    queryKey: queryKeys.userStats(account?.address),
+    queryFn: () => fetchUserStats({ data: { walletAddress: account!.address } }),
+    enabled: Boolean(account?.address),
+    staleTime: 15_000,
+  })
 
   const active = getActiveFile(project)
   const filename = active?.path ?? 'untitled.algo.ts'
@@ -394,7 +403,10 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       toast.message('Connect a wallet to pay')
       return
     }
-    if (getSkipPayConfirm()) {
+    if (
+      getSkipPayConfirm() ||
+      (creditQuery.data?.dailyCreditRemainingUsdc ?? 0) >= model.priceUsdc
+    ) {
       runPaidAction(action)
       return
     }

@@ -99,7 +99,10 @@ export function ModelWorkspace({ model }: { model: Model }) {
       toast.message("Connect a wallet to pay");
       return;
     }
-    if (getSkipPayConfirm()) {
+    if (
+      getSkipPayConfirm() ||
+      (statsQuery.data?.dailyCreditRemainingUsdc ?? 0) >= model.priceUsdc
+    ) {
       runPaidAction(action);
       return;
     }
@@ -170,7 +173,7 @@ export function ModelWorkspace({ model }: { model: Model }) {
               onClick={() => setConnectOpen(true)}
             >
               <Wallet className="size-4" />
-              <span className="hidden sm:inline">Pay with wallet</span>
+              <span className="hidden sm:inline">Connect wallet</span>
             </Button>
           )}
         </div>

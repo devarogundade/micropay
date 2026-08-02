@@ -433,7 +433,10 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       toast.message('Connect a wallet to pay')
       return
     }
-    if (getSkipPayConfirm()) {
+    if (
+      getSkipPayConfirm() ||
+      (creditQuery.data?.dailyCreditRemainingUsdc ?? 0) >= model.priceUsdc
+    ) {
       runPaidAction(action)
       return
     }

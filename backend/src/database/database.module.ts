@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ALL_ENTITIES } from './entities';
 import { AddImageJobResult1722600000000 } from './migrations/1722600000000-AddImageJobResult';
 import { AddDailyCredits1722700000000 } from './migrations/1722700000000-AddDailyCredits';
+import { SeedCodeTemplates1722800000000 } from './migrations/1722800000000-SeedCodeTemplates';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AddDailyCredits1722700000000 } from './migrations/1722700000000-AddDail
           migrations: [
             AddImageJobResult1722600000000,
             AddDailyCredits1722700000000,
+            SeedCodeTemplates1722800000000,
           ],
           synchronize: config.get<boolean>('database.sync') ?? false,
           logging: config.get<boolean>('database.logging') ?? false,

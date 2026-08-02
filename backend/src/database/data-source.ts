@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { ALL_ENTITIES } from './entities';
 import { AddImageJobResult1722600000000 } from './migrations/1722600000000-AddImageJobResult';
 import { AddDailyCredits1722700000000 } from './migrations/1722700000000-AddDailyCredits';
+import { SeedCodeTemplates1722800000000 } from './migrations/1722800000000-SeedCodeTemplates';
 
 const url = process.env.DATABASE_URL;
 
@@ -19,7 +20,11 @@ export default new DataSource({
   type: 'postgres',
   url,
   entities: ALL_ENTITIES,
-  migrations: [AddImageJobResult1722600000000, AddDailyCredits1722700000000],
+  migrations: [
+    AddImageJobResult1722600000000,
+    AddDailyCredits1722700000000,
+    SeedCodeTemplates1722800000000,
+  ],
   synchronize: false,
   ssl: databaseSsl ? { rejectUnauthorized: false } : false,
 });
