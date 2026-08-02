@@ -252,13 +252,13 @@ export function AudioStudio({
 
   return (
     <div className="grid h-full min-h-0 gap-0 lg:grid-cols-[minmax(280px,340px)_1fr]">
-      <aside className="flex min-h-0 flex-col border-b border-border bg-carbon lg:border-b-0 lg:border-r">
+      <aside className="flex min-h-0 flex-col border-b border-border bg-snow lg:border-b-0 lg:border-r">
         <div className="flex h-10 shrink-0 items-center border-b border-border px-4 lg:h-[var(--app-header-height)]">
           <div>
             <p className="text-[11px] uppercase tracking-wider text-fog">
               Studio
             </p>
-            <h2 className="text-sm font-medium leading-none text-paper">
+            <h2 className="text-sm font-medium leading-none text-ink">
               Audio transcription
             </h2>
           </div>
@@ -270,7 +270,7 @@ export function AudioStudio({
               'flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed px-4 py-8 transition-colors',
               dragOver
                 ? 'border-primary bg-primary/5'
-                : 'border-border bg-void/60',
+                : 'border-border bg-muted/60',
             )}
             onDragOver={(e) => {
               e.preventDefault()
@@ -285,7 +285,7 @@ export function AudioStudio({
           >
             <Upload className="size-7 text-muted-foreground" />
             <div className="text-center">
-              <p className="text-sm font-medium text-paper">Drop audio here</p>
+              <p className="text-sm font-medium text-ink">Drop audio here</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 mp3, wav, m4a, webm, ogg · max {MAX_UPLOAD_LABEL}
               </p>
@@ -310,7 +310,7 @@ export function AudioStudio({
           </div>
 
           {file ? (
-            <div className="rounded-xl border border-border bg-void p-3 shadow-[inset_0_0_0_1px_rgb(35,37,42)]">
+            <div className="rounded-xl border border-border bg-paper p-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]">
               <WaveformBars active={busy} />
               <p className="mt-3 truncate text-xs text-mist">{file.name}</p>
               <p className="mt-0.5 text-[11px] text-fog">
@@ -322,7 +322,7 @@ export function AudioStudio({
           <div className="space-y-2">
             <Label>Language (optional)</Label>
             <Select value={language} onValueChange={setLanguage} disabled={busy}>
-              <SelectTrigger className="w-full bg-void" aria-label="Language">
+              <SelectTrigger className="w-full bg-paper" aria-label="Language">
                 <SelectValue placeholder="Language" />
               </SelectTrigger>
               <SelectContent>
@@ -397,7 +397,7 @@ export function AudioStudio({
                           'w-full rounded-md border px-2.5 py-2 text-left transition-colors',
                           activeId === item.id
                             ? 'border-mist/30 bg-obsidian'
-                            : 'border-transparent hover:border-border hover:bg-void/80',
+                            : 'border-transparent hover:border-border hover:bg-paper/80',
                         )}
                       >
                         <p className="truncate text-[12px] text-mist">
@@ -422,8 +422,8 @@ export function AudioStudio({
         </div>
       </aside>
 
-      <div className="flex min-h-0 flex-col bg-void">
-        <div className="flex h-10 shrink-0 items-center justify-between border-b border-border bg-carbon px-4 lg:h-[var(--app-header-height)]">
+      <div className="flex min-h-0 flex-col bg-paper">
+        <div className="flex h-10 shrink-0 items-center justify-between border-b border-border bg-snow px-4 lg:h-[var(--app-header-height)]">
           <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
             Transcript
           </p>

@@ -4,6 +4,8 @@
 export const queryKeys = {
   activitiesRoot: ['activities'] as const,
   userStatsRoot: ['user-stats'] as const,
+  userStats: (wallet: string | null | undefined) =>
+    ['user-stats', wallet ?? null] as const,
   recentlyUsedModelsRoot: ['recently-used-models'] as const,
   modelsCatalog: ['models-catalog'] as const,
 

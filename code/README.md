@@ -1,39 +1,47 @@
-# Code — code.micropay.website
+# Micropay Code
 
-TanStack Start fullstack IDE (Algorand TypeScript / puya-ts), **app-style**:
-Vite + `@tanstack/react-start` + Netlify plugin, Prisma, `/certs`.
+Client-only Vite + TanStack Router SPA for editing, compiling, deploying, and sharing Algorand TypeScript projects.
 
 ## Architecture
 
-| Concern | Where |
-|---------|--------|
-| IDE UI / wallet / Monaco / templates | `code/` (this package) |
-| Paid IDE agent, compile, models, clone | **This host** — `/api/v1/ide/agent`, `/api/v1/puya-ts/compile`, `/api/v1/models`, `/api/v1/templates`, `/api/v1/clone` |
-| Postgres / Prisma | **This package** — `code/prisma` only, Postgres schema `code`. Same `DATABASE_URL` as app is OK; **zero shared tables/models**. Apply with `npm run db:push` |
-| IDE spend tracking | `CodeActivity` / `CodeUser` / `CodeUserModelUsage` |
-| Template clone tracking | `CodeTemplate` / `CodeTemplateClone` |
-| Merchant discovery | `public/.well-known/x402.json` |
-
-App and IDE are separate products (own Netlify site / merchant card / Prisma schema).
-
-## Env
-
-See `.env.example`. Requires `DATABASE_URL`, `ZG_ROUTER_*`, `X402_*`.
-
-## Dev
-
-```bash
-npm install   # repo root
-npm run db:generate --workspace=code
-npm run db:push --workspace=code
-npm run dev:code
-# → http://localhost:5000
+```text
+browser IDE -> HTTPS -> NestJS backend -> PostgreSQL / Redis / AI / Puya / x402
 ```
 
-## Netlify
+Code does not own a database and contains no Prisma client, migrations, API proxy routes, server functions, provider credentials, payment settlement logic, or server compiler. Models, real Puya compilation, paid agents, templates, clone accounting, and persistence belong to `../backend`.
 
-- Base directory: `code`
-- Build: `vite build` → `dist/client`
-- Domain: `code.micropay.website`
-- Set `DATABASE_URL` (may match app’s Postgres URL; tables remain separate)
-- Apply code schema on setup (`npm run db:push`)
+Browser-owned functionality includes Monaco, project state, local structural diagnostics, GitHub integration, wallet signing, and Algod deployment.
+
+## Environment
+
+Create `.env.local` from `.env.example`:
+
+```dotenv
+VITE_PUBLIC_API_URL=http://localhost:4000
+VITE_X402_NETWORK=testnet
+```
+
+`VITE_PUBLIC_API_URL` is required and browser-visible. Configure backend CORS to allow the Code origin and expose x402 payment response headers.
+
+## Development
+
+```powershell
+# Repository root
+npm run dev:backend
+npm run dev:code
+```
+
+Code runs at `http://localhost:5000` by default.
+
+## Checks
+
+```powershell
+npm run generate-routes
+npm run typecheck
+npm run build
+```
+
+The production output is `dist`. Static hosting must rewrite application routes to `index.html`.
+
+For Vercel, use Root Directory `code`, enable access to files outside the root
+for `packages/site-meta`, and use the committed `vercel.json`.

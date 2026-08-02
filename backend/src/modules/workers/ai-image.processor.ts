@@ -59,7 +59,7 @@ export class AiImageProcessor extends WorkerHost {
       size: size ?? null,
     });
 
-    await this.patch(imageJobId, 'completed');
+    await this.patch(imageJobId, 'completed', undefined, persisted);
     this.realtime.emitJobCompleted({
       jobId: imageJobId,
       status: 'completed',
@@ -89,13 +89,13 @@ export class AiImageProcessor extends WorkerHost {
     id: string,
     status: string,
     errorMessage?: string,
+    result?: Record<string, unknown>,
   ) {
-    await this.imageJobs.update(
-      { id },
-      {
-        status,
-        errorMessage: errorMessage ?? null,
-      },
-    );
+    const row = await this.imageJobs.findOne({ where: { id } });
+    if (!row) return;
+    row.status = status;
+    row.errorMessage = errorMessage ?? null;
+    if (result !== undefined) row.result = result;
+    await this.imageJobs.save(row);
   }
 }

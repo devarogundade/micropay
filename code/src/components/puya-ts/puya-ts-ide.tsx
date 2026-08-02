@@ -27,6 +27,7 @@ import {
 } from 'react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
 
 import { BrandMark } from '#/components/brand'
 import { ModelSwitcher } from '#/components/models/model-switcher'
@@ -130,6 +131,8 @@ import {
 import { useClientGsap } from '#/lib/use-client-gsap'
 import { cn } from '#/lib/utils'
 import { useWallet } from '#/lib/wallet'
+import { fetchCreditStats } from '#/lib/credit-stats'
+import { queryKeys } from '#/lib/query-keys'
 
 const LAYOUT_KEY = 'micropay.puya-ts.ide.layout.v1'
 const NETWORK_KEY = 'micropay.puya-ts.ide.network.v1'
@@ -303,6 +306,12 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
     fetchWithPay,
     signTransactions,
   } = useWallet()
+  const creditQuery = useQuery({
+    queryKey: queryKeys.userStats(account?.address),
+    queryFn: () => fetchCreditStats(account!.address),
+    enabled: Boolean(account?.address),
+    staleTime: 15_000,
+  })
 
   const active = getActiveFile(project)
   const filename = active?.path ?? 'untitled.algo.ts'
@@ -445,7 +454,10 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       const res = await fetch(apiUrl('/api/v1/puya-ts/compile'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files, entry: entryPath }),
+        body: JSON.stringify({
+          files: Object.entries(files).map(([path, content]) => ({ path, content })),
+          entry: entryPath,
+        }),
       })
       const raw: unknown = await res.json()
       if (
@@ -523,8 +535,13 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
   }
 
   async function confirmDeploy() {
-    if (!compileResult?.ok || !compileResult.approvalTeal || !compileResult.clearTeal) {
-      toast.error('Compile successfully before deploying')
+    if (
+      !compileResult?.ok ||
+      compileResult.mode !== 'puya-ts' ||
+      !compileResult.approvalTeal ||
+      !compileResult.clearTeal
+    ) {
+      toast.error('A successful Puya compile is required before deploying')
       return
     }
     if (!account) {
@@ -646,23 +663,23 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
     <div ref={rootRef} className="flex h-full min-h-0 flex-col bg-void">
       <div className="ws-body flex min-h-0 flex-1 overflow-hidden">
         <aside
-          className="hidden min-h-0 shrink-0 flex-col border-r border-border bg-carbon md:flex"
+          className="hidden min-h-0 shrink-0 flex-col border-r border-border bg-carbon text-sidebar-foreground md:flex"
           style={{ width: layout.sidebarW }}
         >
-          <div className="workspace-bar flex items-center gap-2 border-b border-border px-3">
+          <div className="workspace-bar flex items-center gap-2 border-b border-border bg-carbon/90 px-3 backdrop-blur-md">
             <a href={siteUrl} className="min-w-0 no-underline" title="Micropay">
               <BrandMark size="sm" />
             </a>
             <div className="ml-auto flex items-center gap-2">
               <Link
                 to="/templates"
-                className="text-[11px] text-fog transition-colors hover:text-paper"
+                className="rounded-xl px-2 py-1.5 text-[11px] text-fog transition-colors hover:bg-accent hover:text-paper"
               >
                 Templates
               </Link>
               <a
                 href={appUrl}
-                className="text-[11px] text-fog transition-colors hover:text-paper"
+                className="rounded-xl px-2 py-1.5 text-[11px] text-fog transition-colors hover:bg-accent hover:text-paper"
               >
                 App
               </a>
@@ -736,7 +753,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
           className="flex min-h-0 min-w-0 flex-col border-b border-border lg:border-b-0"
           style={{ flex: `1 1 ${editorColumnPct}%`, minWidth: 0 }}
         >
-          <div className="workspace-bar flex items-center gap-1 overflow-x-auto border-b border-border bg-carbon px-2">
+          <div className="workspace-bar flex items-center gap-1 overflow-x-auto border-b border-border bg-carbon/90 px-2 backdrop-blur-md">
             <Button
               size="sm"
               className="h-8 gap-1.5"
@@ -755,7 +772,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
               variant="outline"
               className="h-8 gap-1.5"
               onClick={() => setDeployOpen(true)}
-              disabled={!compileResult?.ok}
+              disabled={compileResult?.mode !== 'puya-ts' || !compileResult.ok}
             >
               <Rocket className="size-3.5" />
               Deploy
@@ -1069,10 +1086,12 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                     onSelect={setModelSlug}
                   />
                 </div>
-                <div className="hidden items-center gap-1.5 rounded-md border border-border bg-void px-2.5 py-1.5 xl:flex">
+                <div className="hidden items-center gap-1.5 rounded-xl border border-border bg-void px-2.5 py-1.5 xl:flex">
                   <img src="/assets/usdc.png" alt="" className="size-3.5" />
                   <span className="text-[12px] font-medium text-paper">
-                    {formatUsdc(model.priceUsdc)}
+                    {creditQuery.data
+                      ? `${formatUsdc(creditQuery.data.dailyCreditRemainingUsdc)} credit left`
+                      : formatUsdc(model.priceUsdc)}
                   </span>
                 </div>
                 {account ? (
@@ -1189,7 +1208,9 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
             </Button>
             <Button
               onClick={() => void confirmDeploy()}
-              disabled={deploying || !compileResult?.ok}
+              disabled={
+                deploying || compileResult?.mode !== 'puya-ts' || !compileResult.ok
+              }
             >
               {deploying ? (
                 <Loader2 className="size-4 animate-spin" />

@@ -1,4 +1,4 @@
-/** Client-safe chat attachment helpers (no Prisma / Node deps). */
+/** Browser-safe chat attachment helpers. */
 
 export type StoredAttachment = {
   id: string
@@ -7,7 +7,7 @@ export type StoredAttachment = {
   mimeType?: string
   size: number
   kind: 'image' | 'text'
-  /** Supabase Storage object path. */
+  /** Backend storage object path. */
   storagePath?: string
   /** Public or signed HTTPS URL for the object. */
   url?: string
@@ -15,7 +15,7 @@ export type StoredAttachment = {
   textContent?: string
 }
 
-/** Strip bulky image data URLs before persisting; keep Supabase metadata. */
+/** Strip bulky image data URLs before sending attachment metadata. */
 export function toStoredAttachments(
   attachments:
     | Array<{

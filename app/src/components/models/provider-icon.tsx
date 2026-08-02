@@ -27,7 +27,7 @@ export function ProviderIcon({
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-paper shadow-[inset_0_0_0_1px_rgb(35,37,42)]',
+        'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-paper shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]',
         FRAME[size],
         className,
       )}

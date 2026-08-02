@@ -13,12 +13,11 @@
   "homepage": "/",
   "documentation": "/api-reference",
   "llms": "https://micropay.website/llms.txt",
-  "mcp": "/mcp",
   "product": "app",
   "endpoints": [
     {
       "method": "POST",
-      "path": "/api/v1/chat/completions",
+      "path": "https://api.micropay.website/api/v1/chat/completions",
       "serviceName": "Micropay Chat",
       "description": "OpenAI-compatible chat completions with optional SSE streaming for Micropay models (diverse popular LLMs).",
       "mimeType": "application/json",
@@ -26,7 +25,7 @@
     },
     {
       "method": "POST",
-      "path": "/api/v1/images/generations",
+      "path": "https://api.micropay.website/api/v1/images/generations",
       "serviceName": "Micropay Images",
       "description": "OpenAI-compatible image generation returning base64 PNG (b64_json) for Micropay models.",
       "mimeType": "application/json",
@@ -34,7 +33,7 @@
     },
     {
       "method": "POST",
-      "path": "/api/v1/audio/transcriptions",
+      "path": "https://api.micropay.website/api/v1/audio/transcriptions",
       "serviceName": "Micropay Audio",
       "description": "OpenAI-compatible speech-to-text transcription (multipart audio upload) returning text for Micropay models.",
       "mimeType": "application/json",

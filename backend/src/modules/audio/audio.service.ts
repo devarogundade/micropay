@@ -44,6 +44,7 @@ export class AudioService {
     language?: string;
     paymentHeader?: string;
     walletAddress?: string;
+    requestId?: string;
     asyncOnly?: boolean;
   }) {
     this.ai.assertRouterConfigured();
@@ -81,6 +82,8 @@ export class AudioService {
       description: `Audio transcription ${model}`,
       paymentHeader: input.paymentHeader,
       body: { model, language: input.language },
+      walletAddress: input.walletAddress,
+      requestId: input.requestId,
     });
 
     if (!gate.ok) {
@@ -118,7 +121,7 @@ export class AudioService {
         modelSlug: model,
         modelName: model,
         type: ActivityKind.Audio,
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
         status: ActivityStatus.settled,
         txId,
       });
@@ -126,7 +129,7 @@ export class AudioService {
         walletAddress: input.walletAddress,
         product: PaymentProduct.app,
         model,
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
         endpoint: '/api/v1/audio/transcriptions',
       });
     }

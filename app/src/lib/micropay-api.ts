@@ -1,4 +1,4 @@
-/** Browser → Micropay Nest API (or same-origin Start proxy). */
+/** Browser to Micropay Nest API. */
 
 import { apiUrl } from '#/lib/api-url'
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '#/lib/storage-limits'
@@ -357,6 +357,38 @@ export async function streamChatCompletions(input: {
   let trace: Record<string, unknown> | undefined
   let rawLast: unknown
 
+  const processLine = (line: string) => {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith(':') || !trimmed.startsWith('data:')) {
+      return
+    }
+    const payload = trimmed.slice(5).trim()
+    if (!payload || payload === '[DONE]') return
+
+    try {
+      const chunk = asChatCompletionJson(JSON.parse(payload) as unknown)
+      rawLast = chunk
+      if (chunk.model) model = chunk.model
+      if (chunk.usage) usage = chunk.usage
+      if (chunk.x_0g_trace) trace = chunk.x_0g_trace
+
+      const delta = chunk.choices?.[0]?.delta
+      const msg = chunk.choices?.[0]?.message
+      const c = delta?.content ?? msg?.content
+      const r = delta?.reasoning_content ?? msg?.reasoning_content
+      if (typeof c === 'string' && c) {
+        content += c
+        input.onDelta?.({ content: c })
+      }
+      if (typeof r === 'string' && r) {
+        reasoning += r
+        input.onDelta?.({ reasoning: r })
+      }
+    } catch {
+      /* Ignore malformed provider events and continue the stream. */
+    }
+  }
+
   try {
     while (true) {
       const { done, value } = await reader.read()
@@ -366,36 +398,11 @@ export async function streamChatCompletions(input: {
       buffer = lines.pop() ?? ''
 
       for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed || trimmed.startsWith(':')) continue
-        if (!trimmed.startsWith('data:')) continue
-        const payload = trimmed.slice(5).trim()
-        if (payload === '[DONE]') continue
-
-        try {
-          const chunk = asChatCompletionJson(JSON.parse(payload) as unknown)
-          rawLast = chunk
-          if (chunk.model) model = chunk.model
-          if (chunk.usage) usage = chunk.usage
-          if (chunk.x_0g_trace) trace = chunk.x_0g_trace
-
-          const delta = chunk.choices?.[0]?.delta
-          const msg = chunk.choices?.[0]?.message
-          const c = delta?.content ?? msg?.content
-          const r = delta?.reasoning_content ?? msg?.reasoning_content
-          if (typeof c === 'string' && c) {
-            content += c
-            input.onDelta?.({ content: c })
-          }
-          if (typeof r === 'string' && r) {
-            reasoning += r
-            input.onDelta?.({ reasoning: r })
-          }
-        } catch {
-          /* skip malformed SSE lines */
-        }
+        processLine(line)
       }
     }
+    buffer += decoder.decode()
+    if (buffer) processLine(buffer)
   } catch (e) {
     if (input.signal?.aborted) {
       return {

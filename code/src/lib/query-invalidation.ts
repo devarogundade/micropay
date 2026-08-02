@@ -2,12 +2,11 @@ import type { QueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '#/lib/query-keys'
 
-/** No-op — IDE SPA does not host the Activities UI (that lives on App; same DB). */
 export async function invalidateUsageQueries(
-  _queryClient: QueryClient,
-  _wallet?: string | null,
+  queryClient: QueryClient,
+  wallet?: string | null,
 ) {
-  /* IDE SPA does not host activities / spend UI (app product only) */
+  await queryClient.invalidateQueries({ queryKey: queryKeys.userStats(wallet) })
 }
 
 /** Chat session list and optional single-session detail. */

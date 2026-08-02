@@ -44,7 +44,7 @@ export function BottomSheet({
         side="bottom"
         showCloseButton={false}
         className={cn(
-          'safe-bottom gap-0 rounded-t-2xl border-border bg-carbon p-0 shadow-xl',
+          'safe-bottom gap-0 rounded-t-2xl border-border bg-snow p-0 shadow-xl',
           'max-h-[min(92dvh,720px)]',
           className,
         )}
@@ -58,7 +58,7 @@ export function BottomSheet({
         {title || description ? (
           <SheetHeader className="gap-1 border-b border-border px-4 pb-3 pt-1 text-left">
             {title ? (
-              <SheetTitle className="text-base text-paper">{title}</SheetTitle>
+              <SheetTitle className="text-base text-ink">{title}</SheetTitle>
             ) : null}
             {description ? (
               <SheetDescription>{description}</SheetDescription>

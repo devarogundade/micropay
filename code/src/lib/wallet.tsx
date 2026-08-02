@@ -2,8 +2,8 @@
  * Real Algorand wallet connect via @txnlab/use-wallet-react (Pera / Defly / Lute / Kibisis).
  * Exposes a thin Micropay-shaped API plus x402-aware fetchWithPay.
  *
- * WalletManager is created only in the browser — module-level construction
- * during SSR can throw HTTPError and take down the whole Netlify function.
+ * WalletManager is created only in the browser so browser-only connector
+ * globals are not evaluated during tooling or static builds.
  */
 
 import { AlgorandClient } from '@algorandfoundation/algokit-utils/algorand-client'
@@ -46,6 +46,8 @@ function createX402AlgorandClient() {
     .setDefaultValidityWindow(1000)
     .setSuggestedParamsCacheTimeout(0)
 }
+
+type ExactAvmConfig = NonNullable<ConstructorParameters<typeof ExactAvmScheme>[1]>
 
 export type WalletAccount = {
   address: string
@@ -192,7 +194,9 @@ function MicropayWalletBridge({ children }: { children: ReactNode }) {
     client.register(
       'algorand:*',
       new ExactAvmScheme(signer, {
-        algorandClient: createX402AlgorandClient(),
+        // x402 currently installs its own copy of AlgoKit; both expose the same client API.
+        algorandClient:
+          createX402AlgorandClient() as unknown as ExactAvmConfig['algorandClient'],
       }),
     )
     const paid = wrapFetchWithPayment(fetch, client)
@@ -200,6 +204,9 @@ function MicropayWalletBridge({ children }: { children: ReactNode }) {
     return (input: RequestInfo | URL, init?: RequestInit) => {
       const headers = new Headers(init?.headers)
       headers.set('X-Wallet-Address', address)
+      if (!headers.has('X-Micropay-Request-Id')) {
+        headers.set('X-Micropay-Request-Id', crypto.randomUUID())
+      }
       return paid(input, { ...init, headers })
     }
   }, [signer, activeAccount])

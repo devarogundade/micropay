@@ -4,8 +4,8 @@
   "description": "Pay-per-use AI for chat, images, and audio. USDC on Algorand via x402.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#09C72B",
+  "background_color": "#f5f5f5",
+  "theme_color": "#111111",
   "icons": [
     {
       "src": "/favicon.svg",

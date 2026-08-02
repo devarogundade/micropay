@@ -3,7 +3,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { fetchModelsCatalog } from '#/lib/models-catalog.functions'
 import { queryKeys } from '#/lib/query-keys'
 
-/** Client+SSR catalog cache window — aligns with server `listRouterModels` TTL. */
+/** Browser catalog cache window. */
 export const MODELS_CATALOG_STALE_MS = 60_000
 
 export function ensureModelsCatalog(queryClient: QueryClient) {

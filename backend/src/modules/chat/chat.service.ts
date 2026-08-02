@@ -249,6 +249,7 @@ export class ChatService {
     body: Record<string, unknown>;
     paymentHeader?: string;
     walletAddress?: string;
+    requestId?: string;
     asyncHeader?: string;
     asyncQuery?: string;
   }): Promise<
@@ -285,6 +286,8 @@ export class ChatService {
       description: `Chat ${model}`,
       paymentHeader: input.paymentHeader,
       body: input.body,
+      walletAddress: input.walletAddress,
+      requestId: input.requestId,
     });
     if (!gate.ok) {
       return {
@@ -321,7 +324,7 @@ export class ChatService {
         modelSlug: model || 'unknown',
         modelName: model || 'unknown',
         type: ActivityKind.Chat,
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
         status: ActivityStatus.settled,
         txId,
       });
@@ -329,7 +332,7 @@ export class ChatService {
         walletAddress: input.walletAddress,
         product: PaymentProduct.app,
         model,
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
         endpoint: '/api/v1/chat/completions',
       });
     }
@@ -361,10 +364,17 @@ export class ChatService {
     const clientDisabledTools =
       input.body.tools === null ||
       (Array.isArray(input.body.tools) && input.body.tools.length === 0);
+    const explicitlyRequestedTools =
+      input.body.tools !== undefined || input.body.tool_names !== undefined;
 
     // Tool path: non-stream multi-round loop. When client asked for stream,
-    // return JSON final answer (tool rounds are not streamable end-to-end).
-    if (toolsEnabled && !clientDisabledTools) {
+    // only explicit tools opt into the JSON fallback. Omitted tools on a
+    // streaming request must not prevent token-by-token provider output.
+    if (
+      toolsEnabled &&
+      !clientDisabledTools &&
+      (!wantStream || explicitlyRequestedTools)
+    ) {
       try {
         const result = await this.toolsOrchestrator.completeWithTools(
           input.body,

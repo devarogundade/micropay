@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ALL_ENTITIES } from './entities';
+import { AddImageJobResult1722600000000 } from './migrations/1722600000000-AddImageJobResult';
+import { AddDailyCredits1722700000000 } from './migrations/1722700000000-AddDailyCredits';
 
 @Module({
   imports: [
@@ -14,11 +16,12 @@ import { ALL_ENTITIES } from './entities';
           type: 'postgres' as const,
           url,
           entities: ALL_ENTITIES,
+          migrations: [
+            AddImageJobResult1722600000000,
+            AddDailyCredits1722700000000,
+          ],
           synchronize: config.get<boolean>('database.sync') ?? false,
           logging: config.get<boolean>('database.logging') ?? false,
-          ssl: url?.includes('localhost')
-            ? false
-            : { rejectUnauthorized: false },
         };
       },
     }),

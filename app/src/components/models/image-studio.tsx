@@ -224,13 +224,13 @@ export function ImageStudio({
 
   return (
     <div className="grid h-full min-h-0 gap-0 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
-      <aside className="flex min-h-0 flex-col border-b border-border bg-carbon lg:border-b-0 lg:border-r">
+      <aside className="flex min-h-0 flex-col border-b border-border bg-snow lg:border-b-0 lg:border-r">
         <div className="flex h-10 shrink-0 items-center border-b border-border px-4 lg:h-[var(--app-header-height)]">
           <div>
             <p className="text-[11px] uppercase tracking-wider text-fog">
               Studio
             </p>
-            <h2 className="text-sm font-medium leading-none text-paper">
+            <h2 className="text-sm font-medium leading-none text-ink">
               Image generation
             </h2>
           </div>
@@ -243,7 +243,7 @@ export function ImageStudio({
               id="img-prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              className="min-h-28 bg-void"
+              className="min-h-28 bg-paper"
               placeholder="Describe the image you want…"
               disabled={busy}
             />
@@ -251,7 +251,7 @@ export function ImageStudio({
           <div className="space-y-2">
             <Label>Size</Label>
             <Select value={size} onValueChange={setSize} disabled={busy}>
-              <SelectTrigger className="w-full bg-void" aria-label="Image size">
+              <SelectTrigger className="w-full bg-paper" aria-label="Image size">
                 <SelectValue placeholder="Size" />
               </SelectTrigger>
               <SelectContent>
@@ -330,7 +330,7 @@ export function ImageStudio({
                           'flex w-full items-center gap-2.5 rounded-md border px-2 py-1.5 text-left transition-colors',
                           i === activeIndex
                             ? 'border-mist/30 bg-obsidian'
-                            : 'border-transparent hover:border-border hover:bg-void/80',
+                            : 'border-transparent hover:border-border hover:bg-paper/80',
                         )}
                       >
                         <img
@@ -357,8 +357,8 @@ export function ImageStudio({
         </div>
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-col bg-void p-4 md:p-6">
-        <div className="relative flex min-h-[240px] min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-border bg-carbon shadow-[inset_0_0_0_1px_rgb(35,37,42)] sm:min-h-[280px]">
+      <div className="flex min-h-0 min-w-0 flex-col bg-paper p-4 md:p-6">
+        <div className="relative flex min-h-[240px] min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-border bg-snow shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] sm:min-h-[280px]">
           {gallery.length > 0 ? (
             <Swiper
               modules={[Navigation, Pagination, A11y]}

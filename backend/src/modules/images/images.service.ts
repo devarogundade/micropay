@@ -44,6 +44,7 @@ export class ImagesService {
     body: Record<string, unknown>;
     paymentHeader?: string;
     walletAddress?: string;
+    requestId?: string;
     asyncOnly?: boolean;
   }) {
     this.ai.assertRouterConfigured();
@@ -77,6 +78,8 @@ export class ImagesService {
       description: `Image generation ${model}`,
       paymentHeader: input.paymentHeader,
       body,
+      walletAddress: input.walletAddress,
+      requestId: input.requestId,
     });
 
     if (!gate.ok) {
@@ -114,7 +117,7 @@ export class ImagesService {
         modelSlug: model,
         modelName: model,
         type: 'Image Gen',
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
         status: ActivityStatus.settled,
         txId,
       });
@@ -122,7 +125,7 @@ export class ImagesService {
         walletAddress: input.walletAddress,
         product: 'app',
         model,
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
         endpoint: '/api/v1/images/generations',
       });
     }
@@ -229,6 +232,7 @@ export class ImagesService {
       size: row.size,
       providerAddress: row.providerAddress,
       errorMessage: row.errorMessage,
+      result: row.result,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

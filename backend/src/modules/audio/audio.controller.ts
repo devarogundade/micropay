@@ -14,6 +14,7 @@ import type { Request, Response } from 'express';
 import { SkipTransform } from '../../common/decorators/skip-transform.decorator';
 import { WalletAddress } from '../../common/decorators/wallet-address.decorator';
 import { AudioService } from './audio.service';
+import { MAX_UPLOAD_BYTES } from '../storage/storage.service';
 
 @Controller('api/v1/audio')
 export class AudioController {
@@ -21,12 +22,15 @@ export class AudioController {
 
   @SkipTransform()
   @Post('transcriptions')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } }),
+  )
   async transcriptions(
     @UploadedFile() file: Express.Multer.File | undefined,
     @Req() req: Request,
     @Headers('payment-signature') paymentSig?: string,
     @Headers('x-payment') xPayment?: string,
+    @Headers('x-micropay-request-id') requestId?: string,
     @Headers('x-async') asyncHeader?: string,
     @WalletAddress() wallet?: string,
     @Res({ passthrough: false }) res?: Response,
@@ -44,6 +48,7 @@ export class AudioController {
       paymentHeader: paymentSig || xPayment,
       walletAddress: wallet,
       asyncOnly,
+      requestId,
     });
     if (result.paymentRequired) {
       if (result.headers) {

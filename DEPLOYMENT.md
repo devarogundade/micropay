@@ -1,87 +1,123 @@
-# Micropay subdomain deployment
+# Micropay Deployment
 
 ## Topology
 
 | Host | Folder | Role |
 |------|--------|------|
-| `micropay.website` | `landing/` | Marketing hub (Vite SPA) |
-| `app.micropay.website` | `app/` | **App product** — TanStack Start, app Prisma, paid AI APIs, MCP |
-| `code.micropay.website` | `code/` | **IDE product** — TanStack Start, code Prisma, agent/templates |
+| `micropay.website` | `landing/` | Marketing Vite SPA |
+| `app.micropay.website` | `app/` | Client-only product SPA |
+| `code.micropay.website` | `code/` | Client-only IDE SPA |
+| `api.micropay.website` | `backend/` | NestJS API, PostgreSQL, Redis, AI, Puya, S3, x402, Socket.IO |
 
-Shared package: `@micropay/site-meta` — **constants / challenge approach only** (facilitator URL, challenge tag, merchant card builders). No shared runtime API or shared DB models.
+Runtime flow:
 
-**Database:** App and code may use the **same `DATABASE_URL`** (one Postgres), but **completely separate** Prisma schemas, migrations, and tables:
-
-| Product | Schema / migrations | Tables |
-|---------|---------------------|--------|
-| App | `app/prisma` | `User`, `Activity`, `Chat*`, `Image*`, `Transcription`, `UserModelUsage` |
-| Code | `code/prisma` → Postgres schema `code` (`db push`) | `CodeUser`, `CodeActivity`, `CodeUserModelUsage`, `CodeTemplate`, `CodeTemplateClone` |
-
-Zero shared table names, rows, or Prisma models. App uses Prisma Migrate on `public`; code applies its schema with `db push` scoped to Postgres schema `code` (so app tables are never touched).
-
-Migrate / push:
-
-```bash
-cd app && npm run db:migrate   # app tables
-cd code && npm run db:push     # code tables
+```text
+app/code browser -> https://api.micropay.website -> backend services
 ```
 
+Only `backend` receives `DATABASE_URL`, provider credentials, payment recipient settings, storage credentials, Redis configuration, and admin keys. Frontend deployments receive browser-visible `VITE_*` variables only.
 
-## Hackathon tracking (same *approach*, dual merchant entries)
+## Vercel Frontends
 
-| Product | Merchant card | Paid routes | PayTo / DB |
-|---------|---------------|-------------|------------|
-| App | `https://app.micropay.website/.well-known/x402.json` | chat, images, audio | App `X402_PAY_TO` + app tables |
-| IDE | `https://code.micropay.website/.well-known/x402.json` | agent, template clone | Code `X402_PAY_TO` + code tables |
+Create three Vercel projects from this repository. Use Node.js 22.x and enable
+"Include source files outside the Root Directory" because each project imports
+`packages/site-meta`.
 
-1. GoPlausible facilitator (`https://facilitator.goplausible.xyz`)
-2. Challenge tag `x402-global-challenge`
-3. Product merchant cards for discovery
-4. Separate activity tables — app `Activity` vs code `CodeActivity`
+| Project | Root Directory | Build | Output | Domain |
+|---------|----------------|-------|--------|--------|
+| Landing | `landing` | `npm run build` | `dist` | `micropay.website`, `www.micropay.website` |
+| App | `app` | `npm run build` | `dist` | `app.micropay.website` |
+| Code | `code` | `npm run build` | `dist` | `code.micropay.website` |
 
-## Netlify (3 sites, 1 repo)
+Each project has a committed `vercel.json` for SPA rewrites and merchant-card
+headers. Landing also redirects `www` to the apex domain.
 
-### 1) Landing
+Required frontend environment:
 
-- Base directory: `landing`
-- Build: `npm run build` → publish `dist`
-- Domain: `micropay.website` (+ `www` → apex)
-- Env: `VITE_PUBLIC_SITE_URL`, `VITE_PUBLIC_APP_URL`, `VITE_PUBLIC_CODE_URL`
+```dotenv
+VITE_PUBLIC_API_URL=https://api.micropay.website
+VITE_X402_NETWORK=mainnet
+```
 
-### 2) App
+Set the public app/site/code origins documented in each package's `.env.example`.
 
-- Repo root as Netlify base (package path / config: `app/`)
-- Build: `npm run build --workspace=app` → publish `app/dist/client`
-- Domain: `app.micropay.website`
-- Env: full `app/.env.example` (`DATABASE_URL`, `X402_PAY_TO`, `ZG_ROUTER_*`, SSL certs under `app/certs` if needed)
-- Owns Prisma: `app/prisma` (+ `npm run db:migrate`)
+## Docker Backend
 
-### 3) Code (IDE)
+Copy the container environment template and fill its required values:
 
-- Repo root as Netlify base (package path / config: `code/`)
-- Build: `npm run build --workspace=code` → publish `code/dist/client`
-- Domain: `code.micropay.website`
-- Env: full `code/.env.example` (`DATABASE_URL`, `X402_PAY_TO`, `ZG_ROUTER_*`, certs under `code/certs` if needed)
-- Owns Prisma: `code/prisma` (+ `npm run db:push`)
+```powershell
+Copy-Item backend/.env.docker.example backend/.env.docker
+docker compose --env-file backend/.env.docker up --build -d
+docker compose ps
+Invoke-RestMethod http://localhost:4000/health
+```
+
+This starts PostgreSQL 16, Redis 7, and the Nest API/workers. Data is persisted
+in named Docker volumes. Local Compose defaults to `DATABASE_SYNC=true` so a
+fresh development database can be bootstrapped.
+
+Stop the stack without deleting data:
+
+```powershell
+docker compose --env-file backend/.env.docker down
+```
+
+Delete local database and queue data only when explicitly needed:
+
+```powershell
+docker compose --env-file backend/.env.docker down --volumes
+```
+
+### Production Containers
+
+Build the runtime image with:
+
+```powershell
+docker build --target runtime -t micropay-backend ./backend
+```
+
+Production must set `DATABASE_SYNC=false`, `DATABASE_SSL` according to the
+database provider, and run committed migrations before the API rollout:
+
+```powershell
+docker compose --env-file backend/.env.docker --profile migration run --rm migrate
+```
+
+The current migration history is incremental and does not yet contain a full
+baseline for every table. Do not use the migration profile against a blank
+production database until a baseline migration is committed. The local Compose
+schema-sync default is development-only.
+
+Configure production variables from `backend/.env.example`, then run migrations before starting the API:
+
+```powershell
+cd backend
+pnpm run migration:run
+pnpm run build
+pnpm run start:prod
+```
+
+Set these origin variables so HTTP and Socket.IO CORS allow the static sites:
+
+```dotenv
+PUBLIC_APP_URL=https://app.micropay.website
+PUBLIC_CODE_URL=https://code.micropay.website
+PUBLIC_SITE_URL=https://micropay.website
+CORS_ALLOWED_ORIGINS=https://app.micropay.website,https://code.micropay.website
+WS_CORS_ORIGIN=https://app.micropay.website,https://code.micropay.website
+```
 
 ## DNS
 
-- `micropay.website` → landing
-- `www.micropay.website` → redirect to apex
-- `app.micropay.website` → app
-- `code.micropay.website` → code
+- `micropay.website` points to the landing deployment.
+- `app.micropay.website` points to the App static deployment.
+- `code.micropay.website` points to the Code static deployment.
+- `api.micropay.website` points to the Nest backend.
 
-## Local monorepo
+## Local Development
 
-```bash
-npm run dev:landing   # :4000
-npm run dev:app       # :3000
-npm run dev:code      # :5000
-```
-
-Migrate each product’s tables (same URL OK):
-
-```bash
-cd app && npm run db:migrate
-cd code && npm run db:push
+```powershell
+npm run dev:backend  # :4000
+npm run dev:app      # :3000
+npm run dev:code     # :5000
 ```

@@ -65,6 +65,7 @@ export class IdeController {
     @Body() body: CloneDto,
     @Headers('payment-signature') paymentSig?: string,
     @Headers('x-payment') xPayment?: string,
+    @Headers('x-micropay-request-id') requestId?: string,
     @WalletAddress() wallet?: string,
     @Res({ passthrough: false }) res?: Response,
   ) {
@@ -72,6 +73,7 @@ export class IdeController {
       ...body,
       paymentHeader: paymentSig || xPayment,
       walletAddress: wallet,
+      requestId,
     });
     if (result.paymentRequired) {
       if (result.headers) {
@@ -99,6 +101,7 @@ export class IdeController {
     @Body() body: Record<string, unknown>,
     @Headers('payment-signature') paymentSig?: string,
     @Headers('x-payment') xPayment?: string,
+    @Headers('x-micropay-request-id') requestId?: string,
     @Headers('x-async') asyncHeader?: string,
     @Query('async') asyncQuery?: string,
     @WalletAddress() wallet?: string,
@@ -114,6 +117,7 @@ export class IdeController {
       paymentHeader: paymentSig || xPayment,
       walletAddress: wallet,
       asyncOnly,
+      requestId,
     });
     if (result.paymentRequired) {
       if (result.headers) {

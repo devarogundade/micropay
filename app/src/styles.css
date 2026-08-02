@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..590&family=JetBrains+Mono:wght@400&display=swap");
 @import "tailwindcss";
 @plugin '@tailwindcss/typography';
 
@@ -6,22 +5,47 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Onest";
+  src: url("/fonts/onest-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pixel";
+  src: url("/fonts/pixel.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /*
-  Linear — midnight precision instrument
-  Dark theme tokens + shadcn semantic mapping
+  Micropay app — light theme aligned with landing
+  Paper backgrounds, ink primary, Onest / Pixel fonts
 */
 :root {
-  /* Primitive — Linear palette */
-  --void: #08090a;
-  --carbon: #0f1011;
-  --obsidian: #161718;
-  --graphite: #23252a;
-  --smoke: #383b3f;
-  --ash: #62666d;
-  --fog: #8a8f98;
-  --mist: #d0d6e0;
-  --bone: #e5e5e6;
-  --paper: #ffffff;
+  /* Primitive — landing palette */
+  --void: #0c0c0c;
+  --ink: #111111;
+  --carbon: #1a1a1a;
+  --ash: #2a2a2a;
+  --fog: #8a8a8a;
+  --stone: #b3b3b3;
+  --paper: #f5f5f5;
+  --snow: #ffffff;
+  --brand: #111111;
+  --brand-deep: #000000;
+
+  /* App-only surfaces remapped for light UI (hover/chrome/borders) */
+  --obsidian: #ebebeb;
+  --graphite: rgba(0, 0, 0, 0.08);
+  --smoke: #c4c4c4;
+  --mist: #6b6b6b;
+  --bone: #111111;
+
+  /* Status / accent (not primary) */
   --acid-lime: #e4f222;
   --pulse-green: #09c72b;
   --brand-green: #09c72b;
@@ -30,105 +54,110 @@
   --iris-violet: #6366f1;
   --lavender: #8b5cf6;
 
-  /* Backward-compat aliases used across the app */
+  /* Backward-compat aliases */
   --lemon: var(--acid-lime);
   --lemon-soft: color-mix(in srgb, var(--acid-lime) 35%, transparent);
   --lemon-deep: #c4d41a;
-  --ink: var(--void);
-  --ink-soft: var(--ash);
+  --ink-soft: var(--mist);
 
   /* Typography */
-  --font-inter-variable: "Inter", "Inter Variable", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-berkeley-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+  --font-sans: "Onest", ui-sans-serif, system-ui, sans-serif;
+  --font-pixel: "Pixel", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     monospace;
   --font-weight-light: 300;
   --font-weight-regular: 400;
   --font-weight-w510: 510;
   --font-weight-w590: 590;
 
-  /* Named radii */
+  /* Named radii — landing: buttons/panels 12px, floating chrome 18px */
   --radius-cards: 12px;
   --radius-pills: 9999px;
   --radius-small: 2px;
   --radius-badges: 4px;
-  --radius-inputs: 6px;
-  --radius-buttons: 6px;
+  --radius-inputs: 12px;
+  --radius-buttons: 12px;
+  --radius-island: 18px;
 
-  /* Shadows — hairline / inset first */
-  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
-  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
-  --shadow-subtle: rgb(35, 37, 42) 0px 0px 0px 1px inset;
-  --shadow-subtle-2: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
+  /* Shadows — soft light UI */
+  --shadow-sm: rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.08) 0px 4px 12px 0px;
+  --shadow-subtle: rgba(0, 0, 0, 0.06) 0px 1px 3px 0px, rgba(0, 0, 0, 0.04) 0px 0px 0px 1px;
+  --shadow-subtle-2: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
   --shadow-subtle-3: rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px,
     rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px;
-  --shadow-xl: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
-  --shadow-subtle-4: rgba(255, 255, 255, 0.03) 0px 0px 0px 1px inset,
-    rgba(255, 255, 255, 0.04) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.6) 0px 0px 0px 1px,
-    rgba(0, 0, 0, 0.1) 0px 4px 4px 0px;
-  --shadow-subtle-5: rgba(0, 0, 0, 0.1) 0px 0px 0px 2px;
+  --shadow-xl: rgba(0, 0, 0, 0.12) 0px 8px 32px 0px;
+  --shadow-subtle-4: rgba(0, 0, 0, 0.04) 0px 1px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.06) 0px 4px 12px 0px;
+  --shadow-subtle-5: rgba(0, 0, 0, 0.08) 0px 0px 0px 2px;
 
   /* Layout */
   --page-max-width: 1200px;
   --section-gap: 96px;
   --card-padding: 24px;
   --element-gap: 8px;
-  /* Shared app chrome — main header + workspace / IDE top bars */
-  --app-header-height: 3.5rem; /* 56px / h-14 */
+  --app-header-height: 3.5rem;
   --workspace-bar-height: var(--app-header-height);
-  --bottom-nav-height: 3.5rem; /* 56px — mobile tab bar */
+  --bottom-nav-height: 3.5rem;
+  --studio-sidebar-width: 16.5rem;
 
-  /* shadcn semantic → Linear midnight */
-  --background: var(--void);
-  --foreground: var(--mist);
-  --card: var(--carbon);
-  --card-foreground: var(--mist);
-  --popover: var(--obsidian);
-  --popover-foreground: var(--mist);
-  --primary: var(--acid-lime);
-  --primary-foreground: var(--void);
-  --secondary: var(--obsidian);
-  --secondary-foreground: var(--mist);
-  --muted: var(--obsidian);
-  --muted-foreground: var(--fog);
-  --accent: var(--graphite);
-  --accent-foreground: var(--mist);
+  /* shadcn semantic → light paper / ink */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--snow);
+  --card-foreground: var(--ink);
+  --popover: var(--snow);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--snow);
+  --secondary: #ececec;
+  --secondary-foreground: var(--ink);
+  --muted: #ececec;
+  --muted-foreground: #6b6b6b;
+  --accent: #ebebeb;
+  --accent-foreground: var(--ink);
   --destructive: var(--coral-red);
-  --destructive-foreground: var(--paper);
-  --border: var(--graphite);
-  --input: var(--graphite);
-  --ring: var(--acid-lime);
-  --chart-1: var(--acid-lime);
+  --destructive-foreground: var(--snow);
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: var(--ink);
+  --chart-1: var(--ink);
   --chart-2: var(--mist);
   --chart-3: var(--fog);
-  --chart-4: var(--ash);
+  --chart-4: var(--stone);
   --chart-5: var(--smoke);
-  --radius: 6px;
-  --sidebar: var(--carbon);
-  --sidebar-foreground: var(--mist);
-  --sidebar-primary: var(--acid-lime);
-  --sidebar-primary-foreground: var(--void);
-  --sidebar-accent: var(--obsidian);
-  --sidebar-accent-foreground: var(--mist);
-  --sidebar-border: var(--graphite);
-  --sidebar-ring: var(--acid-lime);
+  --radius: 12px;
+  --sidebar: var(--snow);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--ink);
+  --sidebar-primary-foreground: var(--snow);
+  --sidebar-accent: #ebebeb;
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: var(--ink);
 }
 
 @theme inline {
-  --font-sans: var(--font-inter-variable);
-  --font-mono: var(--font-berkeley-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-pixel: var(--font-pixel);
 
-  /* Linear primitives as Tailwind colors */
+  /* Landing / app primitives as Tailwind colors */
   --color-void: var(--void);
+  --color-ink: var(--ink);
   --color-carbon: var(--carbon);
+  --color-ash: var(--ash);
+  --color-fog: var(--fog);
+  --color-stone: var(--stone);
+  --color-paper: var(--paper);
+  --color-snow: var(--snow);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
   --color-obsidian: var(--obsidian);
   --color-graphite: var(--graphite);
   --color-smoke: var(--smoke);
-  --color-ash: var(--ash);
-  --color-fog: var(--fog);
   --color-mist: var(--mist);
   --color-bone: var(--bone);
-  --color-paper: var(--paper);
   --color-acid-lime: var(--acid-lime);
   --color-pulse-green: var(--pulse-green);
   --color-brand-green: var(--brand-green);
@@ -141,7 +170,6 @@
   --color-lemon: var(--lemon);
   --color-lemon-soft: var(--lemon-soft);
   --color-lemon-deep: var(--lemon-deep);
-  --color-ink: var(--ink);
 
   /* shadcn semantic */
   --color-background: var(--background);
@@ -177,17 +205,17 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Radii: buttons/inputs 6px, cards 12px, badges 4px, small 2px */
-  --radius-sm: 2px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
+  /* Radii: buttons/inputs 12px, island chrome 18px */
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
   --radius-xl: 12px;
-  --radius-2xl: 12px;
+  --radius-2xl: 18px;
   --radius-full: 9999px;
 
-  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
-  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
-  --shadow-xl: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
+  --shadow-sm: rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.08) 0px 4px 12px 0px;
+  --shadow-xl: rgba(0, 0, 0, 0.12) 0px 8px 32px 0px;
 }
 
 html,
@@ -197,14 +225,13 @@ body,
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
   font-weight: 400;
-  font-feature-settings: "cv01" 1, "ss03" 1, "zero" 1;
   letter-spacing: -0.011em;
   background-color: var(--background);
   color: var(--foreground);
@@ -212,10 +239,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.font-pixel {
+  font-family: var(--font-pixel);
+  letter-spacing: 0.04em;
+}
+
 .grid-fade {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
 }
@@ -238,7 +270,6 @@ body {
 }
 
 .bottom-nav {
-  /* Keep tab bar above iOS home indicator */
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -250,12 +281,11 @@ body {
     @apply bg-background text-foreground;
   }
 
-  /* Headings — paper white, capped weight (utilities can override) */
   h1,
   h2,
   h3,
   h4 {
-    color: var(--paper);
+    color: var(--ink);
     font-weight: 510;
     letter-spacing: -0.012em;
   }
@@ -265,7 +295,6 @@ body {
   }
 }
 
-/* Cap Tailwind weight utilities at Linear's 590 max */
 @layer utilities {
   .font-medium {
     font-weight: 510;
@@ -278,18 +307,18 @@ body {
   }
 
   .surface-card {
-    background-color: var(--carbon);
+    background-color: var(--snow);
     border-radius: var(--radius-cards);
     box-shadow: var(--shadow-subtle);
   }
 }
 
-/* Swiper — Linear midnight chrome */
+/* Swiper — light chrome */
 .models-carousel .swiper-button-prev,
 .models-carousel .swiper-button-next,
 .image-studio-swiper .swiper-button-prev,
 .image-studio-swiper .swiper-button-next {
-  color: var(--mist);
+  color: var(--ink);
   --swiper-navigation-size: 18px;
   width: 2.25rem;
   height: 2.25rem;
@@ -297,18 +326,18 @@ body {
   top: 50%;
   transform: translateY(-50%);
   border-radius: var(--radius-md);
-  border: 1px solid var(--graphite);
-  background-color: var(--carbon);
-  box-shadow: var(--shadow-subtle-2);
+  border: 1px solid var(--border);
+  background-color: var(--snow);
+  box-shadow: var(--shadow-sm);
 }
 
 .models-carousel .swiper-button-prev:hover,
 .models-carousel .swiper-button-next:hover,
 .image-studio-swiper .swiper-button-prev:hover,
 .image-studio-swiper .swiper-button-next:hover {
-  background-color: var(--obsidian);
+  background-color: var(--muted);
   border-color: var(--smoke);
-  color: var(--paper);
+  color: var(--ink);
 }
 
 .models-carousel .swiper-button-prev::after,
@@ -322,6 +351,17 @@ body {
 .models-carousel .swiper-button-disabled,
 .image-studio-swiper .swiper-button-disabled {
   opacity: 0.35;
+}
+
+/* Brand rows use header arrows — hide Swiper's default nav chrome */
+.brand-models-carousel > .swiper-button-prev,
+.brand-models-carousel > .swiper-button-next {
+  display: none;
+}
+
+.studio-sidebar {
+  width: var(--studio-sidebar-width);
+  min-width: var(--studio-sidebar-width);
 }
 
 .image-studio-swiper {
@@ -342,12 +382,12 @@ body {
 }
 
 .image-studio-swiper .swiper-pagination-bullet {
-  background: var(--ash);
+  background: var(--stone);
   opacity: 1;
 }
 
 .image-studio-swiper .swiper-pagination-bullet-active {
-  background: var(--acid-lime);
+  background: var(--ink);
 }
 
 /* iOS Safari zooms focused fields under 16px — keep all text inputs ≥16px */
@@ -362,4 +402,3 @@ body {
     font-size: max(16px, 1em);
   }
 }
-

@@ -43,7 +43,7 @@ export function WalletConnectDialog() {
 
   return (
     <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
-      <DialogContent className="border-border bg-carbon sm:max-w-md">
+      <DialogContent className="border-border bg-snow sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="size-5" />
@@ -91,7 +91,7 @@ export function WalletConnectDialog() {
                 }
               }}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-void">
+              <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-paper">
                 <img
                   src={p.logoSrc}
                   alt=""

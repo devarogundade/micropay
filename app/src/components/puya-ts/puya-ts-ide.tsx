@@ -415,7 +415,10 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       const res = await fetch(apiUrl('/api/v1/puya-ts/compile'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files, entry: entryPath }),
+        body: JSON.stringify({
+          files: Object.entries(files).map(([path, content]) => ({ path, content })),
+          entry: entryPath,
+        }),
       })
       const raw: unknown = await res.json()
       if (
@@ -477,8 +480,13 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
   }
 
   async function confirmDeploy() {
-    if (!compileResult?.ok || !compileResult.approvalTeal || !compileResult.clearTeal) {
-      toast.error('Compile successfully before deploying')
+    if (
+      !compileResult?.ok ||
+      compileResult.mode !== 'puya-ts' ||
+      !compileResult.approvalTeal ||
+      !compileResult.clearTeal
+    ) {
+      toast.error('A successful Puya compile is required before deploying')
       return
     }
     if (!account) {
@@ -595,10 +603,10 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
   const editorColumnPct = 100 - layout.chatPct
 
   return (
-    <div ref={rootRef} className="flex h-full min-h-0 flex-col bg-void">
+    <div ref={rootRef} className="flex h-full min-h-0 flex-col bg-paper">
       <div className="ws-body flex min-h-0 flex-1 overflow-hidden">
         <aside
-          className="hidden min-h-0 shrink-0 flex-col border-r border-border bg-carbon md:flex"
+          className="hidden min-h-0 shrink-0 flex-col border-r border-border bg-snow md:flex"
           style={{ width: layout.sidebarW }}
         >
           <div className="workspace-bar flex items-center gap-2 border-b border-border px-3">
@@ -665,7 +673,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
           className="flex min-h-0 min-w-0 flex-col border-b border-border lg:border-b-0"
           style={{ flex: `1 1 ${editorColumnPct}%`, minWidth: 0 }}
         >
-          <div className="workspace-bar flex items-center gap-1 overflow-x-auto border-b border-border bg-carbon px-2">
+          <div className="workspace-bar flex items-center gap-1 overflow-x-auto border-b border-border bg-snow px-2">
             <Button
               size="sm"
               className="h-8 gap-1.5"
@@ -684,7 +692,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
               variant="outline"
               className="h-8 gap-1.5"
               onClick={() => setDeployOpen(true)}
-              disabled={!compileResult?.ok}
+              disabled={compileResult?.mode !== 'puya-ts' || !compileResult.ok}
             >
               <Rocket className="size-3.5" />
               Deploy
@@ -694,7 +702,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
               value={network}
               onValueChange={(v) => setNetwork(v as DeployNetwork)}
             >
-              <SelectTrigger size="sm" className="h-8 min-w-[7.5rem] bg-void">
+              <SelectTrigger size="sm" className="h-8 min-w-[7.5rem] bg-paper">
                 <SelectValue placeholder="Network" />
               </SelectTrigger>
               <SelectContent>
@@ -772,8 +780,8 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
             </div>
           </div>
 
-          <div className="flex items-center border-b border-border bg-void">
-            <div className="flex h-8 items-center gap-1.5 border-r border-border bg-carbon px-3 text-[12px] text-paper">
+          <div className="flex items-center border-b border-border bg-paper">
+            <div className="flex h-8 items-center gap-1.5 border-r border-border bg-snow px-3 text-[12px] text-ink">
               <FileCode2 className="size-3 text-signal-teal" />
               <span className="font-mono">{filename}</span>
             </div>
@@ -800,7 +808,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
             />
 
             <div
-              className="flex min-h-0 shrink-0 flex-col border-t border-border bg-void"
+              className="flex min-h-0 shrink-0 flex-col border-t border-border bg-paper"
               style={{ height: layout.terminalH }}
             >
               <Tabs
@@ -808,7 +816,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                 onValueChange={(v) => setTerminalTab(v as TerminalTab)}
                 className="flex min-h-0 flex-1 flex-col"
               >
-                <div className="flex items-center border-b border-border bg-carbon px-2">
+                <div className="flex items-center border-b border-border bg-snow px-2">
                   <TabsList className="h-8 bg-transparent p-0">
                     <TabsTrigger
                       value="problems"
@@ -859,7 +867,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                             key={`${d.line}-${d.column}-${i}`}
                             type="button"
                             className={cn(
-                              'flex w-full gap-2 rounded px-2 py-1 text-left hover:bg-carbon',
+                              'flex w-full gap-2 rounded px-2 py-1 text-left hover:bg-snow',
                               d.severity === 'error'
                                 ? 'text-coral-red'
                                 : 'text-bone',
@@ -899,7 +907,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                                 · {compileResult.mode}
                               </span>
                             </p>
-                            <p className="font-mono text-sm text-paper">
+                            <p className="font-mono text-sm text-ink">
                               {compileResult.contractName}
                             </p>
                             <ul className="mt-2 space-y-1 text-[12px] text-mist">
@@ -918,7 +926,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                                 ? ' (preview)'
                                 : ''}
                             </p>
-                            <pre className="overflow-x-auto rounded-md border border-border bg-carbon p-3 font-mono text-[11px] text-mist">
+                            <pre className="overflow-x-auto rounded-md border border-border bg-snow p-3 font-mono text-[11px] text-mist">
                               {compileResult.approvalTeal}
                             </pre>
                           </div>
@@ -926,7 +934,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                             <p className="mb-1 text-[11px] uppercase tracking-wider text-fog">
                               Clear program
                             </p>
-                            <pre className="overflow-x-auto rounded-md border border-border bg-carbon p-3 font-mono text-[11px] text-mist">
+                            <pre className="overflow-x-auto rounded-md border border-border bg-snow p-3 font-mono text-[11px] text-mist">
                               {compileResult.clearTeal}
                             </pre>
                           </div>
@@ -989,15 +997,15 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                     onSelect={setModelSlug}
                   />
                 </div>
-                <div className="hidden items-center gap-1.5 rounded-md border border-border bg-void px-2.5 py-1.5 xl:flex">
+                <div className="hidden items-center gap-1.5 rounded-md border border-border bg-paper px-2.5 py-1.5 xl:flex">
                   <img src="/assets/usdc.png" alt="" className="size-3.5" />
-                  <span className="text-[12px] font-medium text-paper">
+                  <span className="text-[12px] font-medium text-ink">
                     {formatUsdc(model.priceUsdc)}
                   </span>
                 </div>
                 {account ? (
                   <div className="flex items-center gap-1">
-                    <div className="hidden items-center gap-2 rounded-md border border-border bg-void px-2.5 py-1.5 sm:flex">
+                    <div className="hidden items-center gap-2 rounded-md border border-border bg-paper px-2.5 py-1.5 sm:flex">
                       <img
                         src="/assets/algorand.png"
                         alt=""
@@ -1034,7 +1042,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       </div>
 
       <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
-        <SheetContent className="w-[min(100%,360px)] border-border bg-carbon">
+        <SheetContent className="w-[min(100%,360px)] border-border bg-snow">
           <SheetHeader>
             <SheetTitle>Project versions</SheetTitle>
           </SheetHeader>
@@ -1051,14 +1059,14 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
                   <button
                     key={v.id}
                     type="button"
-                    className="flex w-full flex-col rounded-md border border-border bg-void px-3 py-2 text-left hover:border-mist/30"
+                    className="flex w-full flex-col rounded-md border border-border bg-paper px-3 py-2 text-left hover:border-mist/30"
                     onClick={() => {
                       setProject((prev) => restoreProjectVersion(prev, v.id))
                       setHistoryOpen(false)
                       toast.message('Restored snapshot')
                     }}
                   >
-                    <span className="text-[13px] text-paper">{v.label}</span>
+                    <span className="text-[13px] text-ink">{v.label}</span>
                     <span className="mt-0.5 font-mono text-[10px] text-fog">
                       {v.activePath} · {new Date(v.createdAt).toLocaleString()}
                     </span>
@@ -1071,7 +1079,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       </Sheet>
 
       <Dialog open={deployOpen} onOpenChange={setDeployOpen}>
-        <DialogContent className="border-border bg-carbon sm:max-w-md">
+        <DialogContent className="border-border bg-snow sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Deploy application</DialogTitle>
             <DialogDescription className="text-fog">
@@ -1083,16 +1091,16 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
               .
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 rounded-md border border-border bg-void p-3 text-[12px] text-mist">
+          <div className="space-y-2 rounded-md border border-border bg-paper p-3 text-[12px] text-mist">
             <p>
               Network:{' '}
-              <span className="font-mono text-paper">
+              <span className="font-mono text-ink">
                 {deployNetworkLabel(network)}
               </span>
             </p>
             <p>
               Contract:{' '}
-              <span className="font-mono text-paper">
+              <span className="font-mono text-ink">
                 {compileResult?.contractName ?? '—'}
               </span>
             </p>
@@ -1109,7 +1117,9 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
             </Button>
             <Button
               onClick={() => void confirmDeploy()}
-              disabled={deploying || !compileResult?.ok}
+              disabled={
+                deploying || compileResult?.mode !== 'puya-ts' || !compileResult.ok
+              }
             >
               {deploying ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -1128,7 +1138,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
           if (!o) setPathDialog(null)
         }}
       >
-        <DialogContent className="border-border bg-carbon sm:max-w-sm">
+        <DialogContent className="border-border bg-snow sm:max-w-sm">
           {pathDialog ? (
             <IdePathPrompt
               title={
@@ -1149,7 +1159,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       </Dialog>
 
       <Dialog open={backupOpen} onOpenChange={setBackupOpen}>
-        <DialogContent className="border-border bg-carbon sm:max-w-md">
+        <DialogContent className="border-border bg-snow sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Backup & load</DialogTitle>
             <DialogDescription className="text-fog">
@@ -1279,7 +1289,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
       </Dialog>
 
       <Dialog open={githubOpen} onOpenChange={setGithubOpen}>
-        <DialogContent className="border-border bg-carbon sm:max-w-lg">
+        <DialogContent className="border-border bg-snow sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>GitHub</DialogTitle>
             <DialogDescription className="text-fog whitespace-pre-wrap">

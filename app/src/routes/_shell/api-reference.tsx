@@ -25,12 +25,12 @@ const ENDPOINTS = [
   {
     method: 'POST',
     path: '/api/v1/images/generations',
-    desc: 'Image generation (requires Supabase Storage). Default waits for the job; ?async=1 returns jobId after payment (Studio then uses SSE).',
+    desc: 'Image generation. Default waits for the job; ?async=1 returns a jobId after payment.',
   },
   {
     method: 'GET',
     path: '/api/v1/images/jobs/:jobId',
-    desc: 'Job status. JSON poll by default; ?stream=1 (or Accept: text/event-stream) for SSE progress until done. On completion persists images to Supabase (no extra payment).',
+    desc: 'Job status and generated result for polling fallback while realtime progress is unavailable.',
   },
   {
     method: 'POST',
@@ -40,7 +40,7 @@ const ENDPOINTS = [
   {
     method: 'POST',
     path: '/api/v1/storage/upload',
-    desc: 'Upload a file to Supabase Storage (multipart field: file; optional folder). Hard 50 MB limit. Server-side only.',
+    desc: 'Upload a file through the backend storage service (multipart field: file). Hard 50 MB limit.',
   },
   {
     method: 'GET',
@@ -92,7 +92,7 @@ function ApiReferencePage() {
       </p>
 
       <ListCard className="mt-6 max-w-2xl p-4">
-        <p className="font-medium text-paper">Realtime</p>
+        <p className="font-medium text-ink">Realtime</p>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li>
             <span className="text-mist">SSE</span> — chat token streaming (
@@ -183,7 +183,7 @@ function ApiReferencePage() {
             {`# Browser clients: use @x402/fetch + Algorand wallet (auto PAYMENT-SIGNATURE).
 # Agents: handle 402 → sign → retry with PAYMENT-SIGNATURE.
 
-curl http://localhost:3000/api/v1/chat/completions \\
+curl http://localhost:4000/api/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "PAYMENT-SIGNATURE: <signed-payload>" \\
   -d '{

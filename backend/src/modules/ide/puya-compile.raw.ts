@@ -161,6 +161,9 @@ export async function compilePuyaTsProjectWithPuya(
   if (!structural.contractName && structural.diagnostics.some((d) => d.severity === 'error')) {
     return {
       ...structural,
+      ok: false,
+      approvalTeal: null,
+      clearTeal: null,
       notes: [
         ...structural.notes,
         `Entry file: ${entryPath}`,
@@ -176,7 +179,21 @@ export async function compilePuyaTsProjectWithPuya(
     workDir = await mkdtemp(join(baseTmp, 'compile-'))
     const written = await writeProjectFiles(workDir, files)
     if (written.length === 0) {
-      return compilePuyaTsSource(entrySource)
+      return {
+        ...structural,
+        ok: false,
+        approvalTeal: null,
+        clearTeal: null,
+        diagnostics: [
+          {
+            severity: 'error',
+            message: 'No compilable project files were written',
+            line: 1,
+            column: 1,
+          },
+          ...structural.diagnostics,
+        ],
+      }
     }
 
     const puya = await import('@algorandfoundation/puya-ts')
@@ -287,12 +304,15 @@ export async function compilePuyaTsProjectWithPuya(
 
     return {
       ...structural,
+      ok: false,
+      approvalTeal: null,
+      clearTeal: null,
       diagnostics: [
         ...diagnostics,
         {
           severity: 'warning',
           message:
-            'puya-ts did not emit TEAL artifacts; using structural stub instead',
+            'puya-ts did not emit TEAL artifacts; structural diagnostics only',
           line: 1,
           column: 1,
         },
@@ -308,10 +328,13 @@ export async function compilePuyaTsProjectWithPuya(
     const message = err instanceof Error ? err.message : String(err)
     return {
       ...structural,
+      ok: false,
+      approvalTeal: null,
+      clearTeal: null,
       diagnostics: [
         {
           severity: 'warning',
-          message: `Full puya-ts compile unavailable (${message}); using structural stub`,
+          message: `Full puya-ts compile unavailable (${message}); structural diagnostics only`,
           line: 1,
           column: 1,
         },

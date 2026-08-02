@@ -11,6 +11,11 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { AiJobStatus } from '../../common/types/enums';
 
+const realtimeOrigins = (process.env.WS_CORS_ORIGIN ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export type JobProgressEvent = {
   jobId: string;
   status: string;
@@ -29,7 +34,10 @@ export type UsageEvent = {
 };
 
 @WebSocketGateway({
-  cors: { origin: true, credentials: true },
+  cors: {
+    origin: realtimeOrigins.length ? realtimeOrigins : true,
+    credentials: true,
+  },
   namespace: '/realtime',
 })
 export class RealtimeGateway
@@ -45,6 +53,7 @@ export class RealtimeGateway
       (client.handshake.auth?.walletAddress as string | undefined) ||
       (client.handshake.query?.wallet as string | undefined);
     if (wallet) {
+      client.data.walletAddress = wallet;
       void client.join(this.walletRoom(wallet));
       this.logger.debug(`WS connected ${client.id} wallet=${wallet}`);
     } else {
@@ -59,26 +68,26 @@ export class RealtimeGateway
   @SubscribeMessage('join')
   handleJoin(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: { walletAddress?: string; rooms?: string[] },
+    @MessageBody() body: { walletAddress?: string },
   ) {
-    if (body?.walletAddress) {
+    if (
+      body?.walletAddress &&
+      body.walletAddress === client.data.walletAddress
+    ) {
       void client.join(this.walletRoom(body.walletAddress));
+      return { ok: true };
     }
-    for (const room of body?.rooms ?? []) {
-      void client.join(room);
-    }
-    return { ok: true };
+    return { ok: false };
   }
 
   @SubscribeMessage('subscribeJob')
   handleSubscribeJob(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() _client: Socket,
     @MessageBody() body: { jobId: string },
   ) {
-    if (body?.jobId) {
-      void client.join(this.jobRoom(body.jobId));
-    }
-    return { ok: true };
+    // Wallet-scoped events are delivered through the room joined at handshake.
+    // Job rooms require ownership authentication before they can be exposed.
+    return { ok: false, jobId: body?.jobId };
   }
 
   /** Emit progress; also fans out terminal events as job.completed / job.failed. */
@@ -120,7 +129,6 @@ export class RealtimeGateway
     if (walletAddress) {
       this.server.to(this.walletRoom(walletAddress)).emit(event, payload);
     }
-    this.server.emit(event, payload);
   }
 
   emitUsage(event: UsageEvent) {
@@ -129,7 +137,6 @@ export class RealtimeGateway
         .to(this.walletRoom(event.walletAddress))
         .emit('usage.updated', event);
     }
-    this.server.emit('usage.updated', event);
   }
 
   walletRoom(wallet: string) {

@@ -8,6 +8,7 @@ import {
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { findWithPagination } from '../../common/helpers/typeorm-query.helper';
 import { UsersService } from '../users/users.service';
+import { PaymentsService } from '../payments/payments.service';
 
 export type UserStats = {
   totalSpendUsdc: number;
@@ -15,6 +16,10 @@ export type UserStats = {
   totalRequests: number;
   settledRequests: number;
   byType: Array<{ type: string; count: number; spendUsdc: number }>;
+  dailyCreditAllowanceUsdc: number;
+  dailyCreditUsedUsdc: number;
+  dailyCreditRemainingUsdc: number;
+  creditResetsAt: string;
 };
 
 @Injectable()
@@ -23,6 +28,7 @@ export class ActivitiesService {
     @InjectRepository(ActivityEntity)
     private readonly repo: Repository<ActivityEntity>,
     private readonly users: UsersService,
+    private readonly payments: PaymentsService,
   ) {}
 
   async listForWallet(
@@ -128,6 +134,7 @@ export class ActivitiesService {
   }
 
   async statsForWallet(wallet: string): Promise<UserStats> {
+    const credit = await this.payments.getDailyCredit(wallet);
     const startOfToday = new Date();
     startOfToday.setUTCHours(0, 0, 0, 0);
 
@@ -152,6 +159,10 @@ export class ActivitiesService {
       ),
       totalRequests: all.length,
       settledRequests: settled.length,
+      dailyCreditAllowanceUsdc: credit.allowanceUsdc,
+      dailyCreditUsedUsdc: credit.usedUsdc,
+      dailyCreditRemainingUsdc: credit.remainingUsdc,
+      creditResetsAt: credit.resetsAt,
       byType: [...byTypeMap.entries()].map(([type, v]) => ({
         type,
         count: v.count,

@@ -11,8 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as AppRouteImport } from './routes/app'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShellIndexRouteImport } from './routes/_shell/index'
 import { Route as ShellActivitiesRouteImport } from './routes/_shell/activities'
 import { Route as ShellAgentsRouteImport } from './routes/_shell/agents'
@@ -22,19 +20,6 @@ import { Route as ShellTryRouteImport } from './routes/_shell/try'
 import { Route as AppSplatRouteImport } from './routes/app/$'
 import { Route as ShellModelsIndexRouteImport } from './routes/_shell/models/index'
 import { Route as ShellModelsSlugRouteImport } from './routes/_shell/models/$slug'
-import { Route as ApiV1ActivitiesRouteImport } from './routes/api/v1/activities'
-import { Route as ApiV1ModelsRouteImport } from './routes/api/v1/models'
-import { Route as ApiV1AudioHistoryRouteImport } from './routes/api/v1/audio/history'
-import { Route as ApiV1AudioTranscriptionsRouteImport } from './routes/api/v1/audio/transcriptions'
-import { Route as ApiV1ChatCompletionsRouteImport } from './routes/api/v1/chat/completions'
-import { Route as ApiV1ChatSessionsRouteImport } from './routes/api/v1/chat/sessions'
-import { Route as ApiV1IdeAgentRouteImport } from './routes/api/v1/ide/agent'
-import { Route as ApiV1ImagesGenerationsRouteImport } from './routes/api/v1/images/generations'
-import { Route as ApiV1ImagesHistoryRouteImport } from './routes/api/v1/images/history'
-import { Route as ApiV1PuyaTsCompileRouteImport } from './routes/api/v1/puya-ts/compile'
-import { Route as ApiV1StorageUploadRouteImport } from './routes/api/v1/storage/upload'
-import { Route as ApiV1ChatSessionsSessionIdRouteImport } from './routes/api/v1/chat/sessions/$sessionId'
-import { Route as ApiV1ImagesJobsJobIdRouteImport } from './routes/api/v1/images/jobs/$jobId'
 
 const ShellRoute = ShellRouteImport.update({
   id: '/_shell',
@@ -43,16 +28,6 @@ const ShellRoute = ShellRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShellIndexRoute = ShellIndexRouteImport.update({
@@ -100,79 +75,10 @@ const ShellModelsSlugRoute = ShellModelsSlugRouteImport.update({
   path: '/models/$slug',
   getParentRoute: () => ShellRoute,
 } as any)
-const ApiV1ActivitiesRoute = ApiV1ActivitiesRouteImport.update({
-  id: '/api/v1/activities',
-  path: '/api/v1/activities',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ModelsRoute = ApiV1ModelsRouteImport.update({
-  id: '/api/v1/models',
-  path: '/api/v1/models',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1AudioHistoryRoute = ApiV1AudioHistoryRouteImport.update({
-  id: '/api/v1/audio/history',
-  path: '/api/v1/audio/history',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1AudioTranscriptionsRoute =
-  ApiV1AudioTranscriptionsRouteImport.update({
-    id: '/api/v1/audio/transcriptions',
-    path: '/api/v1/audio/transcriptions',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiV1ChatCompletionsRoute = ApiV1ChatCompletionsRouteImport.update({
-  id: '/api/v1/chat/completions',
-  path: '/api/v1/chat/completions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ChatSessionsRoute = ApiV1ChatSessionsRouteImport.update({
-  id: '/api/v1/chat/sessions',
-  path: '/api/v1/chat/sessions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1IdeAgentRoute = ApiV1IdeAgentRouteImport.update({
-  id: '/api/v1/ide/agent',
-  path: '/api/v1/ide/agent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ImagesGenerationsRoute = ApiV1ImagesGenerationsRouteImport.update({
-  id: '/api/v1/images/generations',
-  path: '/api/v1/images/generations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ImagesHistoryRoute = ApiV1ImagesHistoryRouteImport.update({
-  id: '/api/v1/images/history',
-  path: '/api/v1/images/history',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1PuyaTsCompileRoute = ApiV1PuyaTsCompileRouteImport.update({
-  id: '/api/v1/puya-ts/compile',
-  path: '/api/v1/puya-ts/compile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1StorageUploadRoute = ApiV1StorageUploadRouteImport.update({
-  id: '/api/v1/storage/upload',
-  path: '/api/v1/storage/upload',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ChatSessionsSessionIdRoute =
-  ApiV1ChatSessionsSessionIdRouteImport.update({
-    id: '/$sessionId',
-    path: '/$sessionId',
-    getParentRoute: () => ApiV1ChatSessionsRoute,
-  } as any)
-const ApiV1ImagesJobsJobIdRoute = ApiV1ImagesJobsJobIdRouteImport.update({
-  id: '/api/v1/images/jobs/$jobId',
-  path: '/api/v1/images/jobs/$jobId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ShellIndexRoute
   '/app': typeof AppRouteWithChildren
-  '/mcp': typeof McpRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/activities': typeof ShellActivitiesRoute
   '/agents': typeof ShellAgentsRoute
   '/api-reference': typeof ShellApiReferenceRoute
@@ -180,25 +86,10 @@ export interface FileRoutesByFullPath {
   '/try': typeof ShellTryRoute
   '/app/$': typeof AppSplatRoute
   '/models/$slug': typeof ShellModelsSlugRoute
-  '/api/v1/activities': typeof ApiV1ActivitiesRoute
-  '/api/v1/models': typeof ApiV1ModelsRoute
   '/models/': typeof ShellModelsIndexRoute
-  '/api/v1/audio/history': typeof ApiV1AudioHistoryRoute
-  '/api/v1/audio/transcriptions': typeof ApiV1AudioTranscriptionsRoute
-  '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
-  '/api/v1/chat/sessions': typeof ApiV1ChatSessionsRouteWithChildren
-  '/api/v1/ide/agent': typeof ApiV1IdeAgentRoute
-  '/api/v1/images/generations': typeof ApiV1ImagesGenerationsRoute
-  '/api/v1/images/history': typeof ApiV1ImagesHistoryRoute
-  '/api/v1/puya-ts/compile': typeof ApiV1PuyaTsCompileRoute
-  '/api/v1/storage/upload': typeof ApiV1StorageUploadRoute
-  '/api/v1/chat/sessions/$sessionId': typeof ApiV1ChatSessionsSessionIdRoute
-  '/api/v1/images/jobs/$jobId': typeof ApiV1ImagesJobsJobIdRoute
 }
 export interface FileRoutesByTo {
   '/app': typeof AppRouteWithChildren
-  '/mcp': typeof McpRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/activities': typeof ShellActivitiesRoute
   '/agents': typeof ShellAgentsRoute
   '/api-reference': typeof ShellApiReferenceRoute
@@ -207,27 +98,12 @@ export interface FileRoutesByTo {
   '/app/$': typeof AppSplatRoute
   '/': typeof ShellIndexRoute
   '/models/$slug': typeof ShellModelsSlugRoute
-  '/api/v1/activities': typeof ApiV1ActivitiesRoute
-  '/api/v1/models': typeof ApiV1ModelsRoute
   '/models': typeof ShellModelsIndexRoute
-  '/api/v1/audio/history': typeof ApiV1AudioHistoryRoute
-  '/api/v1/audio/transcriptions': typeof ApiV1AudioTranscriptionsRoute
-  '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
-  '/api/v1/chat/sessions': typeof ApiV1ChatSessionsRouteWithChildren
-  '/api/v1/ide/agent': typeof ApiV1IdeAgentRoute
-  '/api/v1/images/generations': typeof ApiV1ImagesGenerationsRoute
-  '/api/v1/images/history': typeof ApiV1ImagesHistoryRoute
-  '/api/v1/puya-ts/compile': typeof ApiV1PuyaTsCompileRoute
-  '/api/v1/storage/upload': typeof ApiV1StorageUploadRoute
-  '/api/v1/chat/sessions/$sessionId': typeof ApiV1ChatSessionsSessionIdRoute
-  '/api/v1/images/jobs/$jobId': typeof ApiV1ImagesJobsJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_shell': typeof ShellRouteWithChildren
   '/app': typeof AppRouteWithChildren
-  '/mcp': typeof McpRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_shell/activities': typeof ShellActivitiesRoute
   '/_shell/agents': typeof ShellAgentsRoute
   '/_shell/api-reference': typeof ShellApiReferenceRoute
@@ -236,28 +112,13 @@ export interface FileRoutesById {
   '/app/$': typeof AppSplatRoute
   '/_shell/': typeof ShellIndexRoute
   '/_shell/models/$slug': typeof ShellModelsSlugRoute
-  '/api/v1/activities': typeof ApiV1ActivitiesRoute
-  '/api/v1/models': typeof ApiV1ModelsRoute
   '/_shell/models/': typeof ShellModelsIndexRoute
-  '/api/v1/audio/history': typeof ApiV1AudioHistoryRoute
-  '/api/v1/audio/transcriptions': typeof ApiV1AudioTranscriptionsRoute
-  '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
-  '/api/v1/chat/sessions': typeof ApiV1ChatSessionsRouteWithChildren
-  '/api/v1/ide/agent': typeof ApiV1IdeAgentRoute
-  '/api/v1/images/generations': typeof ApiV1ImagesGenerationsRoute
-  '/api/v1/images/history': typeof ApiV1ImagesHistoryRoute
-  '/api/v1/puya-ts/compile': typeof ApiV1PuyaTsCompileRoute
-  '/api/v1/storage/upload': typeof ApiV1StorageUploadRoute
-  '/api/v1/chat/sessions/$sessionId': typeof ApiV1ChatSessionsSessionIdRoute
-  '/api/v1/images/jobs/$jobId': typeof ApiV1ImagesJobsJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/app'
-    | '/mcp'
-    | '/sitemap.xml'
     | '/activities'
     | '/agents'
     | '/api-reference'
@@ -265,25 +126,10 @@ export interface FileRouteTypes {
     | '/try'
     | '/app/$'
     | '/models/$slug'
-    | '/api/v1/activities'
-    | '/api/v1/models'
     | '/models/'
-    | '/api/v1/audio/history'
-    | '/api/v1/audio/transcriptions'
-    | '/api/v1/chat/completions'
-    | '/api/v1/chat/sessions'
-    | '/api/v1/ide/agent'
-    | '/api/v1/images/generations'
-    | '/api/v1/images/history'
-    | '/api/v1/puya-ts/compile'
-    | '/api/v1/storage/upload'
-    | '/api/v1/chat/sessions/$sessionId'
-    | '/api/v1/images/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/app'
-    | '/mcp'
-    | '/sitemap.xml'
     | '/activities'
     | '/agents'
     | '/api-reference'
@@ -292,26 +138,11 @@ export interface FileRouteTypes {
     | '/app/$'
     | '/'
     | '/models/$slug'
-    | '/api/v1/activities'
-    | '/api/v1/models'
     | '/models'
-    | '/api/v1/audio/history'
-    | '/api/v1/audio/transcriptions'
-    | '/api/v1/chat/completions'
-    | '/api/v1/chat/sessions'
-    | '/api/v1/ide/agent'
-    | '/api/v1/images/generations'
-    | '/api/v1/images/history'
-    | '/api/v1/puya-ts/compile'
-    | '/api/v1/storage/upload'
-    | '/api/v1/chat/sessions/$sessionId'
-    | '/api/v1/images/jobs/$jobId'
   id:
     | '__root__'
     | '/_shell'
     | '/app'
-    | '/mcp'
-    | '/sitemap.xml'
     | '/_shell/activities'
     | '/_shell/agents'
     | '/_shell/api-reference'
@@ -320,39 +151,12 @@ export interface FileRouteTypes {
     | '/app/$'
     | '/_shell/'
     | '/_shell/models/$slug'
-    | '/api/v1/activities'
-    | '/api/v1/models'
     | '/_shell/models/'
-    | '/api/v1/audio/history'
-    | '/api/v1/audio/transcriptions'
-    | '/api/v1/chat/completions'
-    | '/api/v1/chat/sessions'
-    | '/api/v1/ide/agent'
-    | '/api/v1/images/generations'
-    | '/api/v1/images/history'
-    | '/api/v1/puya-ts/compile'
-    | '/api/v1/storage/upload'
-    | '/api/v1/chat/sessions/$sessionId'
-    | '/api/v1/images/jobs/$jobId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   ShellRoute: typeof ShellRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
-  McpRoute: typeof McpRoute
-  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  ApiV1ActivitiesRoute: typeof ApiV1ActivitiesRoute
-  ApiV1ModelsRoute: typeof ApiV1ModelsRoute
-  ApiV1AudioHistoryRoute: typeof ApiV1AudioHistoryRoute
-  ApiV1AudioTranscriptionsRoute: typeof ApiV1AudioTranscriptionsRoute
-  ApiV1ChatCompletionsRoute: typeof ApiV1ChatCompletionsRoute
-  ApiV1ChatSessionsRoute: typeof ApiV1ChatSessionsRouteWithChildren
-  ApiV1IdeAgentRoute: typeof ApiV1IdeAgentRoute
-  ApiV1ImagesGenerationsRoute: typeof ApiV1ImagesGenerationsRoute
-  ApiV1ImagesHistoryRoute: typeof ApiV1ImagesHistoryRoute
-  ApiV1PuyaTsCompileRoute: typeof ApiV1PuyaTsCompileRoute
-  ApiV1StorageUploadRoute: typeof ApiV1StorageUploadRoute
-  ApiV1ImagesJobsJobIdRoute: typeof ApiV1ImagesJobsJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -369,20 +173,6 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_shell/': {
@@ -448,97 +238,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellModelsSlugRouteImport
       parentRoute: typeof ShellRoute
     }
-    '/api/v1/activities': {
-      id: '/api/v1/activities'
-      path: '/api/v1/activities'
-      fullPath: '/api/v1/activities'
-      preLoaderRoute: typeof ApiV1ActivitiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/models': {
-      id: '/api/v1/models'
-      path: '/api/v1/models'
-      fullPath: '/api/v1/models'
-      preLoaderRoute: typeof ApiV1ModelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/audio/history': {
-      id: '/api/v1/audio/history'
-      path: '/api/v1/audio/history'
-      fullPath: '/api/v1/audio/history'
-      preLoaderRoute: typeof ApiV1AudioHistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/audio/transcriptions': {
-      id: '/api/v1/audio/transcriptions'
-      path: '/api/v1/audio/transcriptions'
-      fullPath: '/api/v1/audio/transcriptions'
-      preLoaderRoute: typeof ApiV1AudioTranscriptionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/chat/completions': {
-      id: '/api/v1/chat/completions'
-      path: '/api/v1/chat/completions'
-      fullPath: '/api/v1/chat/completions'
-      preLoaderRoute: typeof ApiV1ChatCompletionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/chat/sessions': {
-      id: '/api/v1/chat/sessions'
-      path: '/api/v1/chat/sessions'
-      fullPath: '/api/v1/chat/sessions'
-      preLoaderRoute: typeof ApiV1ChatSessionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/ide/agent': {
-      id: '/api/v1/ide/agent'
-      path: '/api/v1/ide/agent'
-      fullPath: '/api/v1/ide/agent'
-      preLoaderRoute: typeof ApiV1IdeAgentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/images/generations': {
-      id: '/api/v1/images/generations'
-      path: '/api/v1/images/generations'
-      fullPath: '/api/v1/images/generations'
-      preLoaderRoute: typeof ApiV1ImagesGenerationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/images/history': {
-      id: '/api/v1/images/history'
-      path: '/api/v1/images/history'
-      fullPath: '/api/v1/images/history'
-      preLoaderRoute: typeof ApiV1ImagesHistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/puya-ts/compile': {
-      id: '/api/v1/puya-ts/compile'
-      path: '/api/v1/puya-ts/compile'
-      fullPath: '/api/v1/puya-ts/compile'
-      preLoaderRoute: typeof ApiV1PuyaTsCompileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/storage/upload': {
-      id: '/api/v1/storage/upload'
-      path: '/api/v1/storage/upload'
-      fullPath: '/api/v1/storage/upload'
-      preLoaderRoute: typeof ApiV1StorageUploadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/chat/sessions/$sessionId': {
-      id: '/api/v1/chat/sessions/$sessionId'
-      path: '/$sessionId'
-      fullPath: '/api/v1/chat/sessions/$sessionId'
-      preLoaderRoute: typeof ApiV1ChatSessionsSessionIdRouteImport
-      parentRoute: typeof ApiV1ChatSessionsRoute
-    }
-    '/api/v1/images/jobs/$jobId': {
-      id: '/api/v1/images/jobs/$jobId'
-      path: '/api/v1/images/jobs/$jobId'
-      fullPath: '/api/v1/images/jobs/$jobId'
-      preLoaderRoute: typeof ApiV1ImagesJobsJobIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -576,44 +275,10 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
-interface ApiV1ChatSessionsRouteChildren {
-  ApiV1ChatSessionsSessionIdRoute: typeof ApiV1ChatSessionsSessionIdRoute
-}
-
-const ApiV1ChatSessionsRouteChildren: ApiV1ChatSessionsRouteChildren = {
-  ApiV1ChatSessionsSessionIdRoute: ApiV1ChatSessionsSessionIdRoute,
-}
-
-const ApiV1ChatSessionsRouteWithChildren =
-  ApiV1ChatSessionsRoute._addFileChildren(ApiV1ChatSessionsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   ShellRoute: ShellRouteWithChildren,
   AppRoute: AppRouteWithChildren,
-  McpRoute: McpRoute,
-  SitemapDotxmlRoute: SitemapDotxmlRoute,
-  ApiV1ActivitiesRoute: ApiV1ActivitiesRoute,
-  ApiV1ModelsRoute: ApiV1ModelsRoute,
-  ApiV1AudioHistoryRoute: ApiV1AudioHistoryRoute,
-  ApiV1AudioTranscriptionsRoute: ApiV1AudioTranscriptionsRoute,
-  ApiV1ChatCompletionsRoute: ApiV1ChatCompletionsRoute,
-  ApiV1ChatSessionsRoute: ApiV1ChatSessionsRouteWithChildren,
-  ApiV1IdeAgentRoute: ApiV1IdeAgentRoute,
-  ApiV1ImagesGenerationsRoute: ApiV1ImagesGenerationsRoute,
-  ApiV1ImagesHistoryRoute: ApiV1ImagesHistoryRoute,
-  ApiV1PuyaTsCompileRoute: ApiV1PuyaTsCompileRoute,
-  ApiV1StorageUploadRoute: ApiV1StorageUploadRoute,
-  ApiV1ImagesJobsJobIdRoute: ApiV1ImagesJobsJobIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

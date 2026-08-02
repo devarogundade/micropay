@@ -1,16 +1,20 @@
 /**
  * Client fetchers for activities / user stats against Nest.
- * Call shape mirrors former createServerFn: `fn({ data })`.
+ * The input wrapper is retained for existing component call sites.
  */
 
 import { apiUrl } from '#/lib/api-url'
-import type { Activity, ActivityStatus, UserStats } from '#/lib/activities-store'
+import type { Activity, ActivityStatus, UserStats } from '#/lib/api-types'
 
 const emptyStats: UserStats = {
   totalSpendUsdc: 0,
   todaySpendUsdc: 0,
   totalRequests: 0,
   settledRequests: 0,
+  dailyCreditAllowanceUsdc: 0.1,
+  dailyCreditUsedUsdc: 0,
+  dailyCreditRemainingUsdc: 0.1,
+  creditResetsAt: '',
   byType: [],
 }
 

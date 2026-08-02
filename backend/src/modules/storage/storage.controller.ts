@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
@@ -14,6 +15,7 @@ import { SkipTransform } from '../../common/decorators/skip-transform.decorator'
 import { WalletAddress } from '../../common/decorators/wallet-address.decorator';
 import { ok } from '../../common/dto/api-response.dto';
 import { StorageService } from './storage.service';
+import { MAX_UPLOAD_BYTES } from './storage.service';
 
 class PresignDto {
   @IsOptional()
@@ -43,16 +45,18 @@ export class StorageController {
   /** Legacy flat shape for app `uploadToStorage` (no envelope). */
   @SkipTransform()
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } }),
+  )
   async upload(
     @UploadedFile() file: Express.Multer.File | undefined,
     @WalletAddress() wallet?: string,
     @Body('folder') folder?: string,
   ) {
     if (!file) {
-      return {
+      throw new BadRequestException({
         error: { code: 'bad_request', message: 'file is required' },
-      };
+      });
     }
     const asset = await this.storage.uploadBuffer({
       buffer: file.buffer,

@@ -11,6 +11,7 @@ export const envValidationSchema = Joi.object({
 
   DATABASE_URL: Joi.string().required(),
   DATABASE_SYNC: Joi.boolean().truthy('true').falsy('false').default(false),
+  DATABASE_SSL: Joi.boolean().truthy('true').falsy('false').optional(),
   DATABASE_LOGGING: Joi.boolean().truthy('true').falsy('false').default(false),
 
   REDIS_HOST: Joi.string().default('127.0.0.1'),

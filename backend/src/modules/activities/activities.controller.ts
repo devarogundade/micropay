@@ -22,6 +22,10 @@ export class ActivitiesController {
       todaySpendUsdc: 0,
       totalRequests: 0,
       settledRequests: 0,
+      dailyCreditAllowanceUsdc: 0.1,
+      dailyCreditUsedUsdc: 0,
+      dailyCreditRemainingUsdc: 0.1,
+      creditResetsAt: new Date(new Date().setUTCHours(24, 0, 0, 0)).toISOString(),
       byType: [] as Array<{ type: string; count: number; spendUsdc: number }>,
     };
 

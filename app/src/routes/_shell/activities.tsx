@@ -38,7 +38,7 @@ import {
 } from '#/components/ui/select'
 import { formatUsdc } from '#/data/models'
 import { fetchActivities } from '#/lib/activities.functions'
-import type { Activity, ActivityStatus } from '#/lib/activities-store'
+import type { Activity, ActivityStatus } from '#/lib/api-types'
 import { queryKeys } from '#/lib/query-keys'
 import { useWallet } from '#/lib/wallet'
 
@@ -136,7 +136,7 @@ function ActivitiesPage() {
                   Today
                 </p>
                 <p className="font-semibold tabular-nums">
-                  {formatUsdc(stats.todaySpendUsdc)}
+                  {formatUsdc(stats.dailyCreditRemainingUsdc)}
                 </p>
               </div>
             </>
@@ -162,7 +162,9 @@ function ActivitiesPage() {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-64 text-xs" align="end">
-                Filtered list total: {formatUsdc(total)}. Lifetime and today come
+                Daily credit used: {formatUsdc(stats?.dailyCreditUsedUsdc ?? 0)} of{' '}
+                {formatUsdc(stats?.dailyCreditAllowanceUsdc ?? 0.1)}. Filtered list total:{' '}
+                {formatUsdc(total)}. Lifetime and today come
                 from wallet stats. Tx links open Algorand explorer (mainnet).
               </PopoverContent>
             </Popover>
@@ -290,7 +292,7 @@ function ActivitiesPage() {
           {/* Mobile card list */}
           <div className="mt-6 md:hidden">
             {showLoading && rows.length === 0 ? (
-              <div className="rounded-xl border border-border bg-carbon/60 p-4">
+              <div className="rounded-xl border border-border bg-snow/80 p-4">
                 <LoadingState compact label="Loading activity…" />
                 <SkeletonLines className="mt-3" lines={4} />
               </div>
@@ -425,7 +427,7 @@ function ActivitiesPage() {
                               href={explorer}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-mist hover:text-paper"
+                              className="inline-flex items-center gap-1 text-mist hover:text-ink"
                               title={a.txId}
                             >
                               {a.txId.slice(0, 8)}…
@@ -524,7 +526,7 @@ function DetailRow({
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-3 last:border-0 last:pb-0">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 text-right text-paper">{value}</dd>
+      <dd className="min-w-0 text-right text-ink">{value}</dd>
     </div>
   )
 }

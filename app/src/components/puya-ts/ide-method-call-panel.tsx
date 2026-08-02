@@ -118,7 +118,7 @@ export function IdeMethodCallPanel({
               setArgValues({})
             }}
           >
-            <SelectTrigger className="bg-void font-mono text-sm">
+            <SelectTrigger className="bg-paper font-mono text-sm">
               <SelectValue placeholder="Select method" />
             </SelectTrigger>
             <SelectContent>
@@ -170,13 +170,13 @@ export function IdeMethodCallPanel({
       </Button>
 
       {lastResult ? (
-        <div className="space-y-1 rounded-md border border-border bg-carbon p-3 font-mono text-[12px] text-mist">
+        <div className="space-y-1 rounded-md border border-border bg-snow p-3 font-mono text-[12px] text-mist">
           <p>
             <span className="text-fog">tx:</span> {lastResult.txId || '—'}
           </p>
           <p>
             <span className="text-fog">return:</span>{' '}
-            <span className="text-paper">
+            <span className="text-ink">
               {lastResult.returnValue ?? '(void)'}
             </span>
           </p>

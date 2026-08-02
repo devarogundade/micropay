@@ -1,12 +1,12 @@
 /**
- * Recently used models — Nest `/api/v1/models/recent` + catalog join (no Prisma).
+ * Recently used models from Nest, joined with the live catalog in the browser.
  */
 
 import { apiUrl } from '#/lib/api-url'
 import { normalizeWalletAddress } from '#/lib/wallet-address'
 import type { Model } from '#/data/models'
-import { routerModelToUi } from '#/lib/zg-catalog'
-import type { RouterModel } from '#/lib/zg-router'
+import type { RouterModel } from '#/lib/api-types'
+import { routerModelToUi } from '#/lib/model-catalog'
 
 export type ModelUsageRow = {
   modelSlug: string
@@ -15,35 +15,17 @@ export type ModelUsageRow = {
   useCount: number
 }
 
-function nestOrigin(): string {
-  return (
-    (typeof process !== 'undefined' &&
-      (process.env.VITE_PUBLIC_API_URL || process.env.NEST_API_URL)?.replace(
-        /\/$/,
-        '',
-      )) ||
-    apiUrl('').replace(/\/$/, '') ||
-    'http://localhost:4000'
-  )
-}
-
 async function fetchCatalogModels(): Promise<Model[]> {
   try {
-    const res = await fetch(`${nestOrigin()}/api/v1/models`, {
+    const res = await fetch(apiUrl('/api/v1/models'), {
       headers: { Accept: 'application/json' },
     })
     if (!res.ok) return []
     const raw = (await res.json()) as {
-      data?: Array<RouterModel & { price_usdc?: number }>
+      data?: RouterModel[]
     }
     const list = Array.isArray(raw.data) ? raw.data : []
-    return list.map((rm) => {
-      const ui = routerModelToUi(rm)
-      if (typeof rm.price_usdc === 'number' && rm.price_usdc > 0) {
-        ui.priceUsdc = rm.price_usdc
-      }
-      return ui
-    })
+    return list.map(routerModelToUi)
   } catch {
     return []
   }

@@ -12,12 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
 import { Route as TemplatesIdRouteImport } from './routes/templates/$id'
-import { Route as ApiV1CloneRouteImport } from './routes/api/v1/clone'
-import { Route as ApiV1ModelsRouteImport } from './routes/api/v1/models'
-import { Route as ApiV1IdeAgentRouteImport } from './routes/api/v1/ide/agent'
-import { Route as ApiV1PuyaTsCompileRouteImport } from './routes/api/v1/puya-ts/compile'
-import { Route as ApiV1TemplatesIndexRouteImport } from './routes/api/v1/templates/index'
-import { Route as ApiV1TemplatesIdRouteImport } from './routes/api/v1/templates/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,117 +28,35 @@ const TemplatesIdRoute = TemplatesIdRouteImport.update({
   path: '/templates/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiV1CloneRoute = ApiV1CloneRouteImport.update({
-  id: '/api/v1/clone',
-  path: '/api/v1/clone',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ModelsRoute = ApiV1ModelsRouteImport.update({
-  id: '/api/v1/models',
-  path: '/api/v1/models',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1IdeAgentRoute = ApiV1IdeAgentRouteImport.update({
-  id: '/api/v1/ide/agent',
-  path: '/api/v1/ide/agent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1PuyaTsCompileRoute = ApiV1PuyaTsCompileRouteImport.update({
-  id: '/api/v1/puya-ts/compile',
-  path: '/api/v1/puya-ts/compile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1TemplatesIndexRoute = ApiV1TemplatesIndexRouteImport.update({
-  id: '/api/v1/templates/',
-  path: '/api/v1/templates/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1TemplatesIdRoute = ApiV1TemplatesIdRouteImport.update({
-  id: '/api/v1/templates/$id',
-  path: '/api/v1/templates/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/': typeof TemplatesIndexRoute
-  '/api/v1/clone': typeof ApiV1CloneRoute
-  '/api/v1/models': typeof ApiV1ModelsRoute
-  '/api/v1/ide/agent': typeof ApiV1IdeAgentRoute
-  '/api/v1/puya-ts/compile': typeof ApiV1PuyaTsCompileRoute
-  '/api/v1/templates/$id': typeof ApiV1TemplatesIdRoute
-  '/api/v1/templates/': typeof ApiV1TemplatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates': typeof TemplatesIndexRoute
-  '/api/v1/clone': typeof ApiV1CloneRoute
-  '/api/v1/models': typeof ApiV1ModelsRoute
-  '/api/v1/ide/agent': typeof ApiV1IdeAgentRoute
-  '/api/v1/puya-ts/compile': typeof ApiV1PuyaTsCompileRoute
-  '/api/v1/templates/$id': typeof ApiV1TemplatesIdRoute
-  '/api/v1/templates': typeof ApiV1TemplatesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/templates/': typeof TemplatesIndexRoute
-  '/api/v1/clone': typeof ApiV1CloneRoute
-  '/api/v1/models': typeof ApiV1ModelsRoute
-  '/api/v1/ide/agent': typeof ApiV1IdeAgentRoute
-  '/api/v1/puya-ts/compile': typeof ApiV1PuyaTsCompileRoute
-  '/api/v1/templates/$id': typeof ApiV1TemplatesIdRoute
-  '/api/v1/templates/': typeof ApiV1TemplatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/templates/$id'
-    | '/templates/'
-    | '/api/v1/clone'
-    | '/api/v1/models'
-    | '/api/v1/ide/agent'
-    | '/api/v1/puya-ts/compile'
-    | '/api/v1/templates/$id'
-    | '/api/v1/templates/'
+  fullPaths: '/' | '/templates/$id' | '/templates/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/templates/$id'
-    | '/templates'
-    | '/api/v1/clone'
-    | '/api/v1/models'
-    | '/api/v1/ide/agent'
-    | '/api/v1/puya-ts/compile'
-    | '/api/v1/templates/$id'
-    | '/api/v1/templates'
-  id:
-    | '__root__'
-    | '/'
-    | '/templates/$id'
-    | '/templates/'
-    | '/api/v1/clone'
-    | '/api/v1/models'
-    | '/api/v1/ide/agent'
-    | '/api/v1/puya-ts/compile'
-    | '/api/v1/templates/$id'
-    | '/api/v1/templates/'
+  to: '/' | '/templates/$id' | '/templates'
+  id: '__root__' | '/' | '/templates/$id' | '/templates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   TemplatesIdRoute: typeof TemplatesIdRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
-  ApiV1CloneRoute: typeof ApiV1CloneRoute
-  ApiV1ModelsRoute: typeof ApiV1ModelsRoute
-  ApiV1IdeAgentRoute: typeof ApiV1IdeAgentRoute
-  ApiV1PuyaTsCompileRoute: typeof ApiV1PuyaTsCompileRoute
-  ApiV1TemplatesIdRoute: typeof ApiV1TemplatesIdRoute
-  ApiV1TemplatesIndexRoute: typeof ApiV1TemplatesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -170,48 +82,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/clone': {
-      id: '/api/v1/clone'
-      path: '/api/v1/clone'
-      fullPath: '/api/v1/clone'
-      preLoaderRoute: typeof ApiV1CloneRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/models': {
-      id: '/api/v1/models'
-      path: '/api/v1/models'
-      fullPath: '/api/v1/models'
-      preLoaderRoute: typeof ApiV1ModelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/ide/agent': {
-      id: '/api/v1/ide/agent'
-      path: '/api/v1/ide/agent'
-      fullPath: '/api/v1/ide/agent'
-      preLoaderRoute: typeof ApiV1IdeAgentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/puya-ts/compile': {
-      id: '/api/v1/puya-ts/compile'
-      path: '/api/v1/puya-ts/compile'
-      fullPath: '/api/v1/puya-ts/compile'
-      preLoaderRoute: typeof ApiV1PuyaTsCompileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/templates/': {
-      id: '/api/v1/templates/'
-      path: '/api/v1/templates'
-      fullPath: '/api/v1/templates/'
-      preLoaderRoute: typeof ApiV1TemplatesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/templates/$id': {
-      id: '/api/v1/templates/$id'
-      path: '/api/v1/templates/$id'
-      fullPath: '/api/v1/templates/$id'
-      preLoaderRoute: typeof ApiV1TemplatesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -219,22 +89,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   TemplatesIdRoute: TemplatesIdRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
-  ApiV1CloneRoute: ApiV1CloneRoute,
-  ApiV1ModelsRoute: ApiV1ModelsRoute,
-  ApiV1IdeAgentRoute: ApiV1IdeAgentRoute,
-  ApiV1PuyaTsCompileRoute: ApiV1PuyaTsCompileRoute,
-  ApiV1TemplatesIdRoute: ApiV1TemplatesIdRoute,
-  ApiV1TemplatesIndexRoute: ApiV1TemplatesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

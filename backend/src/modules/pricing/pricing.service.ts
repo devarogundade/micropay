@@ -94,7 +94,12 @@ export class PricingService {
     key: string,
     opts?: { network?: string; keyType?: PricingKeyType },
   ): Promise<ResolvedPrice & { rule?: PricingRuleEntity }> {
-    const network = opts?.network ?? PricingNetworkScope.both;
+    const configuredNetwork = this.config.get<string>('network');
+    const network =
+      opts?.network ??
+      (configuredNetwork === PricingNetworkScope.mainnet
+        ? PricingNetworkScope.mainnet
+        : PricingNetworkScope.testnet);
     const qb = this.repo
       .createQueryBuilder('p')
       .where('p.active = true')
@@ -106,7 +111,8 @@ export class PricingService {
         both: PricingNetworkScope.both,
         network,
       })
-      .orderBy('p.updatedAt', 'DESC');
+      .orderBy('CASE WHEN p.network = :network THEN 0 ELSE 1 END', 'ASC')
+      .addOrderBy('p.updatedAt', 'DESC');
 
     const row = await qb.getOne();
     if (row) {

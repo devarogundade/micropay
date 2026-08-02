@@ -16,7 +16,7 @@
   "endpoints": [
     {
       "method": "POST",
-      "path": "https://code.micropay.website/api/v1/ide/agent",
+      "path": "https://api.micropay.website/api/v1/ide/agent",
       "serviceName": "Micropay IDE",
       "description": "Micropay IDE assistant with project file tools, compile, and Algorand TypeScript knowledge.",
       "mimeType": "application/json",
@@ -24,7 +24,7 @@
     },
     {
       "method": "POST",
-      "path": "https://code.micropay.website/api/v1/clone",
+      "path": "https://api.micropay.website/api/v1/clone",
       "serviceName": "Micropay Templates",
       "description": "Clone an Algorand TypeScript IDE template into your workspace (0.05 USDC).",
       "mimeType": "application/json",

@@ -79,7 +79,7 @@ export function ModelSwitcher({ current, models, busy, onSelect }: Props) {
         <Button
           variant="outline"
           size="sm"
-          className="h-9 max-w-[min(100%,160px)] gap-2 border-border bg-void px-2 font-normal sm:max-w-[min(100%,280px)] sm:px-2.5"
+          className="h-9 max-w-[min(100%,160px)] gap-2 border-border bg-paper px-2 font-normal sm:max-w-[min(100%,280px)] sm:px-2.5"
           aria-label="Switch model"
         >
           <ProviderIcon
@@ -87,7 +87,7 @@ export function ModelSwitcher({ current, models, busy, onSelect }: Props) {
             size="sm"
             className="size-6 shrink-0 border-0 shadow-none"
           />
-          <span className="min-w-0 flex-1 truncate text-left text-[13px] text-paper">
+          <span className="min-w-0 flex-1 truncate text-left text-[13px] text-ink">
             {current.name}
           </span>
           <ChevronsUpDown className="size-3.5 shrink-0 text-fog" />
@@ -95,7 +95,7 @@ export function ModelSwitcher({ current, models, busy, onSelect }: Props) {
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[min(100vw-2rem,320px)] border-border bg-carbon p-0 shadow-lg"
+        className="w-[min(100vw-2rem,320px)] border-border bg-snow p-0 shadow-lg"
       >
         <div className="border-b border-border p-2">
           <div className="relative">
@@ -104,7 +104,7 @@ export function ModelSwitcher({ current, models, busy, onSelect }: Props) {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search models…"
-              className="h-8 border-border bg-void pl-8 text-base"
+              className="h-8 border-border bg-paper pl-8 text-base"
               autoFocus
             />
           </div>
@@ -126,8 +126,8 @@ export function ModelSwitcher({ current, models, busy, onSelect }: Props) {
                     className={cn(
                       'flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors',
                       active
-                        ? 'bg-obsidian text-paper'
-                        : 'text-mist hover:bg-obsidian/70 hover:text-paper',
+                        ? 'bg-obsidian text-ink'
+                        : 'text-mist hover:bg-obsidian/70 hover:text-ink',
                     )}
                   >
                     <ProviderIcon

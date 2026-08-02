@@ -1,4 +1,4 @@
-/** Client-safe Algorand address helpers (no Prisma / Node deps). */
+/** Browser-safe Algorand address helpers. */
 
 const ALGO_ADDR = /^[A-Z2-7]{58}$/
 

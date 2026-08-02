@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   const config = app.get(ConfigService);
 
   const corsOrigins = [
@@ -31,6 +32,11 @@ async function bootstrap() {
       'X-PAYMENT',
       'X-Payment',
       'x-payment',
+      'Access-Control-Expose-Headers',
+      'X-Async',
+      'x-async',
+      'X-Micropay-Request-Id',
+      'x-micropay-request-id',
       'x-admin-api-key',
       'X-Admin-Api-Key',
     ],
@@ -38,6 +44,11 @@ async function bootstrap() {
       'PAYMENT-RESPONSE',
       'Payment-Response',
       'payment-response',
+      'PAYMENT-REQUIRED',
+      'Payment-Required',
+      'payment-required',
+      'X-Credit-Applied',
+      'X-Credit-Remaining',
     ],
   });
 

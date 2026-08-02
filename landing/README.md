@@ -26,8 +26,11 @@ VITE_PUBLIC_APP_URL=https://app.micropay.website
 VITE_PUBLIC_CODE_URL=https://code.micropay.website
 ```
 
-## Netlify
+## Vercel
 
-- Site base directory: `landing`
-- Custom domain: `micropay.website` (+ `www` → apex)
+- Create a Vercel project with Root Directory `landing`.
+- Enable access to source files outside the Root Directory for `packages/site-meta`.
+- Build command: `npm run build`; output directory: `dist`.
+- Attach `micropay.website` and `www.micropay.website`.
+- `vercel.json` handles the `www` redirect, SPA fallback, and merchant-card headers.
 - See root `DEPLOYMENT.md`

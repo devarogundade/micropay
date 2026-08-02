@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@x402/avm@2.19.0':
-    hash: e37292db2ea928387593b6cc7df7ec41a824958e7ef1e9c83186bb80e536919f
+    hash: jdosqinz6r6weuzibjhlnm6thu
     path: patches/@x402%2Favm@2.19.0.patch
 
 importers:
@@ -51,7 +51,7 @@ importers:
         version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-socket.io@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@x402/avm':
         specifier: 2.19.0
-        version: 2.19.0(patch_hash=e37292db2ea928387593b6cc7df7ec41a824958e7ef1e9c83186bb80e536919f)
+        version: 2.19.0(patch_hash=jdosqinz6r6weuzibjhlnm6thu)
       '@x402/core':
         specifier: 2.19.0
         version: 2.19.0
@@ -5715,7 +5715,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
-  '@x402/avm@2.19.0(patch_hash=e37292db2ea928387593b6cc7df7ec41a824958e7ef1e9c83186bb80e536919f)':
+  '@x402/avm@2.19.0(patch_hash=jdosqinz6r6weuzibjhlnm6thu)':
     dependencies:
       '@algorandfoundation/algokit-utils': 10.0.0-alpha.46
       '@x402/core': 2.19.0

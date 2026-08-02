@@ -1,14 +1,11 @@
 /**
  * Client fetchers for chat sessions against Nest REST.
- * Call shape mirrors former createServerFn: `fn({ data })`.
+ * The input wrapper is retained for existing component call sites.
  */
 
 import { apiUrl } from '#/lib/api-url'
 import type { StoredAttachment } from '#/lib/chat-attachments'
-import type {
-  StoredChatMessage,
-  StoredChatSession,
-} from '#/lib/chat-store'
+import type { StoredChatMessage, StoredChatSession } from '#/lib/api-types'
 import { normalizeWalletAddress } from '#/lib/wallet-address'
 
 function walletHeaders(wallet: string): HeadersInit {

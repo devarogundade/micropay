@@ -3,9 +3,7 @@
  * Canonical source: `packages/site-meta` (@micropay/site-meta).
  *
  * App and IDE are separate product surfaces. This package shares
- * challenge / identity constants. Runtime data: app owns its Prisma
- * schema/tables; code owns Code* tables (separate schema/migrations).
- * Same DATABASE_URL is OK; zero shared models/rows.
+ * challenge and identity constants. Runtime data is owned by Nest.
  */
 
 export {

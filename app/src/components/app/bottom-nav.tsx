@@ -13,7 +13,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-void/95 backdrop-blur-md md:hidden"
+      className="bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-paper/95 backdrop-blur-md md:hidden"
     >
       <ul className="mx-auto flex h-[var(--bottom-nav-height)] max-w-lg items-stretch justify-around px-1">
         {BOTTOM_NAV.map((item) => {
@@ -25,13 +25,13 @@ export function BottomNav() {
                 to={to as AppNavPath}
                 className={cn(
                   'relative flex min-h-11 w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] tracking-[-0.01em] no-underline transition-colors',
-                  isActive ? 'text-paper' : 'text-fog hover:text-mist',
+                  isActive ? 'text-ink' : 'text-fog hover:text-ink',
                 )}
               >
                 {isActive ? (
                   <span
                     aria-hidden
-                    className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-acid-lime"
+                    className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-ink"
                   />
                 ) : null}
                 <Icon

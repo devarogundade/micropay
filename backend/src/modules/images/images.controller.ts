@@ -23,6 +23,7 @@ export class ImagesController {
     @Body() body: Record<string, unknown>,
     @Headers('payment-signature') paymentSig?: string,
     @Headers('x-payment') xPayment?: string,
+    @Headers('x-micropay-request-id') requestId?: string,
     @Query('async') asyncMode?: string,
     @WalletAddress() wallet?: string,
     @Res({ passthrough: false }) res?: Response,
@@ -32,6 +33,7 @@ export class ImagesController {
       paymentHeader: paymentSig || xPayment,
       walletAddress: wallet,
       asyncOnly: asyncMode === '1',
+      requestId,
     });
     if (result.paymentRequired) {
       if (result.headers) {

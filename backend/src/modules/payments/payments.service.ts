@@ -4,6 +4,8 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ExactAvmScheme } from '@x402/avm/exact/server';
 import {
   ALGORAND_MAINNET_GENESIS_HASH,
@@ -35,6 +37,22 @@ import {
   type NetworkMode,
 } from '../../config/networks';
 import { PaymentProduct, RouteKind } from '../../common/types/enums';
+import {
+  CreditUsageEntity,
+  WalletDailyCreditEntity,
+} from '../../database/entities';
+
+const DAILY_CREDIT_MICROS = 100_000;
+
+export type CreditBreakdown = {
+  allowanceUsdc: number;
+  usedUsdc: number;
+  remainingUsdc: number;
+  listPriceUsdc: number;
+  creditAppliedUsdc: number;
+  chargeUsdc: number;
+  resetsAt: string;
+};
 
 export type X402GateOk = {
   ok: true;
@@ -43,6 +61,7 @@ export type X402GateOk = {
   paymentPayload: PaymentPayload;
   paymentRequirements: PaymentRequirements;
   declaredExtensions?: Record<string, unknown>;
+  credit: CreditBreakdown;
   settle: () => Promise<{
     headers: Record<string, string>;
     txId: string;
@@ -75,7 +94,144 @@ export class X402SettleError extends Error {
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly dataSource: DataSource,
+    @InjectRepository(WalletDailyCreditEntity)
+    private readonly dailyCredits: Repository<WalletDailyCreditEntity>,
+  ) {}
+
+  private today(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  private nextReset(): string {
+    const reset = new Date();
+    reset.setUTCDate(reset.getUTCDate() + 1);
+    reset.setUTCHours(0, 0, 0, 0);
+    return reset.toISOString();
+  }
+
+  private microsToUsdc(micros: number): number {
+    return Number((micros / 1_000_000).toFixed(6));
+  }
+
+  private usdcToMicros(amount: number): number {
+    return Math.max(0, Math.round(amount * 1_000_000));
+  }
+
+  async getDailyCredit(walletAddress?: string): Promise<CreditBreakdown> {
+    const allowance = DAILY_CREDIT_MICROS;
+    const row = walletAddress
+      ? await this.dailyCredits.findOne({
+          where: { walletAddress, day: this.today() },
+        })
+      : null;
+    const used = row ? Number(row.usedMicros) : 0;
+    return {
+      allowanceUsdc: this.microsToUsdc(allowance),
+      usedUsdc: this.microsToUsdc(used),
+      remainingUsdc: this.microsToUsdc(Math.max(0, allowance - used)),
+      listPriceUsdc: 0,
+      creditAppliedUsdc: 0,
+      chargeUsdc: 0,
+      resetsAt: this.nextReset(),
+    };
+  }
+
+  private async allocateCredit(input: {
+    requestId?: string;
+    walletAddress?: string;
+    priceUsdc: number;
+    product: PaymentProduct | string;
+    routeKind: RouteKind | string;
+  }): Promise<CreditBreakdown> {
+    const listMicros = this.usdcToMicros(input.priceUsdc);
+    if (!input.walletAddress || !input.requestId) {
+      const daily = await this.getDailyCredit(input.walletAddress);
+      return {
+        ...daily,
+        listPriceUsdc: this.microsToUsdc(listMicros),
+        chargeUsdc: this.microsToUsdc(listMicros),
+      };
+    }
+
+    return this.dataSource.transaction(async (manager) => {
+      const usageRepo = manager.getRepository(CreditUsageEntity);
+      const existing = await usageRepo.findOne({
+        where: { requestId: input.requestId },
+      });
+      if (existing) {
+        if (
+          existing.walletAddress !== input.walletAddress ||
+          Number(existing.listPriceMicros) !== listMicros
+        ) {
+          throw new Error('Credit request ID was reused for a different request');
+        }
+        const daily = await manager.getRepository(WalletDailyCreditEntity).findOneByOrFail({
+          walletAddress: existing.walletAddress,
+          day: existing.day,
+        });
+        const used = Number(daily.usedMicros);
+        const credit = Number(existing.creditMicros);
+        const charged = Number(existing.chargedMicros);
+        return {
+          allowanceUsdc: this.microsToUsdc(Number(daily.allowanceMicros)),
+          usedUsdc: this.microsToUsdc(used),
+          remainingUsdc: this.microsToUsdc(
+            Math.max(0, Number(daily.allowanceMicros) - used),
+          ),
+          listPriceUsdc: this.microsToUsdc(listMicros),
+          creditAppliedUsdc: this.microsToUsdc(credit),
+          chargeUsdc: this.microsToUsdc(charged),
+          resetsAt: this.nextReset(),
+        };
+      }
+
+      const day = this.today();
+      await manager.query(
+        `INSERT INTO "WalletDailyCredit" ("walletAddress", "day", "allowanceMicros", "usedMicros") VALUES ($1, $2, $3, 0) ON CONFLICT ("walletAddress", "day") DO NOTHING`,
+        [input.walletAddress, day, DAILY_CREDIT_MICROS],
+      );
+      const rows = (await manager.query(
+        `SELECT * FROM "WalletDailyCredit" WHERE "walletAddress" = $1 AND "day" = $2 FOR UPDATE`,
+        [input.walletAddress, day],
+      )) as WalletDailyCreditEntity[];
+      const daily = rows[0];
+      if (!daily) throw new Error('Unable to allocate daily credit');
+      const allowance = Number(daily.allowanceMicros);
+      const usedBefore = Number(daily.usedMicros);
+      const credit = Math.min(listMicros, Math.max(0, allowance - usedBefore));
+      const charged = listMicros - credit;
+      const used = usedBefore + credit;
+
+      await manager.update(
+        WalletDailyCreditEntity,
+        { walletAddress: input.walletAddress, day },
+        { usedMicros: String(used) },
+      );
+      await usageRepo.insert({
+        requestId: input.requestId,
+        walletAddress: input.walletAddress,
+        day,
+        product: String(input.product),
+        routeKind: String(input.routeKind),
+        listPriceMicros: String(listMicros),
+        creditMicros: String(credit),
+        chargedMicros: String(charged),
+      });
+
+      return {
+        allowanceUsdc: this.microsToUsdc(allowance),
+        usedUsdc: this.microsToUsdc(used),
+        remainingUsdc: this.microsToUsdc(Math.max(0, allowance - used)),
+        listPriceUsdc: this.microsToUsdc(listMicros),
+        creditAppliedUsdc: this.microsToUsdc(credit),
+        chargeUsdc: this.microsToUsdc(charged),
+        resetsAt: this.nextReset(),
+      };
+    });
+  }
 
   getNetwork(): NetworkMode {
     return (this.config.get<string>('x402.network') as NetworkMode) ?? 'testnet';
@@ -240,7 +396,36 @@ export class PaymentsService {
     url?: string;
     headers?: Record<string, string | undefined>;
     body?: unknown;
+    walletAddress?: string;
+    requestId?: string;
   }): Promise<X402GateResult> {
+    const credit = await this.allocateCredit({
+      requestId: input.requestId,
+      walletAddress: input.walletAddress,
+      priceUsdc: input.priceUsdc,
+      product: input.product,
+      routeKind: input.routeKind,
+    });
+    const amountToCharge = credit.chargeUsdc;
+
+    if (amountToCharge === 0) {
+      return {
+        ok: true,
+        payTo: this.getPayTo(),
+        priceUsdc: 0,
+        paymentPayload: {} as PaymentPayload,
+        paymentRequirements: {} as PaymentRequirements,
+        credit,
+        settle: async () => ({
+          headers: {
+            'X-Credit-Applied': String(credit.creditAppliedUsdc),
+            'X-Credit-Remaining': String(credit.remainingUsdc),
+          },
+          txId: 'credit',
+        }),
+      };
+    }
+
     if (!this.x402Configured()) {
       return {
         ok: false,
@@ -260,7 +445,7 @@ export class PaymentsService {
     const asset = this.getUsdcAsa();
     let price: string;
     try {
-      price = this.toX402Price(input.priceUsdc);
+      price = this.toX402Price(amountToCharge);
     } catch (e) {
       return {
         ok: false,
@@ -318,7 +503,7 @@ export class PaymentsService {
                   scheme: 'exact',
                   network,
                   maxAmountRequired: String(
-                    Math.round(input.priceUsdc * 1e6),
+                    Math.round(amountToCharge * 1e6),
                   ),
                   resource: input.path,
                   description: input.description,
@@ -421,6 +606,7 @@ export class PaymentsService {
       ok: true,
       payTo,
       priceUsdc: input.priceUsdc,
+      credit,
       paymentPayload,
       paymentRequirements,
       declaredExtensions,

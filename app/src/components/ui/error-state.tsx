@@ -50,7 +50,7 @@ export function ErrorState({
         <>
           <AlertCircle className="size-6 text-destructive/80" />
           <div className="space-y-1">
-            <p className="text-sm font-medium text-paper">{title}</p>
+            <p className="text-sm font-medium text-ink">{title}</p>
             {description ? (
               <p className="max-w-sm text-sm text-muted-foreground">
                 {description}

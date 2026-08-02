@@ -76,7 +76,7 @@ export function ListCardRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium text-paper">{title}</div>
+            <div className="truncate text-sm font-medium text-ink">{title}</div>
             {subtitle ? (
               <div className="mt-0.5 truncate text-xs text-muted-foreground">
                 {subtitle}

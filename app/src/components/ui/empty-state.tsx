@@ -34,7 +34,7 @@ export function EmptyState({
         className={cn(
           compact
             ? 'text-xs leading-relaxed text-muted-foreground'
-            : 'text-sm font-medium text-paper',
+            : 'text-sm font-medium text-ink',
         )}
       >
         {compact ? description || title : title}

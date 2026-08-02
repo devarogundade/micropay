@@ -28,12 +28,12 @@ function ModelDetailPage() {
   if (!model) {
     return (
       <div className="mx-auto flex min-h-full max-w-lg flex-col items-start justify-center px-4 py-16">
-        <h1 className="text-xl font-semibold text-paper">Model not found</h1>
+        <h1 className="text-xl font-semibold text-ink">Model not found</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           That model isn’t available. Pick another from the list.
         </p>
         <Button asChild variant="outline" className="mt-6">
-          <Link to="/">
+          <Link to="/models">
             <ArrowLeft className="size-4" />
             Back to models
           </Link>

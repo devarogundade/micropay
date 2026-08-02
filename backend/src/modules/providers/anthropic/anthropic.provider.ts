@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import {
   anthropicMessageToOpenaiCompletion,
+  anthropicSseToOpenaiStream,
   openaiChatBodyToAnthropicMessages,
 } from '../../ai/zg-anthropic';
 import { BaseAiProvider } from '../base.provider';
@@ -67,7 +68,18 @@ export class AnthropicProvider extends BaseAiProvider {
   async chatCompletionsStream(
     req: ChatCompletionRequest,
   ): Promise<globalThis.Response> {
-    return this.postMessages(req, true);
+    const response = await this.postMessages(req, true);
+    if (!response.ok || !response.body) return response;
+
+    const headers = new Headers(response.headers);
+    headers.set('Content-Type', 'text/event-stream; charset=utf-8');
+    headers.set('Cache-Control', 'no-cache');
+
+    return new Response(anthropicSseToOpenaiStream(response.body), {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   }
 
   private async postMessages(

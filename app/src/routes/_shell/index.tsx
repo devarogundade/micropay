@@ -1,309 +1,230 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { Search } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
-import { FreeMode, Navigation } from 'swiper/modules'
-import { Swiper, SwiperSlide } from 'swiper/react'
+import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
-import { ModelCard } from '#/components/models/model-card'
-import { ProviderIcon } from '#/components/models/provider-icon'
-import { EmptyState } from '#/components/ui/empty-state'
-import { ErrorState } from '#/components/ui/error-state'
-import { LoadingState, SkeletonLines } from '#/components/ui/loading-state'
-import { Input } from '#/components/ui/input'
+import { ModelSwitcher } from "#/components/models/model-switcher";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
-import { type ModelType } from '#/data/models'
+  PlaygroundExplore,
+  type ExploreMode,
+} from "#/components/models/playground-explore";
+import {
+  DEFAULT_PLAYGROUND_TOOLS,
+  PlaygroundPromptBar,
+  type PlaygroundToolsState,
+} from "#/components/models/playground-prompt-bar";
+import {
+  getSkipPayConfirm,
+  PayConfirmDialog,
+} from "#/components/pay-confirm-dialog";
+import { Button } from "#/components/ui/button";
+import { LoadingState } from "#/components/ui/loading-state";
+import { type Model } from "#/data/models";
 import {
   MODELS_CATALOG_STALE_MS,
   ensureModelsCatalog,
-} from '#/lib/models-catalog-query'
-import { fetchRecentlyUsedModels } from '#/lib/models-usage.functions'
-import { queryKeys } from '#/lib/query-keys'
-import { useClientGsap } from '#/lib/use-client-gsap'
-import { cn } from '#/lib/utils'
-import { useWallet } from '#/lib/wallet'
+} from "#/lib/models-catalog-query";
+import { useWallet } from "#/lib/wallet";
 
-import 'swiper/css'
-import 'swiper/css/navigation'
+const ChatPanel = lazy(() =>
+  import("#/components/models/chat-panel").then((m) => ({
+    default: m.ChatPanel,
+  })),
+);
 
-export const Route = createFileRoute('/_shell/')({
+export const Route = createFileRoute("/_shell/")({
   loader: async ({ context: { queryClient } }) => {
     try {
-      return await ensureModelsCatalog(queryClient)
+      return await ensureModelsCatalog(queryClient);
     } catch (err) {
-      console.error('[models] route loader failed', err)
+      console.error("[playground] route loader failed", err);
       return {
         models: [],
-        source: 'router' as const,
+        source: "router" as const,
         error:
-          err instanceof Error ? err.message : 'Failed to load model catalog',
-      }
+          err instanceof Error ? err.message : "Failed to load model catalog",
+      };
     }
   },
   staleTime: MODELS_CATALOG_STALE_MS,
   preloadStaleTime: MODELS_CATALOG_STALE_MS,
-  component: ModelsPage,
-})
+  component: PlaygroundPage,
+});
 
-type SortKey = 'recommended' | 'price-asc' | 'price-desc' | 'name'
+function pickDefaultChatModel(models: Model[]): Model | null {
+  const chat = models.filter((m) => m.type === "Chat");
+  if (chat.length === 0) return null;
+  const recommended = chat.find((m) => m.recommended);
+  if (recommended) return recommended;
+  return [...chat].sort((a, b) => a.priceUsdc - b.priceUsdc)[0] ?? null;
+}
 
-function ModelsPage() {
-  const catalog = Route.useLoaderData()
-  const MODELS = catalog?.models ?? []
-  const { account } = useWallet()
-  const [q, setQ] = useState('')
-  const [type, setType] = useState<'all' | ModelType>('all')
-  const [provider, setProvider] = useState<'all' | string>('all')
-  const [sort, setSort] = useState<SortKey>('recommended')
-  const root = useRef<HTMLDivElement>(null)
+function PlaygroundPage() {
+  const catalog = Route.useLoaderData();
+  const models = catalog?.models ?? [];
+  const chatModels = useMemo(
+    () => models.filter((m) => m.type === "Chat"),
+    [models],
+  );
+  const { account, setConnectOpen, fetchWithPay } = useWallet();
 
-  const recentQuery = useQuery({
-    queryKey: queryKeys.recentlyUsedModels(account?.address ?? null),
-    queryFn: () =>
-      fetchRecentlyUsedModels({
-        data: { walletAddress: account?.address, limit: 5 },
-      }),
-    enabled: Boolean(account?.address),
-    staleTime: 15_000,
-    refetchOnMount: 'always',
-  })
+  const [mode, setMode] = useState<ExploreMode>("models");
+  const [input, setInput] = useState("");
+  const [tools, setTools] = useState<PlaygroundToolsState>(
+    DEFAULT_PLAYGROUND_TOOLS,
+  );
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [active, setActive] = useState(false);
+  const [seedPrompt, setSeedPrompt] = useState<string | undefined>();
+  const [busy, setBusy] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const pendingRef = useRef<null | (() => Promise<void>)>(null);
 
-  useClientGsap(root, (gsap) => {
-    gsap.from('.models-hero', {
-      y: 10,
-      opacity: 0,
-      duration: 0.28,
-      ease: 'power2.out',
-    })
-    gsap.from('.models-strip', {
-      opacity: 0,
-      y: 8,
-      duration: 0.3,
-      delay: 0.04,
-      ease: 'power2.out',
-    })
-  })
-
-  const providers = useMemo(() => {
-    const map = new Map<string, { label: string; logoSrc: string }>()
-    for (const m of MODELS) {
-      if (!map.has(m.provider)) {
-        map.set(m.provider, { label: m.provider, logoSrc: m.logoSrc })
-      }
+  const selectedModel = useMemo(() => {
+    if (selectedSlug) {
+      return chatModels.find((m) => m.slug === selectedSlug) ?? null;
     }
-    return [...map.values()].sort((a, b) => a.label.localeCompare(b.label))
-  }, [MODELS])
+    return pickDefaultChatModel(chatModels);
+  }, [chatModels, selectedSlug]);
 
-  const filtered = useMemo(() => {
-    let list = MODELS.filter((m) => {
-      const matchesQ =
-        !q ||
-        m.name.toLowerCase().includes(q.toLowerCase()) ||
-        m.provider.toLowerCase().includes(q.toLowerCase()) ||
-        m.description.toLowerCase().includes(q.toLowerCase()) ||
-        m.slug.toLowerCase().includes(q.toLowerCase())
-      const matchesType = type === 'all' || m.type === type
-      const matchesProvider = provider === 'all' || m.provider === provider
-      return matchesQ && matchesType && matchesProvider
-    })
-    list = [...list].sort((a, b) => {
-      if (sort === 'price-asc') return a.priceUsdc - b.priceUsdc
-      if (sort === 'price-desc') return b.priceUsdc - a.priceUsdc
-      if (sort === 'name') return a.name.localeCompare(b.name)
-      return Number(b.recommended) - Number(a.recommended)
-    })
-    return list
-  }, [MODELS, q, type, provider, sort])
+  function runPaidAction(action: () => Promise<void>) {
+    setPayOpen(false);
+    setConfirming(true);
+    void action()
+      .catch(() => {
+        /* toasts in panel */
+      })
+      .finally(() => {
+        setConfirming(false);
+      });
+  }
 
-  const recentlyUsed = recentQuery.data?.models ?? []
-  const showRecentStrip = !q && type === 'all' && provider === 'all'
+  function requestPay(action: () => Promise<void>) {
+    if (!account || !fetchWithPay) {
+      setConnectOpen(true);
+      toast.message("Connect a wallet to pay");
+      return;
+    }
+    if (getSkipPayConfirm()) {
+      runPaidAction(action);
+      return;
+    }
+    pendingRef.current = action;
+    setPayOpen(true);
+  }
+
+  function startChat(prompt: string) {
+    const trimmed = prompt.trim();
+    if (!trimmed) return;
+    if (!selectedModel) {
+      toast.error("No chat models available");
+      return;
+    }
+    setSeedPrompt(trimmed);
+    setInput("");
+    setActive(true);
+  }
+
+  function resetToExplore() {
+    setActive(false);
+    setSeedPrompt(undefined);
+    setInput("");
+    setBusy(false);
+  }
 
   return (
-    <div ref={root}>
-      <div className="models-hero flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-paper sm:text-2xl">
-            Models
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pick a model. Pay with your wallet only when you use it.
-          </p>
-          {catalog.error ? (
-            <p className="mt-2 text-xs text-destructive">
-              Couldn’t load models: {catalog.error}
-            </p>
-          ) : MODELS.length > 0 ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {MODELS.length} models ready to try
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      {MODELS.length === 0 ? (
-        catalog.error ? (
-          <ErrorState
-            className="mt-10"
-            title="Couldn’t load models"
-            description={catalog.error}
-            onRetry={() => window.location.reload()}
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-paper">
+      <div className="flex h-10 shrink-0 items-center gap-2  px-3 md:px-4">
+        {selectedModel && chatModels.length > 0 ? (
+          <ModelSwitcher
+            current={selectedModel}
+            models={chatModels}
+            busy={busy}
+            onSelect={(slug) => {
+              setSelectedSlug(slug);
+              if (active) {
+                setSeedPrompt(undefined);
+              }
+            }}
           />
         ) : (
-          <EmptyState
-            className="mt-10"
-            title="No models right now"
-            description="Check back in a moment, or refresh the page."
-          />
-        )
-      ) : null}
-
-      {showRecentStrip ? (
-        <section className="models-strip mt-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Recently Used
-            </h2>
-          </div>
-          {!account ? (
-            <EmptyState
-              compact
-              title="Connect a wallet"
-              description="Connect a wallet to see models you’ve used lately."
-            />
-          ) : recentQuery.isLoading ? (
-            <div className="rounded-xl border border-border bg-carbon/60 p-4">
-              <LoadingState compact label="Loading recent models…" />
-              <SkeletonLines className="mt-3" lines={2} />
-            </div>
-          ) : recentlyUsed.length === 0 ? (
-            <EmptyState
-              compact
-              title="Nothing here yet"
-              description="Use a model from the list below — it’ll show up here next time."
-            />
-          ) : (
-            <Swiper
-              modules={[FreeMode, Navigation]}
-              freeMode
-              navigation
-              spaceBetween={12}
-              slidesPerView={1.15}
-              breakpoints={{
-                640: { slidesPerView: 2.1 },
-                1024: { slidesPerView: 3.1 },
-              }}
-              className="models-carousel !overflow-visible"
-            >
-              {recentlyUsed.map((m) => (
-                <SwiperSlide key={m.slug} className="!h-auto">
-                  <ModelCard model={m} />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          )}
-        </section>
-      ) : null}
-
-      <div className="mt-8 flex flex-col gap-2.5 sm:flex-row sm:gap-3">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search models…"
-            className="h-11 pl-9 sm:h-9"
-          />
-        </div>
-        <Select
-          value={type}
-          onValueChange={(v) => setType(v as 'all' | ModelType)}
-        >
-          <SelectTrigger className="h-11 w-full sm:h-9 sm:w-40" aria-label="Filter by type">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="Chat">Chat</SelectItem>
-            <SelectItem value="Image Gen">Image Gen</SelectItem>
-            <SelectItem value="Audio">Audio</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
-          <SelectTrigger className="h-11 w-full sm:h-9 sm:w-44" aria-label="Sort models">
-            <SelectValue placeholder="Sort" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="recommended">Recommended</SelectItem>
-            <SelectItem value="price-asc">Price ↑</SelectItem>
-            <SelectItem value="price-desc">Price ↓</SelectItem>
-            <SelectItem value="name">Name</SelectItem>
-          </SelectContent>
-        </Select>
+          <p className="text-xs text-muted-foreground">
+            {catalog.error
+              ? "Couldn’t load models"
+              : "No chat models available"}
+          </p>
+        )}
+        {active ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="ml-auto h-7 text-xs text-mist"
+            onClick={resetToExplore}
+          >
+            Back to explore
+          </Button>
+        ) : null}
       </div>
 
-      {providers.length > 1 ? (
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setProvider('all')}
-            className={cn(
-              'inline-flex h-8 items-center rounded-md border px-2.5 text-xs transition-colors',
-              provider === 'all'
-                ? 'border-smoke bg-card text-paper'
-                : 'border-border bg-transparent text-muted-foreground hover:border-smoke hover:text-paper',
-            )}
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        {active && selectedModel ? (
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center">
+                <LoadingState compact label="Opening chat…" />
+              </div>
+            }
           >
-            All
-          </button>
-          {providers.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              onClick={() => setProvider(p.label)}
-              className={cn(
-                'inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs transition-colors',
-                provider === p.label
-                  ? 'border-smoke bg-card text-paper'
-                  : 'border-border bg-transparent text-muted-foreground hover:border-smoke hover:text-paper',
-              )}
-            >
-              <ProviderIcon
-                src={p.logoSrc}
-                size="sm"
-                className="size-5 border-0 shadow-none"
+            <ChatPanel
+              key={`${selectedModel.slug}:${seedPrompt ?? "live"}`}
+              model={selectedModel}
+              onRequestPay={requestPay}
+              onBusyChange={setBusy}
+              initialPrompt={seedPrompt}
+              freshSession
+              hideSidebar
+            />
+          </Suspense>
+        ) : (
+          <>
+            <div className="h-full overflow-y-auto">
+              <PlaygroundExplore
+                mode={mode}
+                onModeChange={setMode}
+                onPrompt={(p) => {
+                  setInput(p);
+                  startChat(p);
+                }}
               />
-              {p.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+            </div>
+            <PlaygroundPromptBar
+              value={input}
+              onChange={setInput}
+              onRun={() => startChat(input)}
+              tools={tools}
+              onToolsChange={setTools}
+              onAttach={() =>
+                toast.message("Attach files after you start a chat")
+              }
+            />
+          </>
+        )}
+      </div>
 
-      <section className="mt-10">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          {q || type !== 'all' || provider !== 'all' ? 'Results' : 'All models'}
-          <span className="ml-2 font-normal normal-case tracking-normal">
-            ({filtered.length})
-          </span>
-        </h2>
-        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-          {filtered.map((m) => (
-            <ModelCard key={m.slug} model={m} />
-          ))}
-        </div>
-        {filtered.length === 0 && MODELS.length > 0 ? (
-          <EmptyState
-            className="mt-8"
-            title="No matches"
-            description="Try a different search or clear the filters."
-          />
-        ) : null}
-      </section>
+      {selectedModel ? (
+        <PayConfirmDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          model={selectedModel}
+          confirming={confirming}
+          onConfirm={() => {
+            const action = pendingRef.current;
+            pendingRef.current = null;
+            if (action) runPaidAction(action);
+          }}
+        />
+      ) : null}
     </div>
-  )
+  );
 }

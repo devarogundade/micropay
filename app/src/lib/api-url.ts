@@ -1,7 +1,7 @@
 /**
  * API helper for the app SPA.
  * Set VITE_PUBLIC_API_URL to the NestJS backend (e.g. http://localhost:4000).
- * Same-origin Start routes are thin proxies — prefer Nest directly.
+ * This client-only app always calls Nest directly.
  */
 
 import { DEFAULT_SITE_ORIGIN } from '@micropay/site-meta'
@@ -11,12 +11,7 @@ export function getApiUrl(): string {
     import.meta.env.VITE_PUBLIC_API_URL as string | undefined
   )?.replace(/\/$/, '')
   if (own) return own
-
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    return window.location.origin
-  }
-
-  return ''
+  throw new Error('VITE_PUBLIC_API_URL is required')
 }
 
 export function getSiteUrl(): string {

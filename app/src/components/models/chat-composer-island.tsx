@@ -25,4 +25,4 @@ export function ChatIslandDock({
 }
 
 export const chatIslandShellClassName =
-  'flex items-end gap-1.5 rounded-[1.35rem] border border-border/80 bg-carbon/95 p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgb(35,37,42)] backdrop-blur-md'
+  'flex items-end gap-1.5 rounded-[1.35rem] border border-border/80 bg-snow/95 p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_0_0_1px_rgba(0,0,0,0.08)] backdrop-blur-md'

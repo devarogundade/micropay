@@ -73,7 +73,7 @@ export function ChatSidebar({
 
   if (collapsed) {
     return (
-      <aside className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-carbon">
+      <aside className="flex h-full w-11 shrink-0 flex-col items-center border-r border-border bg-snow">
         <div className="workspace-bar flex w-full flex-col items-center justify-center gap-1 border-b border-border">
           <Button
             variant="ghost"
@@ -100,7 +100,7 @@ export function ChatSidebar({
   }
 
   return (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-carbon">
+    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-snow">
       <div className="workspace-bar flex items-center gap-1 border-b border-border px-2">
         <Button
           className="h-8 flex-1 justify-start gap-2 px-2.5 text-[13px]"
@@ -149,7 +149,7 @@ export function ChatSidebar({
                   className={cn(
                     'group flex items-start gap-1 rounded-md transition-colors',
                     active
-                      ? 'bg-obsidian text-paper'
+                      ? 'bg-obsidian text-ink'
                       : 'text-mist hover:bg-obsidian/60',
                   )}
                 >
@@ -174,7 +174,7 @@ export function ChatSidebar({
                   </button>
                   <button
                     type="button"
-                    className="mr-1 mt-1.5 rounded p-1 text-fog opacity-0 transition-opacity hover:bg-void hover:text-coral-red group-hover:opacity-100"
+                    className="mr-1 mt-1.5 rounded p-1 text-fog opacity-0 transition-opacity hover:bg-muted hover:text-coral-red group-hover:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation()
                       onDelete(s.id)

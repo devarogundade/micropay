@@ -1,10 +1,5 @@
-// Ensure globalThis.Buffer exists before wallet/x402 client modules load.
-import '#/lib/buffer-polyfill.js'
-
 import {
-  HeadContent,
   Outlet,
-  Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -22,8 +17,6 @@ import {
 } from '#/lib/site-meta'
 import { WalletProvider } from '#/lib/wallet'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-
-import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -65,8 +58,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         name: 'keywords',
         content: SITE_KEYWORDS.join(', '),
       },
-      { name: 'theme-color', content: '#09C72B' },
-      { name: 'color-scheme', content: 'dark' },
+      { name: 'theme-color', content: '#111111' },
+      { name: 'color-scheme', content: 'light' },
       { name: 'application-name', content: SITE_NAME },
       { name: 'author', content: SITE_NAME },
       { name: 'robots', content: 'index, follow' },
@@ -90,10 +83,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { name: 'twitter:image', content: ogImage },
     ],
     links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
       { rel: 'icon', href: '/favicon.png', type: 'image/png' },
       { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
@@ -116,7 +105,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   component: RootComponent,
-  shellComponent: RootDocument,
 })
 
 function RootComponent() {
@@ -126,24 +114,9 @@ function RootComponent() {
         <Outlet />
         <WalletConnectDialog />
         <Toaster position="top-right" richColors closeButton />
-      </TooltipProvider>
-    </WalletProvider>
-  )
-}
-
-function RootDocument({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" className="dark">
-      <head>
-        <HeadContent />
-      </head>
-      <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
         {import.meta.env.DEV ? (
           <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
+            config={{ position: 'bottom-right' }}
             plugins={[
               {
                 name: 'Tanstack Router',
@@ -153,8 +126,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             ]}
           />
         ) : null}
-        <Scripts />
-      </body>
-    </html>
+      </TooltipProvider>
+    </WalletProvider>
   )
 }

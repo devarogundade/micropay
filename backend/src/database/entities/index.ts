@@ -19,6 +19,8 @@ import { TranscriptionEntity } from './transcription.entity';
 import { UsageRecordEntity } from './usage-record.entity';
 import { UserModelUsageEntity } from './user-model-usage.entity';
 import { UserEntity } from './user.entity';
+import { CreditUsageEntity } from './credit-usage.entity';
+import { WalletDailyCreditEntity } from './wallet-daily-credit.entity';
 
 export const ALL_ENTITIES = [
   UserEntity,
@@ -42,6 +44,8 @@ export const ALL_ENTITIES = [
   FileAssetEntity,
   KnowledgeDocEntity,
   ToolDefEntity,
+  WalletDailyCreditEntity,
+  CreditUsageEntity,
 ];
 
 export {
@@ -66,4 +70,6 @@ export {
   FileAssetEntity,
   KnowledgeDocEntity,
   ToolDefEntity,
+  WalletDailyCreditEntity,
+  CreditUsageEntity,
 };

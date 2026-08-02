@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..590&family=JetBrains+Mono:wght@400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Onest:wght@300..900&display=swap");
 @import "tailwindcss";
 @plugin '@tailwindcss/typography';
 
@@ -7,8 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  Linear — midnight precision instrument
-  Dark theme tokens + shadcn semantic mapping
+  Micropay Code — app typography and geometry on dark IDE surfaces
 */
 :root {
   /* Primitive — Linear palette */
@@ -38,9 +37,8 @@
   --ink-soft: var(--ash);
 
   /* Typography */
-  --font-inter-variable: "Inter", "Inter Variable", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-berkeley-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+  --font-sans: "Onest", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     monospace;
   --font-weight-light: 300;
   --font-weight-regular: 400;
@@ -52,8 +50,9 @@
   --radius-pills: 9999px;
   --radius-small: 2px;
   --radius-badges: 4px;
-  --radius-inputs: 6px;
-  --radius-buttons: 6px;
+  --radius-inputs: 12px;
+  --radius-buttons: 12px;
+  --radius-island: 18px;
 
   /* Shadows — hairline / inset first */
   --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
@@ -102,7 +101,7 @@
   --chart-3: var(--fog);
   --chart-4: var(--ash);
   --chart-5: var(--smoke);
-  --radius: 6px;
+  --radius: 12px;
   --sidebar: var(--carbon);
   --sidebar-foreground: var(--mist);
   --sidebar-primary: var(--acid-lime);
@@ -114,8 +113,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter-variable);
-  --font-mono: var(--font-berkeley-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 
   /* Linear primitives as Tailwind colors */
   --color-void: var(--void);
@@ -176,12 +175,12 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Radii: buttons/inputs 6px, cards 12px, badges 4px, small 2px */
-  --radius-sm: 2px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
+  /* Match the app's softer controls while keeping compact IDE density. */
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
   --radius-xl: 12px;
-  --radius-2xl: 12px;
+  --radius-2xl: 18px;
   --radius-full: 9999px;
 
   --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
@@ -191,7 +190,8 @@
 
 html,
 body,
-#root {
+#root,
+#app {
   min-height: 100%;
 }
 
@@ -203,7 +203,6 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   font-weight: 400;
-  font-feature-settings: "cv01" 1, "ss03" 1, "zero" 1;
   letter-spacing: -0.011em;
   background-color: var(--background);
   color: var(--foreground);
@@ -339,7 +338,7 @@ body {
     @apply bg-background text-foreground;
   }
 
-  /* Headings — paper white, capped weight (utilities can override) */
+  /* Shared app type hierarchy on dark surfaces. */
   h1,
   h2,
   h3,
@@ -451,4 +450,3 @@ body {
     font-size: max(16px, 1em);
   }
 }
-

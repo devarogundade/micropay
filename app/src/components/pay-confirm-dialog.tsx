@@ -72,7 +72,7 @@ export function PayConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border bg-carbon sm:max-w-md">
+      <DialogContent className="border-border bg-snow sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Pay with wallet</DialogTitle>
           <DialogDescription>
@@ -121,7 +121,7 @@ export function PayConfirmDialog({
             checked={dontShowAgain}
             disabled={confirming}
             onChange={(e) => setDontShowAgain(e.target.checked)}
-            className="size-4 shrink-0 rounded border border-border bg-void accent-primary"
+            className="size-4 shrink-0 rounded border border-border bg-paper accent-primary"
           />
           Don’t show this again
         </Label>

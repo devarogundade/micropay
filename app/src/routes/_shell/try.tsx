@@ -98,7 +98,7 @@ function TryDemoPage() {
               </Button>
             ) : (
               <Button asChild variant="outline">
-                <Link to="/">Browse models</Link>
+                <Link to="/models">Browse models</Link>
               </Button>
             )
           }
@@ -160,7 +160,7 @@ function Step({
   return (
     <li
       className={cn(
-        'rounded-md border border-border bg-carbon/40 p-5',
+        'rounded-md border border-border bg-snow/40 p-5',
         active && 'border-mist/30',
       )}
     >

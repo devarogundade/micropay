@@ -61,7 +61,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 async function postIdeAgent(input: {
   model: string
   messages: IdeAgentMessage[]
-  tools?: unknown[]
+  tools?: readonly unknown[]
   fetchImpl?: typeof fetch | null
   signal?: AbortSignal
 }): Promise<{

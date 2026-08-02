@@ -1,6 +1,6 @@
 /**
  * Client helpers for template browse + x402 clone.
- * Must not import Prisma / templates-store (keeps DB out of the browser bundle).
+ * Browser client for template APIs owned by Nest.
  */
 
 import { TEMPLATE_CLONE_USDC } from '#/data/models'

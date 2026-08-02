@@ -1,4 +1,4 @@
-/** Shared template types — safe for client bundles (no Prisma / DB imports). */
+/** Browser-safe template API types. */
 
 export type TemplateFile = { path: string; content: string }
 

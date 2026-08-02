@@ -19,7 +19,7 @@ See [MIGRATION.md](./MIGRATION.md) for what moved from `app/` / `code/`.
 
 1. PostgreSQL (e.g. `localhost:5432/micropay`)
 2. Redis (e.g. `localhost:6379`)
-3. Node 20+ / pnpm
+3. Node 22.11+ / pnpm
 
 ### Setup
 
@@ -33,6 +33,25 @@ pnpm run start:dev
 ```
 
 Backend listens on **http://localhost:4000** by default.
+
+## Docker
+
+From the repository root:
+
+```powershell
+Copy-Item backend/.env.docker.example backend/.env.docker
+docker compose --env-file backend/.env.docker up --build -d
+Invoke-RestMethod http://localhost:4000/health
+```
+
+The Compose stack includes PostgreSQL, Redis, and the API/worker process. See
+`../DEPLOYMENT.md` for production migration and Vercel frontend guidance.
+
+Apply committed schema changes to an existing database before deployment:
+
+```powershell
+pnpm run migration:run
+```
 
 ### Frontends
 

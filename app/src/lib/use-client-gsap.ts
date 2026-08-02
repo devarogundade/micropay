@@ -3,7 +3,7 @@ import { useEffect, type DependencyList, type RefObject } from 'react'
 type Gsap = typeof import('gsap').default
 
 /**
- * Load GSAP only in the browser after mount so SSR/Netlify never evaluates
+ * Load GSAP only in the browser after mount so static tooling never evaluates
  * gsap's ESM entry (which crashes under CJS interop).
  */
 export function useClientGsap(

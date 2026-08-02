@@ -2,9 +2,7 @@
  * Code (IDE) re-exports of shared merchant / SEO identity.
  * Canonical source: `packages/site-meta` (@micropay/site-meta).
  *
- * App and IDE are separate product surfaces (own deploy / merchant card).
- * Same DATABASE_URL; code owns CodeUser / CodeActivity / CodeUserModelUsage /
- * CodeTemplate / CodeTemplateClone (not app User / Activity).
+ * App and IDE are separate product surfaces. Runtime data is owned by Nest.
  */
 
 export {

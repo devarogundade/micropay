@@ -13,7 +13,7 @@ export function ThinkingBlock({
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="mb-2 rounded-md border border-border/80 bg-void/60">
+    <div className="mb-2 rounded-md border border-border/80 bg-muted/60">
       <button
         type="button"
         className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"

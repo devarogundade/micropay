@@ -24,6 +24,7 @@ export class ChatController {
     @Body() body: Record<string, unknown>,
     @Headers('payment-signature') paymentSig?: string,
     @Headers('x-payment') xPayment?: string,
+    @Headers('x-micropay-request-id') requestId?: string,
     @Headers('x-async') asyncHeader?: string,
     @Query('async') asyncQuery?: string,
     @WalletAddress() wallet?: string,
@@ -35,6 +36,7 @@ export class ChatController {
       walletAddress: wallet,
       asyncHeader,
       asyncQuery,
+      requestId,
     });
 
     if (result.paymentRequired) {

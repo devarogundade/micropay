@@ -247,6 +247,7 @@ export class IdeService {
     slug?: string;
     paymentHeader?: string;
     walletAddress?: string;
+    requestId?: string;
   }) {
     const key = input.templateId || input.id || input.slug;
     if (!key) throw new NotFoundException('templateId required');
@@ -269,6 +270,8 @@ export class IdeService {
         id: input.id,
         slug: input.slug,
       },
+      walletAddress: input.walletAddress,
+      requestId: input.requestId,
     });
 
     if (!gate.ok) {
@@ -305,7 +308,7 @@ export class IdeService {
         templateId: template.id,
         walletAddress: input.walletAddress ?? null,
         txId,
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
       }),
     );
     template.clonedCount += 1;
@@ -314,7 +317,7 @@ export class IdeService {
     return {
       paymentRequired: false as const,
       template: this.toDetail(template),
-      costUsdc: priceUsdc,
+      costUsdc: gate.priceUsdc,
       txId,
       paymentHeaders,
     };
@@ -328,6 +331,7 @@ export class IdeService {
     body: Record<string, unknown>;
     paymentHeader?: string;
     walletAddress?: string;
+    requestId?: string;
     asyncOnly?: boolean;
   }) {
     this.ai.assertRouterConfigured();
@@ -345,6 +349,8 @@ export class IdeService {
       description: `IDE agent ${model}`,
       paymentHeader: input.paymentHeader,
       body: input.body,
+      walletAddress: input.walletAddress,
+      requestId: input.requestId,
     });
 
     if (!gate.ok) {
@@ -385,7 +391,7 @@ export class IdeService {
           modelSlug: model || 'unknown',
           modelName: model || 'unknown',
           type: 'IDE',
-          costUsdc: priceUsdc,
+          costUsdc: gate.priceUsdc,
           status: CodeActivityStatus.settled,
           txId,
         }),
@@ -396,7 +402,7 @@ export class IdeService {
         userId: user.id,
         product: 'code',
         model,
-        costUsdc: priceUsdc,
+        costUsdc: gate.priceUsdc,
         endpoint: '/api/v1/ide/agent',
       });
     }

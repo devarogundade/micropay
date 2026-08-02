@@ -351,7 +351,7 @@ export function PuyaTsChatPanel({
   }
 
   return (
-    <div className="flex h-full min-h-0 overflow-hidden border-l border-border bg-void">
+    <div className="flex h-full min-h-0 overflow-hidden border-l border-border bg-paper">
       <div className="hidden h-full md:flex">
         <ChatSidebar
           sessions={sessions}
@@ -368,9 +368,9 @@ export function PuyaTsChatPanel({
       </div>
 
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <div className="workspace-bar flex items-center gap-2 border-b border-border bg-carbon px-3">
+        <div className="workspace-bar flex items-center gap-2 border-b border-border bg-snow px-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] text-paper">Assistant</p>
+            <p className="truncate text-[13px] text-ink">Assistant</p>
             <p className="truncate text-[10px] text-fog">
               {model.name} · {formatUsdc(model.priceUsdc)}
             </p>
@@ -388,7 +388,7 @@ export function PuyaTsChatPanel({
         </div>
 
         <Sheet open={mobileHistoryOpen} onOpenChange={setMobileHistoryOpen}>
-          <SheetContent side="left" className="w-[min(100%,300px)] bg-carbon p-0">
+          <SheetContent side="left" className="w-[min(100%,300px)] bg-snow p-0">
             <SheetHeader className="border-b border-border px-3 py-3">
               <SheetTitle className="text-sm">History</SheetTitle>
             </SheetHeader>
@@ -435,8 +435,8 @@ export function PuyaTsChatPanel({
                   className={cn(
                     'rounded-lg px-3 py-2 text-sm',
                     m.role === 'user'
-                      ? 'ml-6 bg-obsidian text-paper'
-                      : 'mr-2 bg-carbon text-mist shadow-[inset_0_0_0_1px_rgb(35,37,42)]',
+                      ? 'ml-6 bg-ink text-snow'
+                      : 'mr-2 bg-snow text-ink shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]',
                     m.error && 'border border-coral-red/40',
                   )}
                 >
@@ -451,7 +451,7 @@ export function PuyaTsChatPanel({
                 </div>
               ))}
               {toolLog.length > 0 ? (
-                <div className="mr-2 space-y-1 rounded-lg border border-border bg-void px-3 py-2">
+                <div className="mr-2 space-y-1 rounded-lg border border-border bg-paper px-3 py-2">
                   <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-fog">
                     <Wrench className="size-3" />
                     Tools

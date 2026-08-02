@@ -98,7 +98,7 @@ export function IdeFileTree({
               key={row.path}
               className={cn(
                 'group flex w-full items-center gap-0.5 rounded-md text-[12px]',
-                isActive ? 'bg-obsidian text-paper' : 'text-mist hover:bg-obsidian/60',
+                isActive ? 'bg-obsidian text-ink' : 'text-mist hover:bg-obsidian/60',
               )}
               style={{ paddingLeft: 4 + row.depth * 12 }}
             >
@@ -186,7 +186,7 @@ export function IdePathPrompt({
   const [value, setValue] = useState(defaultValue || '')
   return (
     <div className="space-y-3">
-      <p className="text-sm text-paper">{title}</p>
+      <p className="text-sm text-ink">{title}</p>
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}

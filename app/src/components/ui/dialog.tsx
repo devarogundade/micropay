@@ -59,7 +59,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed z-50 grid w-full gap-4 border border-border bg-carbon p-6 shadow-[inset_0_0_0_1px_rgb(35,37,42)] outline-none",
+          "fixed z-50 grid w-full gap-4 border border-border bg-snow p-6 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] outline-none",
           // Mobile: bottom sheet
           "inset-x-0 bottom-0 top-auto max-h-[min(92dvh,100%)] max-w-none translate-x-0 translate-y-0 overflow-y-auto rounded-t-2xl rounded-b-none duration-300",
           "data-[state=closed]:animate-out data-[state=open]:animate-in",
