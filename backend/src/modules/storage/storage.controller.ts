@@ -18,6 +18,7 @@ import { WalletAddress } from '../../common/decorators/wallet-address.decorator'
 import { ok } from '../../common/dto/api-response.dto';
 import { StorageService } from './storage.service';
 import { MAX_UPLOAD_BYTES } from './storage.service';
+import { PdfExtractionService } from './pdf-extraction.service';
 
 class PresignDto {
   @IsOptional()
@@ -42,7 +43,10 @@ class PresignDto {
 
 @Controller('api/v1/storage')
 export class StorageController {
-  constructor(private readonly storage: StorageService) {}
+  constructor(
+    private readonly storage: StorageService,
+    private readonly pdf: PdfExtractionService,
+  ) {}
 
   /** Legacy flat shape for app `uploadToStorage` (no envelope). */
   @SkipTransform()
@@ -92,9 +96,24 @@ export class StorageController {
   /** Stable public asset URL backed by a short-lived private S3 URL. */
   @SkipTransform()
   @Get('file')
-  async file(@Query('key') key: string, @Res() response: Response) {
+  async file(
+    @Query('key') key: string,
+    @Query('download') download: string | undefined,
+    @Res() response: Response,
+  ) {
     if (!key) throw new BadRequestException('key is required');
-    const { url } = await this.storage.getPresignedDownloadUrl(key, 300);
+    const { url } = await this.storage.getPresignedDownloadUrl(
+      key,
+      300,
+      download === '1' ? `micropay-${Date.now()}.png` : undefined,
+    );
     return response.redirect(302, url);
+  }
+
+  @SkipTransform()
+  @Post('pdf/extract')
+  async extractPdf(@Body() body: { storagePath?: string; maxChars?: number }) {
+    if (!body.storagePath) throw new BadRequestException('storagePath is required');
+    return this.pdf.extractFromKey(body.storagePath, body.maxChars);
   }
 }

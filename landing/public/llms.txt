@@ -16,5 +16,5 @@
 
 ## App docs
 - https://app.micropay.website/api-reference
-- https://app.micropay.website/mcp
+- https://api.micropay.website/mcp
 - https://app.micropay.website/llms.txt

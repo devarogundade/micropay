@@ -138,14 +138,42 @@ export class StorageService {
     return { url, bucket, key, expiresIn: input.expiresIn ?? 900 };
   }
 
-  async getPresignedDownloadUrl(key: string, expiresIn = 900) {
+  async getPresignedDownloadUrl(
+    key: string,
+    expiresIn = 900,
+    filename?: string,
+  ) {
     const bucket = this.bucket();
     const client = this.getS3();
     const url = await getSignedUrl(
       client,
-      new GetObjectCommand({ Bucket: bucket, Key: key }),
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        ...(filename
+          ? {
+              ResponseContentDisposition: `attachment; filename="${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}"`,
+              ResponseContentType: 'image/png',
+            }
+          : {}),
+      }),
       { expiresIn },
     );
     return { url, bucket, key, expiresIn };
+  }
+
+  async getObjectBuffer(key: string, maxBytes: number): Promise<Buffer> {
+    const result = await this.getS3().send(
+      new GetObjectCommand({ Bucket: this.bucket(), Key: key }),
+    );
+    if (result.ContentLength && result.ContentLength > maxBytes) {
+      throw new BadRequestException(`File exceeds ${maxBytes} byte extraction limit`);
+    }
+    if (!result.Body) throw new BadRequestException('Stored file is empty');
+    const bytes = await result.Body.transformToByteArray();
+    if (bytes.byteLength > maxBytes) {
+      throw new BadRequestException(`File exceeds ${maxBytes} byte extraction limit`);
+    }
+    return Buffer.from(bytes);
   }
 }

@@ -6,13 +6,15 @@ export type StoredAttachment = {
   mime: string
   mimeType?: string
   size: number
-  kind: 'image' | 'text'
+  kind: 'image' | 'text' | 'pdf'
   /** Backend storage object path. */
   storagePath?: string
   /** Public or signed HTTPS URL for the object. */
   url?: string
   /** Text file bodies only (images omit data URLs). */
   textContent?: string
+  pages?: number
+  truncated?: boolean
 }
 
 /** Strip bulky image data URLs before sending attachment metadata. */
@@ -24,11 +26,13 @@ export function toStoredAttachments(
         mime: string
         mimeType?: string
         size: number
-        kind: 'image' | 'text'
+        kind: 'image' | 'text' | 'pdf'
         dataUrl?: string
         url?: string
         storagePath?: string
         textContent?: string
+        pages?: number
+        truncated?: boolean
       }>
     | undefined,
 ): StoredAttachment[] | undefined {
@@ -44,9 +48,11 @@ export function toStoredAttachments(
       kind: a.kind,
       ...(a.url ? { url: a.url } : {}),
       ...(a.storagePath ? { storagePath: a.storagePath } : {}),
-      ...(a.kind === 'text' && a.textContent
+      ...((a.kind === 'text' || a.kind === 'pdf') && a.textContent
         ? { textContent: a.textContent.slice(0, 50_000) }
         : {}),
+      ...(a.pages != null ? { pages: a.pages } : {}),
+      ...(a.truncated ? { truncated: true } : {}),
     }
   })
 }

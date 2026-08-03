@@ -25,7 +25,7 @@ Unauthenticated calls receive HTTP 402 with exact payment requirements (USDC ASA
 - API reference: /api-reference
 - Model catalog: /models
 - puya-ts IDE: /ide
-- MCP protocol: /mcp
+- MCP protocol: https://api.micropay.website/mcp
 - MCP setup UI: /agents
 - Machine-readable merchant card: /.well-known/x402.json
 - Agent plugin manifest: /.well-known/ai-plugin.json

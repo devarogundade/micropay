@@ -2,6 +2,25 @@ import { cn } from '#/lib/utils'
 
 type Point = { day: string; usdc: number }
 
+function smoothPath(points: Array<Point & { x: number; y: number }>, minY: number, maxY: number) {
+  if (points.length === 0) return ''
+  if (points.length === 1) return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`
+  const clampY = (value: number) => Math.max(minY, Math.min(maxY, value))
+  let path = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)]
+    const p1 = points[i]
+    const p2 = points[i + 1]
+    const p3 = points[Math.min(points.length - 1, i + 2)]
+    const cp1x = p1.x + (p2.x - p0.x) / 7.5
+    const cp1y = clampY(p1.y + (p2.y - p0.y) / 7.5)
+    const cp2x = p2.x - (p3.x - p1.x) / 7.5
+    const cp2y = clampY(p2.y - (p3.y - p1.y) / 7.5)
+    path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
+  }
+  return path
+}
+
 export function UsageChart({
   className,
   data,
@@ -31,9 +50,7 @@ export function UsageChart({
     return { ...d, x, y }
   })
 
-  const path = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
-    .join(' ')
+  const path = smoothPath(points, padY, padY + innerH)
 
   const area = `${path} L ${points[points.length - 1].x.toFixed(1)} ${(padY + innerH).toFixed(1)} L ${points[0].x.toFixed(1)} ${(padY + innerH).toFixed(1)} Z`
 

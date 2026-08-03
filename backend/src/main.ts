@@ -39,6 +39,7 @@ async function bootstrap() {
       'x-micropay-request-id',
       'x-admin-api-key',
       'X-Admin-Api-Key',
+      'MCP-Protocol-Version',
     ],
     exposedHeaders: [
       'PAYMENT-RESPONSE',

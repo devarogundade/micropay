@@ -261,7 +261,7 @@ export function buildAppMerchantCard(opts?: {
     homepage: `${app}/`,
     documentation: `${app}/api-reference`,
     llms: `${site}/llms.txt`,
-    mcp: `${app}/mcp`,
+    mcp: `${api}/mcp`,
     product: 'app',
     endpoints: [
       {

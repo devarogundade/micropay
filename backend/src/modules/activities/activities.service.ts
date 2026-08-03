@@ -9,6 +9,7 @@ import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { findWithPagination } from '../../common/helpers/typeorm-query.helper';
 import { UsersService } from '../users/users.service';
 import { PaymentsService } from '../payments/payments.service';
+import { CodeActivityEntity } from '../../database/entities/code-activity.entity';
 
 export type UserStats = {
   totalSpendUsdc: number;
@@ -27,6 +28,8 @@ export class ActivitiesService {
   constructor(
     @InjectRepository(ActivityEntity)
     private readonly repo: Repository<ActivityEntity>,
+    @InjectRepository(CodeActivityEntity)
+    private readonly codeRepo: Repository<CodeActivityEntity>,
     private readonly users: UsersService,
     private readonly payments: PaymentsService,
   ) {}
@@ -107,11 +110,23 @@ export class ActivitiesService {
       select: ['createdAt', 'costUsdc'],
     });
     const filtered = rows.filter((r) => r.createdAt >= since);
+    const appTxIds = new Set(rows.map((row) => row.txId).filter(Boolean));
+    const codeRows = await this.codeRepo.find({ where: { walletAddress: wallet } });
+    const codeFiltered = codeRows.filter(
+      (row) =>
+        row.status === 'settled' &&
+        row.createdAt >= since &&
+        !appTxIds.has(row.txId),
+    );
 
     const byDay = new Map<string, number>();
     for (const r of filtered) {
       const key = r.createdAt.toISOString().slice(0, 10);
-      byDay.set(key, (byDay.get(key) ?? 0) + (r.costUsdc || 0));
+      byDay.set(key, (byDay.get(key) ?? 0) + (Number(r.costUsdc) || 0));
+    }
+    for (const row of codeFiltered) {
+      const key = row.createdAt.toISOString().slice(0, 10);
+      byDay.set(key, (byDay.get(key) ?? 0) + (Number(row.costUsdc) || 0));
     }
 
     const now = new Date();
@@ -124,6 +139,7 @@ export class ActivitiesService {
       const label = d.toLocaleDateString(undefined, {
         month: 'short',
         day: 'numeric',
+        timeZone: 'UTC',
       });
       out.push({
         day: label,
@@ -140,25 +156,45 @@ export class ActivitiesService {
 
     const all = await this.repo.find({ where: { walletAddress: wallet } });
     const settled = all.filter((r) => r.status === ActivityStatus.settled);
+    const appTxIds = new Set(all.map((row) => row.txId).filter(Boolean));
+    const legacyCode = (await this.codeRepo.find({ where: { walletAddress: wallet } })).filter(
+      (row) => row.status === 'settled' && !appTxIds.has(row.txId),
+    );
     const today = settled.filter((r) => r.createdAt >= startOfToday);
+    const codeToday = legacyCode.filter((row) => row.createdAt >= startOfToday);
 
     const byTypeMap = new Map<string, { count: number; spendUsdc: number }>();
     for (const r of settled) {
       const cur = byTypeMap.get(r.type) ?? { count: 0, spendUsdc: 0 };
       cur.count += 1;
-      cur.spendUsdc += r.costUsdc || 0;
+      cur.spendUsdc += Number(r.costUsdc) || 0;
       byTypeMap.set(r.type, cur);
+    }
+    if (legacyCode.length) {
+      const current = byTypeMap.get('IDE') ?? { count: 0, spendUsdc: 0 };
+      current.count += legacyCode.length;
+      current.spendUsdc += legacyCode.reduce(
+        (sum, row) => sum + (Number(row.costUsdc) || 0),
+        0,
+      );
+      byTypeMap.set('IDE', current);
     }
 
     return {
       totalSpendUsdc: Number(
-        settled.reduce((s, r) => s + (r.costUsdc || 0), 0).toFixed(6),
+        (
+          settled.reduce((s, r) => s + (Number(r.costUsdc) || 0), 0) +
+          legacyCode.reduce((s, r) => s + (Number(r.costUsdc) || 0), 0)
+        ).toFixed(6),
       ),
       todaySpendUsdc: Number(
-        today.reduce((s, r) => s + (r.costUsdc || 0), 0).toFixed(6),
+        (
+          today.reduce((s, r) => s + (Number(r.costUsdc) || 0), 0) +
+          codeToday.reduce((s, r) => s + (Number(r.costUsdc) || 0), 0)
+        ).toFixed(6),
       ),
-      totalRequests: all.length,
-      settledRequests: settled.length,
+      totalRequests: all.length + legacyCode.length,
+      settledRequests: settled.length + legacyCode.length,
       dailyCreditAllowanceUsdc: credit.allowanceUsdc,
       dailyCreditUsedUsdc: credit.usedUsdc,
       dailyCreditRemainingUsdc: credit.remainingUsdc,
@@ -177,7 +213,7 @@ export class ActivitiesService {
       modelSlug: row.modelSlug,
       modelName: row.modelName,
       type: row.type,
-      costUsdc: row.costUsdc,
+      costUsdc: Number(row.costUsdc) || 0,
       status: row.status,
       txId: row.txId,
       createdAt: row.createdAt.toISOString(),

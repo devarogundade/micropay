@@ -10,7 +10,7 @@ info:
     name: Micropay
     url: /
 servers:
-  - url: /
+  - url: https://api.micropay.website
     description: Micropay public origin
 paths:
   /api/v1/chat/completions:

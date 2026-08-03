@@ -58,6 +58,7 @@ import {
 import { fetchChatSession, fetchChatSessions } from "#/lib/chat.functions";
 import {
   costUsdcFromTrace,
+  extractStoredPdf,
   providerLabelFromTrace,
   streamChatCompletions,
   uploadToStorage,
@@ -369,9 +370,33 @@ export function ChatPanel({
       }
 
       if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
-        toast.error(
-          `${file.name}: PDF is not supported here. Convert to text or attach an image.`,
-        );
+        try {
+          const stored = await uploadToStorage({
+            file,
+            filename: file.name,
+            folder: "attachments",
+          });
+          const extracted = await extractStoredPdf(stored.storagePath);
+          if (!extracted.text.trim()) {
+            toast.error(`${file.name}: no extractable text found`);
+            continue;
+          }
+          next.push({
+            id: uid(),
+            name: file.name,
+            mime: "application/pdf",
+            mimeType: "application/pdf",
+            size: file.size,
+            kind: "pdf",
+            url: stored.url,
+            storagePath: stored.storagePath,
+            textContent: extracted.text,
+            pages: extracted.pages,
+            truncated: extracted.truncated,
+          });
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : `Could not extract ${file.name}`);
+        }
         continue;
       }
 
@@ -464,7 +489,7 @@ export function ChatPanel({
       }
 
       toast.error(
-        `${file.name}: unsupported type. Attach images (png/jpeg/gif/webp) or text files.`,
+        `${file.name}: unsupported type. Attach images, PDFs, or text files.`,
       );
     }
 
@@ -1002,7 +1027,7 @@ export function ChatPanel({
               className="size-10 shrink-0 rounded-full text-fog hover:bg-obsidian hover:text-ink"
               disabled={busy || attachments.length >= MAX_ATTACHMENTS}
               title={
-                canVision ? "Attach images or text files" : "Attach text files"
+                canVision ? "Attach images, PDFs, or text files" : "Attach PDFs or text files"
               }
               onClick={() => fileRef.current?.click()}
             >
@@ -1015,8 +1040,8 @@ export function ChatPanel({
               className="hidden"
               accept={
                 canVision
-                  ? "image/png,image/jpeg,image/gif,image/webp,.png,.jpg,.jpeg,.gif,.webp,text/plain,text/markdown,text/csv,application/json,.txt,.md,.csv,.json,.xml,.yaml,.yml,.ts,.tsx,.js,.jsx,.py,.log"
-                  : "text/plain,text/markdown,text/csv,application/json,.txt,.md,.csv,.json,.xml,.yaml,.yml,.ts,.tsx,.js,.jsx,.py,.log"
+                  ? "image/png,image/jpeg,image/gif,image/webp,.png,.jpg,.jpeg,.gif,.webp,application/pdf,.pdf,text/plain,text/markdown,text/csv,application/json,.txt,.md,.csv,.json,.xml,.yaml,.yml,.ts,.tsx,.js,.jsx,.py,.log"
+                  : "application/pdf,.pdf,text/plain,text/markdown,text/csv,application/json,.txt,.md,.csv,.json,.xml,.yaml,.yml,.ts,.tsx,.js,.jsx,.py,.log"
               }
               onChange={(e) => void addFiles(e.target.files)}
               disabled={busy}

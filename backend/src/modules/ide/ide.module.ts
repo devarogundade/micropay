@@ -11,6 +11,7 @@ import { AiModule } from '../ai/ai.module';
 import { PricingModule } from '../pricing/pricing.module';
 import { IdeService } from './ide.service';
 import { IdeController } from './ide.controller';
+import { ActivitiesModule } from '../activities/activities.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { IdeController } from './ide.controller';
     UsageModule,
     AiModule,
     PricingModule,
+    ActivitiesModule,
   ],
   providers: [IdeService],
   controllers: [IdeController],

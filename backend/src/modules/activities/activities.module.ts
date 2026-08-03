@@ -5,9 +5,14 @@ import { UsersModule } from '../users/users.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { ActivitiesService } from './activities.service';
 import { ActivitiesController } from './activities.controller';
+import { CodeActivityEntity } from '../../database/entities/code-activity.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ActivityEntity]), UsersModule, PaymentsModule],
+  imports: [
+    TypeOrmModule.forFeature([ActivityEntity, CodeActivityEntity]),
+    UsersModule,
+    PaymentsModule,
+  ],
   providers: [ActivitiesService],
   controllers: [ActivitiesController],
   exports: [ActivitiesService],

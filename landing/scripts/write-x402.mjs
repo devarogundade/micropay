@@ -37,7 +37,7 @@ const card = {
   homepage: `${site}/`,
   documentation: `${app}/api-reference`,
   llms: `${site}/llms.txt`,
-  mcp: `${app}/mcp`,
+  mcp: `${api}/mcp`,
   products: {
     app: `${app}/`,
     code: `${code}/`,

@@ -55,8 +55,8 @@ function McpPage() {
             <code className="text-foreground">{apiOrigin}</code>.
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
-            This client-only app does not expose an MCP server. Use the backend's
-            documented agent APIs from wallet-capable clients.
+            Stateless Streamable HTTP MCP is available at{' '}
+            <code className="text-foreground">{apiOrigin}/mcp</code>.
           </p>
         </ListCard>
 
@@ -91,7 +91,7 @@ function McpPage() {
               <li>POST /api/v1/ide/agent</li>
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">
-              MCP lists model info only; payment happens on these routes with a
+               MCP provides discovery and Puya compilation; payment happens on these routes with a
               wallet-capable client (@x402/fetch). Persistence and settlement are
               owned by the backend.
             </p>

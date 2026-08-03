@@ -7,11 +7,13 @@ export type ChatAttachment = {
   mime: string
   mimeType?: string
   size: number
-  kind: 'image' | 'text'
+  kind: 'image' | 'text' | 'pdf'
   url?: string
   storagePath?: string
   dataUrl?: string
   textContent?: string
+  pages?: number
+  truncated?: boolean
 }
 
 export type ChatRole = 'user' | 'assistant' | 'system'
@@ -47,7 +49,7 @@ export function attachmentsFromStored(
       typeof a.name !== 'string' ||
       typeof a.mime !== 'string' ||
       typeof a.size !== 'number' ||
-      (a.kind !== 'image' && a.kind !== 'text')
+      (a.kind !== 'image' && a.kind !== 'text' && a.kind !== 'pdf')
     ) {
       continue
     }
@@ -63,6 +65,8 @@ export function attachmentsFromStored(
       dataUrl: typeof a.dataUrl === 'string' ? a.dataUrl : undefined,
       textContent:
         typeof a.textContent === 'string' ? a.textContent : undefined,
+      pages: typeof a.pages === 'number' ? a.pages : undefined,
+      truncated: a.truncated === true,
     })
   }
   return out.length ? out : undefined
@@ -149,7 +153,7 @@ export function toApiMessage(msg: Msg): ChatMessage {
       : 'user'
   const atts = msg.attachments ?? []
   const images = atts.filter((a) => a.kind === 'image' && imageSrc(a))
-  const texts = atts.filter((a) => a.kind === 'text' && a.textContent)
+  const texts = atts.filter((a) => (a.kind === 'text' || a.kind === 'pdf') && a.textContent)
 
   if (!images.length && !texts.length) {
     return { role, content: msg.content }
@@ -162,7 +166,7 @@ export function toApiMessage(msg: Msg): ChatMessage {
   for (const t of texts) {
     parts.push({
       type: 'text',
-      text: `--- File: ${t.name} ---\n${t.textContent}`,
+      text: `--- ${t.kind === 'pdf' ? 'PDF' : 'File'}: ${t.name}${t.pages ? ` (${t.pages} pages${t.truncated ? ', truncated' : ''})` : ''} ---\n${t.textContent}`,
     })
   }
 

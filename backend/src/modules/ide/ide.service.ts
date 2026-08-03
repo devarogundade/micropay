@@ -24,6 +24,8 @@ import {
 } from '../pricing/pricing.service';
 import type { CreateTemplateDto, UpdateTemplateDto } from './dto/template.dto';
 import { compilePuyaTsProject } from './puya-compile';
+import { ActivitiesService } from '../activities/activities.service';
+import { ActivityStatus } from '../../database/entities/activity.entity';
 import {
   PaymentProduct,
   RouteKind,
@@ -55,6 +57,7 @@ export class IdeService {
     private readonly usage: UsageService,
     private readonly ai: AiService,
     private readonly pricing: PricingService,
+    private readonly appActivities: ActivitiesService,
   ) {}
 
   async ensureCodeUser(address: string): Promise<CodeUserEntity> {
@@ -320,6 +323,16 @@ export class IdeService {
         costUsdc: gate.priceUsdc,
       }),
     );
+    await this.appActivities.record({
+      walletAddress: input.walletAddress,
+      modelSlug: template.slug,
+      modelName: template.name,
+      type: 'IDE',
+      costUsdc: gate.priceUsdc,
+      status: ActivityStatus.settled,
+      txId,
+      requestId: input.requestId,
+    });
     template.clonedCount += 1;
     await this.templates.save(template);
 
@@ -406,6 +419,16 @@ export class IdeService {
           txId,
         }),
       );
+      await this.appActivities.record({
+        walletAddress: input.walletAddress,
+        modelSlug: model || 'unknown',
+        modelName: model || 'unknown',
+        type: 'IDE',
+        costUsdc: gate.priceUsdc,
+        status: ActivityStatus.settled,
+        txId,
+        requestId: input.requestId,
+      });
       await this.recordModelUsage(user.id, model || 'unknown');
       await this.usage.recordAiUsage({
         walletAddress: input.walletAddress,

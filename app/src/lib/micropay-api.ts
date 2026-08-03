@@ -88,6 +88,27 @@ export async function uploadToStorage(input: {
   }
 }
 
+export async function extractStoredPdf(storagePath: string): Promise<{
+  text: string
+  pages: number
+  truncated: boolean
+}> {
+  const response = await fetch(apiUrl('/api/v1/storage/pdf/extract'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ storagePath, maxChars: 50_000 }),
+  })
+  const raw = await readJson(response)
+  if (!response.ok || !isRecord(raw) || typeof raw.text !== 'string') {
+    throw new Error(errorMessage(raw, `PDF extraction failed (${response.status})`))
+  }
+  return {
+    text: raw.text,
+    pages: typeof raw.pages === 'number' ? raw.pages : 0,
+    truncated: raw.truncated === true,
+  }
+}
+
 /** OpenAI-compatible multimodal content parts. */
 export type ChatContentPart =
   | { type: 'text'; text: string }

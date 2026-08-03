@@ -102,7 +102,7 @@ function ActivitiesPage() {
   }, [rows.length, page])
 
   const total = rows
-    .filter((r) => r.status !== 'failed')
+    .filter((r) => r.status === 'settled')
     .reduce((s, r) => s + r.costUsdc, 0)
   const periodTotal = dailySpend.reduce(
     (s: number, d: { usdc: number }) => s + d.usdc,
@@ -139,10 +139,10 @@ function ActivitiesPage() {
               </div>
               <div className="min-w-[7rem] flex-1 rounded-xl border border-border bg-muted/40 px-3 py-2 sm:flex-none sm:px-4">
                 <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Today
+                  Today paid
                 </p>
                 <p className="font-semibold tabular-nums">
-                  {formatUsdc(stats.dailyCreditRemainingUsdc)}
+                  {formatUsdc(stats.todaySpendUsdc)}
                 </p>
               </div>
             </>

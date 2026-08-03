@@ -28,6 +28,7 @@ import {
 import { invalidateUsageQueries } from "#/lib/query-invalidation";
 import { MAX_UPLOAD_LABEL } from "#/lib/storage-limits";
 import { cn } from "#/lib/utils";
+import { apiUrl } from "#/lib/api-url";
 import { useWallet } from "#/lib/wallet";
 
 import "swiper/css";
@@ -141,9 +142,11 @@ export function ImageStudio({
 
   const active = gallery[activeIndex] ?? null;
 
-  function download(src: string, name?: string) {
+  function download(src: string, storagePath?: string, name?: string) {
     const a = document.createElement("a");
-    a.href = src;
+    a.href = storagePath
+      ? apiUrl(`/api/v1/storage/file?key=${encodeURIComponent(storagePath)}&download=1`)
+      : src;
     a.download = name || `micropay-${Date.now()}.png`;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
@@ -412,7 +415,7 @@ export function ImageStudio({
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => download(active.url)}
+                 onClick={() => download(active.url, active.storagePath ?? undefined)}
               >
                 <Download className="size-3.5" />
                 Download

@@ -13,7 +13,7 @@
   "homepage": "https://micropay.website/",
   "documentation": "https://app.micropay.website/api-reference",
   "llms": "https://micropay.website/llms.txt",
-  "mcp": "https://app.micropay.website/mcp",
+  "mcp": "https://api.micropay.website/mcp",
   "products": {
     "app": "https://app.micropay.website/",
     "code": "https://code.micropay.website/"
