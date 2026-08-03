@@ -28,7 +28,9 @@ FROM base AS production-dependencies
 
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
+COPY scripts ./scripts
 RUN pnpm install --frozen-lockfile --prod
+RUN pnpm run prepare:puya
 
 FROM node:22-bookworm-slim AS runtime
 

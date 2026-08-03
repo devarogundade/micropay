@@ -29,7 +29,10 @@ import type {
   PaymentPayload,
   PaymentRequirements,
 } from '@x402/core/types';
-import { bazaarResourceServerExtension } from '@x402/extensions/bazaar';
+import {
+  bazaarResourceServerExtension,
+  declareDiscoveryExtension,
+} from '@x402/extensions/bazaar';
 import {
   ALGORAND_USDC,
   GOPLAUSIBLE_FEE_PAYER,
@@ -93,6 +96,7 @@ export class X402SettleError extends Error {
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
+  private resourceServerPromise?: Promise<x402ResourceServer>;
 
   constructor(
     private readonly config: ConfigService,
@@ -362,6 +366,113 @@ export class PaymentsService {
     return X402_CHALLENGE_TAG;
   }
 
+  private getResourceUrl(path: string): string {
+    const baseUrl = this.config.get<string>('x402.resourceBaseUrl');
+    if (!baseUrl) {
+      throw new Error('PUBLIC_API_URL is required for Bazaar discovery');
+    }
+    return `${baseUrl}${path}`;
+  }
+
+  private getDiscoveryMetadata(routeKind: RouteKind | string) {
+    switch (routeKind) {
+      case RouteKind.chat:
+        return {
+          serviceName: 'Micropay Chat',
+          tags: ['ai', 'chat', 'llm', 'x402', 'openai-compatible'],
+          extension: declareDiscoveryExtension({
+            bodyType: 'json',
+            input: { model: 'model-id', messages: [{ role: 'user', content: 'Hello' }] },
+            inputSchema: {
+              type: 'object',
+              properties: {
+                model: { type: 'string' },
+                messages: { type: 'array' },
+                stream: { type: 'boolean' },
+              },
+              required: ['model', 'messages'],
+            },
+            output: { example: { choices: [{ message: { role: 'assistant', content: 'Hello!' } }] } },
+          }),
+        };
+      case RouteKind.images:
+        return {
+          serviceName: 'Micropay Images',
+          tags: ['ai', 'images', 'generation', 'x402', 'openai-compatible'],
+          extension: declareDiscoveryExtension({
+            bodyType: 'json',
+            input: { model: 'model-id', prompt: 'A sunrise over mountains' },
+            inputSchema: {
+              type: 'object',
+              properties: {
+                model: { type: 'string' },
+                prompt: { type: 'string' },
+                size: { type: 'string' },
+              },
+              required: ['model', 'prompt'],
+            },
+            output: { example: { data: [{ b64_json: 'base64-encoded-png' }] } },
+          }),
+        };
+      case RouteKind.audio:
+        return {
+          serviceName: 'Micropay Audio',
+          tags: ['ai', 'audio', 'transcription', 'x402', 'speech-to-text'],
+          extension: declareDiscoveryExtension({
+            bodyType: 'form-data',
+            input: { file: 'audio file', model: 'model-id' },
+            inputSchema: {
+              type: 'object',
+              properties: {
+                file: { type: 'string', format: 'binary' },
+                model: { type: 'string' },
+                language: { type: 'string' },
+              },
+              required: ['file', 'model'],
+            },
+            output: { example: { text: 'Transcribed speech' } },
+          }),
+        };
+      case RouteKind.clone:
+        return {
+          serviceName: 'Micropay Templates',
+          tags: ['ide', 'templates', 'puya-ts', 'x402', 'algorand'],
+          extension: declareDiscoveryExtension({
+            bodyType: 'json',
+            input: { slug: 'starter-contract' },
+            inputSchema: {
+              type: 'object',
+              properties: {
+                templateId: { type: 'string' },
+                id: { type: 'string' },
+                slug: { type: 'string' },
+              },
+            },
+            output: { example: { template: { slug: 'starter-contract', files: [] } } },
+          }),
+        };
+      default:
+        return {
+          serviceName: 'Micropay IDE',
+          tags: ['ai', 'ide', 'puya-ts', 'x402', 'algorand'],
+          extension: declareDiscoveryExtension({
+            bodyType: 'json',
+            input: { model: 'model-id', messages: [{ role: 'user', content: 'Review this contract' }] },
+            inputSchema: {
+              type: 'object',
+              properties: {
+                model: { type: 'string' },
+                messages: { type: 'array' },
+                files: { type: 'array' },
+              },
+              required: ['model', 'messages'],
+            },
+            output: { example: { choices: [{ message: { role: 'assistant', content: 'Contract review' } }] } },
+          }),
+        };
+    }
+  }
+
   /** Full genesis-hash CAIP-2 ids required by GoPlausible `/supported`. */
   getCaip2(): string {
     return this.getNetwork() === 'testnet'
@@ -460,15 +571,23 @@ export class PaymentsService {
     };
   }
 
-  private async getHttpServer(
-    routes: RoutesConfig,
-  ): Promise<x402HTTPResourceServer> {
-    const facilitator = new HTTPFacilitatorClient({
-      url: this.getFacilitatorUrl(),
-    });
-    const resourceServer = new x402ResourceServer(facilitator);
-    resourceServer.register('algorand:*' as Network, new ExactAvmScheme());
-    resourceServer.registerExtension(bazaarResourceServerExtension);
+  private async getResourceServer(): Promise<x402ResourceServer> {
+    if (!this.resourceServerPromise) {
+      this.resourceServerPromise = (async () => {
+        const facilitator = new HTTPFacilitatorClient({
+          url: this.getFacilitatorUrl(),
+        });
+        const resourceServer = new x402ResourceServer(facilitator);
+        resourceServer.register('algorand:*' as Network, new ExactAvmScheme());
+        resourceServer.registerExtension(bazaarResourceServerExtension);
+        return resourceServer;
+      })();
+    }
+    return this.resourceServerPromise;
+  }
+
+  private async getHttpServer(routes: RoutesConfig): Promise<x402HTTPResourceServer> {
+    const resourceServer = await this.getResourceServer();
     const httpServer = new x402HTTPResourceServer(resourceServer, routes);
     await httpServer.initialize();
     return httpServer;
@@ -563,6 +682,7 @@ export class PaymentsService {
       routeKind: input.routeKind,
       product: input.product,
     };
+    const discovery = this.getDiscoveryMetadata(input.routeKind);
 
     const routes = {
       [input.routeKey]: {
@@ -573,8 +693,13 @@ export class PaymentsService {
           price,
           extra,
         },
+        resource: this.getResourceUrl(input.path),
         description: input.description,
         mimeType: 'application/json',
+        serviceName: discovery.serviceName,
+        tags: discovery.tags,
+        iconUrl: `${this.config.get<string>('cors.siteUrl') || 'https://micropay.website'}/assets/brand/icon.svg`,
+        extensions: discovery.extension,
         unpaidResponseBody: () => ({
           contentType: 'application/json',
           body: {

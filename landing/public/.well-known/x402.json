@@ -21,7 +21,7 @@
   "endpoints": [
     {
       "method": "POST",
-      "path": "https://app.micropay.website/api/v1/chat/completions",
+      "path": "https://api.micropay.website/api/v1/chat/completions",
       "serviceName": "Micropay Chat",
       "description": "OpenAI-compatible chat completions with optional SSE streaming for Micropay models (diverse popular LLMs).",
       "mimeType": "application/json",
@@ -35,7 +35,7 @@
     },
     {
       "method": "POST",
-      "path": "https://app.micropay.website/api/v1/images/generations",
+      "path": "https://api.micropay.website/api/v1/images/generations",
       "serviceName": "Micropay Images",
       "description": "OpenAI-compatible image generation returning base64 PNG (b64_json) for Micropay models.",
       "mimeType": "application/json",
@@ -49,7 +49,7 @@
     },
     {
       "method": "POST",
-      "path": "https://app.micropay.website/api/v1/audio/transcriptions",
+      "path": "https://api.micropay.website/api/v1/audio/transcriptions",
       "serviceName": "Micropay Audio",
       "description": "OpenAI-compatible speech-to-text transcription (multipart audio upload) returning text for Micropay models.",
       "mimeType": "application/json",
@@ -63,13 +63,27 @@
     },
     {
       "method": "POST",
-      "path": "https://app.micropay.website/api/v1/ide/agent",
+      "path": "https://api.micropay.website/api/v1/ide/agent",
       "serviceName": "Micropay IDE",
       "description": "Micropay IDE assistant with project file tools, compile, and Algorand TypeScript knowledge.",
       "mimeType": "application/json",
       "tags": [
         "ai",
         "ide",
+        "puya-ts",
+        "x402",
+        "algorand"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "https://api.micropay.website/api/v1/clone",
+      "serviceName": "Micropay Templates",
+      "description": "Algorand TypeScript template source files and project configuration ready to open in Micropay IDE.",
+      "mimeType": "application/json",
+      "tags": [
+        "ide",
+        "templates",
         "puya-ts",
         "x402",
         "algorand"

@@ -65,6 +65,12 @@ export class StorageService {
     return b;
   }
 
+  getFileUrl(key: string): string {
+    const baseUrl =
+      this.config.get<string>('publicApiUrl') || 'https://api.micropay.website';
+    return `${baseUrl}/api/v1/storage/file?key=${encodeURIComponent(key)}`;
+  }
+
   async uploadBuffer(input: {
     buffer: Buffer;
     mimeType?: string;
@@ -93,10 +99,7 @@ export class StorageService {
       }),
     );
 
-    const publicBase = this.config.get<string>('s3.publicBaseUrl');
-    const url = publicBase
-      ? `${publicBase.replace(/\/$/, '')}/${key}`
-      : `s3://${bucket}/${key}`;
+    const url = this.getFileUrl(key);
 
     return this.assets.save(
       this.assets.create({

@@ -5,9 +5,11 @@ import {
   Post,
   Body,
   Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -85,5 +87,14 @@ export class StorageController {
   async presignDownload(@Query('key') key: string) {
     const result = await this.storage.getPresignedDownloadUrl(key);
     return ok(result);
+  }
+
+  /** Stable public asset URL backed by a short-lived private S3 URL. */
+  @SkipTransform()
+  @Get('file')
+  async file(@Query('key') key: string, @Res() response: Response) {
+    if (!key) throw new BadRequestException('key is required');
+    const { url } = await this.storage.getPresignedDownloadUrl(key, 300);
+    return response.redirect(302, url);
   }
 }

@@ -39,7 +39,6 @@ export const envValidationSchema = Joi.object({
   X402_NETWORK: Joi.string().valid('testnet', 'mainnet').optional(),
   /** Single merchant for app + code. */
   X402_PAY_TO: Joi.string().allow('').optional(),
-  X402_FACILITATOR_URL: Joi.string().allow('').optional(),
   X402_FEE_PAYER: Joi.string().allow('').optional(),
 
   /** Fallback USDC charge when a model/template has no admin PricingRule. */
@@ -78,6 +77,7 @@ export const envValidationSchema = Joi.object({
   PUBLIC_APP_URL: Joi.string().allow('').optional(),
   PUBLIC_CODE_URL: Joi.string().allow('').optional(),
   PUBLIC_SITE_URL: Joi.string().allow('').optional(),
+  PUBLIC_API_URL: Joi.string().uri({ scheme: ['https'] }).optional(),
 
   WS_CORS_ORIGIN: Joi.string().allow('').optional(),
   ADMIN_API_KEY: Joi.string().allow('').optional(),

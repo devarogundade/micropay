@@ -169,6 +169,7 @@ export function ImageStudio({
           prompt: p,
           size,
           fetchImpl: fetchWithPay,
+          walletAddress: account?.address,
           onStatus: setStatus,
         });
         if (!result.ok) {
@@ -182,12 +183,12 @@ export function ImageStudio({
         // Reload history from DB (server persists after SSE completion).
         if (fetchWithPay) {
           const hist = await fetchImageHistory({ fetchImpl: fetchWithPay });
-          if (hist.ok) {
+          if (hist.ok && hist.data.length > 0) {
             setGallery(hist.data);
             setActiveIndex(0);
             setHistoryError(null);
           } else {
-            // Fallback: show just-returned URLs if history reload fails.
+            // Keep the completed result visible while persistence catches up.
             const fallback: ImageHistoryItem[] = result.images.map(
               (src, i) => ({
                 id: `local-${Date.now()}-${i}`,
@@ -202,7 +203,7 @@ export function ImageStudio({
             );
             setGallery((g) => [...fallback, ...g]);
             setActiveIndex(0);
-            setHistoryError(hist.error || "History refresh failed");
+            setHistoryError(hist.ok ? null : hist.error || "History refresh failed");
           }
         }
 

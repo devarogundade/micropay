@@ -17,6 +17,9 @@ const app = (
 const code = (
   process.env.VITE_PUBLIC_CODE_URL || 'https://code.micropay.website'
 ).replace(/\/$/, '')
+const api = (
+  process.env.VITE_PUBLIC_API_URL || 'https://api.micropay.website'
+).replace(/\/$/, '')
 
 const card = {
   name: 'Micropay',
@@ -42,7 +45,7 @@ const card = {
   endpoints: [
     {
       method: 'POST',
-      path: `${app}/api/v1/chat/completions`,
+      path: `${api}/api/v1/chat/completions`,
       serviceName: 'Micropay Chat',
       description:
         'OpenAI-compatible chat completions with optional SSE streaming for Micropay models (diverse popular LLMs).',
@@ -51,7 +54,7 @@ const card = {
     },
     {
       method: 'POST',
-      path: `${app}/api/v1/images/generations`,
+      path: `${api}/api/v1/images/generations`,
       serviceName: 'Micropay Images',
       description:
         'OpenAI-compatible image generation returning base64 PNG (b64_json) for Micropay models.',
@@ -60,7 +63,7 @@ const card = {
     },
     {
       method: 'POST',
-      path: `${app}/api/v1/audio/transcriptions`,
+      path: `${api}/api/v1/audio/transcriptions`,
       serviceName: 'Micropay Audio',
       description:
         'OpenAI-compatible speech-to-text transcription (multipart audio upload) returning text for Micropay models.',
@@ -69,12 +72,21 @@ const card = {
     },
     {
       method: 'POST',
-      path: `${app}/api/v1/ide/agent`,
+      path: `${api}/api/v1/ide/agent`,
       serviceName: 'Micropay IDE',
       description:
         'Micropay IDE assistant with project file tools, compile, and Algorand TypeScript knowledge.',
       mimeType: 'application/json',
       tags: ['ai', 'ide', 'puya-ts', 'x402', 'algorand'],
+    },
+    {
+      method: 'POST',
+      path: `${api}/api/v1/clone`,
+      serviceName: 'Micropay Templates',
+      description:
+        'Algorand TypeScript template source files and project configuration ready to open in Micropay IDE.',
+      mimeType: 'application/json',
+      tags: ['ide', 'templates', 'puya-ts', 'x402', 'algorand'],
     },
   ],
 }

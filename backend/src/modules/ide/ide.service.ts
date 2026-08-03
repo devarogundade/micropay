@@ -272,7 +272,7 @@ export class IdeService {
       path: '/api/v1/clone',
       product: PaymentProduct.code,
       routeKind: RouteKind.clone,
-      description: `Clone template ${template.slug}`,
+      description: `Algorand TypeScript template ${template.slug}, including source files and project configuration ready to open in Micropay IDE.`,
       paymentHeader: input.paymentHeader,
       body: {
         templateId: input.templateId,
@@ -356,7 +356,7 @@ export class IdeService {
       path: '/api/v1/ide/agent',
       product: PaymentProduct.code,
       routeKind: RouteKind.ide,
-      description: `IDE agent ${model}`,
+      description: `Algorand TypeScript IDE assistance from ${model}, returning code guidance with project file and compile tool support.`,
       paymentHeader: input.paymentHeader,
       body: input.body,
       walletAddress: input.walletAddress,

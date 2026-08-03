@@ -79,7 +79,7 @@ export class AudioService {
       path: '/api/v1/audio/transcriptions',
       product: PaymentProduct.app,
       routeKind: RouteKind.audio,
-      description: `Audio transcription ${model}`,
+      description: `Speech-to-text transcription by ${model}, returning the spoken content as text.`,
       paymentHeader: input.paymentHeader,
       body: { model, language: input.language },
       walletAddress: input.walletAddress,

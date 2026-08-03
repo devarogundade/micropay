@@ -103,6 +103,7 @@ Set these origin variables so HTTP and Socket.IO CORS allow the static sites:
 PUBLIC_APP_URL=https://app.micropay.website
 PUBLIC_CODE_URL=https://code.micropay.website
 PUBLIC_SITE_URL=https://micropay.website
+PUBLIC_API_URL=https://api.micropay.website
 CORS_ALLOWED_ORIGINS=https://app.micropay.website,https://code.micropay.website
 WS_CORS_ORIGIN=https://app.micropay.website,https://code.micropay.website
 ```

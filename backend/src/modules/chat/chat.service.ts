@@ -292,7 +292,7 @@ export class ChatService {
       path: '/api/v1/chat/completions',
       product: PaymentProduct.app,
       routeKind: RouteKind.chat,
-      description: `Chat ${model}`,
+      description: `OpenAI-compatible chat completion from ${model}, returning assistant messages with optional SSE token streaming.`,
       paymentHeader: input.paymentHeader,
       body: input.body,
       walletAddress: input.walletAddress,

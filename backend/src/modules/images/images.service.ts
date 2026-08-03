@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,6 +25,8 @@ import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class ImagesService {
+  private readonly logger = new Logger(ImagesService.name);
+
   constructor(
     @InjectRepository(ImageJobEntity)
     private readonly imageJobs: Repository<ImageJobEntity>,
@@ -75,7 +78,7 @@ export class ImagesService {
       path: '/api/v1/images/generations',
       product: 'app',
       routeKind: 'images',
-      description: `Image generation ${model}`,
+      description: `Image generated from a text prompt by ${model}, returned as a base64-encoded PNG.`,
       paymentHeader: input.paymentHeader,
       body,
       walletAddress: input.walletAddress,
@@ -253,7 +256,7 @@ export class ImagesService {
         modelName: r.modelName,
         prompt: r.prompt,
         size: r.size,
-        url: r.url,
+        url: r.storagePath ? this.storage.getFileUrl(r.storagePath) : r.url,
         storagePath: r.storagePath,
         createdAt: r.createdAt.toISOString(),
       })),
@@ -315,8 +318,11 @@ export class ImagesService {
             }),
           );
         }
-      } catch {
+      } catch (error) {
         // Keep b64 if storage not configured so client still gets the image
+        this.logger.error(
+          `Could not persist generated image: ${error instanceof Error ? error.message : String(error)}`,
+        );
         next.push(item);
       }
     }

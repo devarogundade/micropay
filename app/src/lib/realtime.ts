@@ -134,7 +134,9 @@ export async function waitForJob(input: {
   const timeoutMs = input.timeoutMs ?? 180_000
   const started = Date.now()
 
-  const conn = await connectRealtime({ walletAddress: input.walletAddress })
+  const conn = input.pollUrl
+    ? null
+    : await connectRealtime({ walletAddress: input.walletAddress })
   if (conn?.socket) {
     return new Promise((resolve) => {
       let settled = false

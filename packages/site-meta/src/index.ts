@@ -20,6 +20,7 @@
 export const DEFAULT_SITE_ORIGIN = 'https://micropay.website'
 export const DEFAULT_APP_ORIGIN = 'https://app.micropay.website'
 export const DEFAULT_CODE_ORIGIN = 'https://code.micropay.website'
+export const DEFAULT_API_ORIGIN = 'https://api.micropay.website'
 
 export const SITE_NAME = 'Micropay'
 /** ≤ 32 printable ASCII — Bazaar serviceName limit. */
@@ -175,6 +176,14 @@ export function getCodeOrigin(): string | undefined {
   )
 }
 
+/** Shared public resource-server origin. All paid routes use this one domain. */
+export function getApiOrigin(): string | undefined {
+  return (
+    trimOrigin(readEnv('PUBLIC_API_URL')) ||
+    trimOrigin(readViteEnv('VITE_PUBLIC_API_URL'))
+  )
+}
+
 export function originFromRequest(request: Request): string | undefined {
   try {
     const u = new URL(request.url)
@@ -222,12 +231,17 @@ export function codeEndpointUrl(path: string, codeOrigin?: string): string {
 export function buildAppMerchantCard(opts?: {
   siteOrigin?: string
   appOrigin?: string
+  apiOrigin?: string
 }) {
   const site = (opts?.siteOrigin || getSiteOrigin() || DEFAULT_SITE_ORIGIN).replace(
     /\/$/,
     '',
   )
   const app = (opts?.appOrigin || getAppOrigin() || DEFAULT_APP_ORIGIN).replace(
+    /\/$/,
+    '',
+  )
+  const api = (opts?.apiOrigin || getApiOrigin() || DEFAULT_API_ORIGIN).replace(
     /\/$/,
     '',
   )
@@ -252,7 +266,7 @@ export function buildAppMerchantCard(opts?: {
     endpoints: [
       {
         method: 'POST',
-        path: `${app}/api/v1/chat/completions`,
+        path: `${api}/api/v1/chat/completions`,
         serviceName: X402_APP_ROUTE_META.chat.serviceName,
         description:
           'OpenAI-compatible chat completions with optional SSE streaming for Micropay models (diverse popular LLMs).',
@@ -261,7 +275,7 @@ export function buildAppMerchantCard(opts?: {
       },
       {
         method: 'POST',
-        path: `${app}/api/v1/images/generations`,
+        path: `${api}/api/v1/images/generations`,
         serviceName: X402_APP_ROUTE_META.images.serviceName,
         description:
           'OpenAI-compatible image generation returning base64 PNG (b64_json) for Micropay models.',
@@ -270,7 +284,7 @@ export function buildAppMerchantCard(opts?: {
       },
       {
         method: 'POST',
-        path: `${app}/api/v1/audio/transcriptions`,
+        path: `${api}/api/v1/audio/transcriptions`,
         serviceName: X402_APP_ROUTE_META.audio.serviceName,
         description:
           'OpenAI-compatible speech-to-text transcription (multipart audio upload) returning text for Micropay models.',
@@ -285,12 +299,17 @@ export function buildAppMerchantCard(opts?: {
 export function buildCodeMerchantCard(opts?: {
   siteOrigin?: string
   codeOrigin?: string
+  apiOrigin?: string
 }) {
   const site = (opts?.siteOrigin || getSiteOrigin() || DEFAULT_SITE_ORIGIN).replace(
     /\/$/,
     '',
   )
   const code = (opts?.codeOrigin || getCodeOrigin() || DEFAULT_CODE_ORIGIN).replace(
+    /\/$/,
+    '',
+  )
+  const api = (opts?.apiOrigin || getApiOrigin() || DEFAULT_API_ORIGIN).replace(
     /\/$/,
     '',
   )
@@ -313,7 +332,7 @@ export function buildCodeMerchantCard(opts?: {
     endpoints: [
       {
         method: 'POST',
-        path: `${code}/api/v1/ide/agent`,
+        path: `${api}/api/v1/ide/agent`,
         serviceName: X402_CODE_ROUTE_META.ide.serviceName,
         description:
           'Micropay IDE assistant with project file tools, compile, and Algorand TypeScript knowledge.',
@@ -322,7 +341,7 @@ export function buildCodeMerchantCard(opts?: {
       },
       {
         method: 'POST',
-        path: `${code}/api/v1/clone`,
+        path: `${api}/api/v1/clone`,
         serviceName: X402_CODE_ROUTE_META.clone.serviceName,
         description:
           'Clone an Algorand TypeScript IDE template into your workspace (0.05 USDC).',
