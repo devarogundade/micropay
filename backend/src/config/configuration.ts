@@ -24,10 +24,9 @@ export default () => {
     nodeEnv: process.env.NODE_ENV ?? 'development',
     port: parseInt(process.env.PORT ?? '4000', 10),
     network: network as NetworkMode,
-    publicApiUrl: (process.env.PUBLIC_API_URL || 'https://api.micropay.website').replace(
-      /\/$/,
-      '',
-    ),
+    publicApiUrl: (
+      process.env.PUBLIC_API_URL || 'https://api.micropay.website'
+    ).replace(/\/$/, ''),
 
     database: {
       url: process.env.DATABASE_URL,
@@ -70,14 +69,16 @@ export default () => {
       network: x402Network as NetworkMode,
       /** Single merchant address for app + code products. */
       payTo: process.env.X402_PAY_TO || undefined,
-      resourceBaseUrl: (process.env.PUBLIC_API_URL || 'https://api.micropay.website').replace(/\/$/, ''),
+      resourceBaseUrl: (
+        process.env.PUBLIC_API_URL || 'https://api.micropay.website'
+      ).replace(/\/$/, ''),
       facilitatorUrl: GOPLAUSIBLE_FACILITATOR_URL,
       feePayer: process.env.X402_FEE_PAYER || GOPLAUSIBLE_FEE_PAYER,
     },
 
     /** Per-request USDC when a model/template has no PricingRule override. */
     pricing: {
-      defaultAmount: parseFloat(process.env.DEFAULT_AMOUNT ?? '0.01'),
+      defaultAmount: parseFloat(process.env.DEFAULT_AMOUNT ?? '0.025'),
     },
 
     tools: {

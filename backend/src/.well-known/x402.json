@@ -1,0 +1,93 @@
+{
+  "name": "Micropay",
+  "serviceName": "Micropay AI",
+  "description": "Pay-per-use AI for chat, images, and audio across popular models. Pay with your Algorand wallet in USDC via x402 — no subscriptions or API keys.",
+  "protocol": "x402",
+  "version": "2",
+  "network": "algorand:mainnet",
+  "asset": "USDC",
+  "facilitator": "https://facilitator.goplausible.xyz",
+  "tag": "x402-global-challenge",
+  "icon": "https://micropay.website/assets/brand/icon.svg",
+  "logo": "https://micropay.website/assets/brand/logo.svg",
+  "homepage": "https://micropay.website/",
+  "documentation": "https://app.micropay.website/api-reference",
+  "llms": "https://micropay.website/llms.txt",
+  "mcp": "https://api.micropay.website/mcp",
+  "products": {
+    "app": "https://app.micropay.website/",
+    "code": "https://code.micropay.website/"
+  },
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "https://api.micropay.website/api/v1/chat/completions",
+      "serviceName": "Micropay Chat",
+      "description": "OpenAI-compatible chat completions with optional SSE streaming for Micropay models (diverse popular LLMs).",
+      "mimeType": "application/json",
+      "tags": [
+        "ai",
+        "chat",
+        "llm",
+        "x402",
+        "openai-compatible"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "https://api.micropay.website/api/v1/images/generations",
+      "serviceName": "Micropay Images",
+      "description": "OpenAI-compatible image generation returning base64 PNG (b64_json) for Micropay models.",
+      "mimeType": "application/json",
+      "tags": [
+        "ai",
+        "images",
+        "generation",
+        "x402",
+        "openai-compatible"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "https://api.micropay.website/api/v1/audio/transcriptions",
+      "serviceName": "Micropay Audio",
+      "description": "OpenAI-compatible speech-to-text transcription (multipart audio upload) returning text for Micropay models.",
+      "mimeType": "application/json",
+      "tags": [
+        "ai",
+        "audio",
+        "transcription",
+        "x402",
+        "speech-to-text"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "https://api.micropay.website/api/v1/ide/agent",
+      "serviceName": "Micropay IDE",
+      "description": "Micropay IDE assistant with project file tools, compile, and Algorand TypeScript knowledge.",
+      "mimeType": "application/json",
+      "tags": [
+        "ai",
+        "ide",
+        "puya-ts",
+        "x402",
+        "algorand"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "https://api.micropay.website/api/v1/clone",
+      "serviceName": "Micropay Templates",
+      "description": "Algorand TypeScript template source files and project configuration ready to open in Micropay IDE.",
+      "mimeType": "application/json",
+      "tags": [
+        "ide",
+        "templates",
+        "puya-ts",
+        "x402",
+        "algorand"
+      ]
+    }
+  ]
+}
