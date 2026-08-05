@@ -1,13 +1,13 @@
 export type ModelType = 'Chat' | 'Image Gen' | 'Audio'
 
 /** Absolute floor for catalog display and x402 charges (USDC). */
-export const MIN_PAY_USDC = 0.01
+export const MIN_PAY_USDC = 0.05
 
 /**
  * Cap for per-use catalog / x402 amounts (USDC).
- * Includes template clone (0.05); model catalog floors still max at ~0.03.
+ * Includes model catalog and template clone prices.
  */
-export const MAX_PAY_USDC = 0.05
+export const MAX_PAY_USDC = 0.2
 
 /** Fixed price to clone an IDE template (USDC). */
 export const TEMPLATE_CLONE_USDC = 0.05
@@ -40,8 +40,7 @@ export type Model = {
 }
 
 /**
- * Per-model minimum in the 0.01–0.03 USDC band.
- * Smaller / lite models sit near 0.01; GPT and stronger models toward 0.02–0.03.
+ * Per-model prices in the 0.05-0.2 USDC band.
  */
 export function modelMinPayUsdc(
   input: { id: string; name?: string; ownedBy?: string },
@@ -73,19 +72,19 @@ export function modelMinPayUsdc(
         )))
 
   if (type === 'Image Gen') {
-    if (isSmall) return 0.015
-    if (isFrontier || isGptFamily) return 0.03
-    return 0.02
+    if (isSmall) return 0.05
+    if (isFrontier || isGptFamily) return 0.2
+    return 0.1
   }
   if (type === 'Audio') {
-    return isSmall ? 0.01 : 0.015
+    return isSmall ? 0.05 : 0.1
   }
 
-  if (isSmall) return 0.01
-  if (isFrontier) return 0.03
-  if (isStrong) return 0.025
-  if (/(7b|8b|9b|13b|14b)/.test(hay)) return 0.015
-  return 0.02
+  if (isSmall) return 0.05
+  if (isFrontier) return 0.2
+  if (isStrong) return 0.15
+  if (/(7b|8b|9b|13b|14b)/.test(hay)) return 0.1
+  return 0.1
 }
 
 /** True when a model should rank first in the IDE picker (OpenAI / GPT family). */

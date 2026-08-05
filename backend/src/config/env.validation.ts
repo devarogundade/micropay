@@ -42,7 +42,7 @@ export const envValidationSchema = Joi.object({
   X402_FEE_PAYER: Joi.string().allow('').optional(),
 
   /** Fallback USDC charge when a model/template has no admin PricingRule. */
-  DEFAULT_AMOUNT: Joi.number().positive().default(0.01),
+  DEFAULT_AMOUNT: Joi.number().min(0.05).max(0.2).default(0.05),
 
   /** Chat tool integrations */
   TOOLS_ENABLED: Joi.boolean().truthy('true').falsy('false').default(true),

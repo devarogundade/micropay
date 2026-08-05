@@ -78,7 +78,7 @@ export default () => {
 
     /** Per-request USDC when a model/template has no PricingRule override. */
     pricing: {
-      defaultAmount: parseFloat(process.env.DEFAULT_AMOUNT ?? '0.025'),
+      defaultAmount: parseFloat(process.env.DEFAULT_AMOUNT ?? '0.05'),
     },
 
     tools: {

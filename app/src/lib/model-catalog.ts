@@ -69,7 +69,7 @@ export function routerModelToUi(model: RouterModel): Model {
     type,
     priceUsdc:
       typeof model.price_usdc === 'number' && model.price_usdc > 0
-        ? model.price_usdc
+        ? Math.min(MAX_PAY_USDC, Math.max(MIN_PAY_USDC, model.price_usdc))
         : estimatedPrice(model, type),
     description,
     trending: (model.provider_count ?? 0) >= 2,

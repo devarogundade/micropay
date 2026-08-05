@@ -1,4 +1,5 @@
 import {
+  MAX_PAY_USDC,
   MIN_PAY_USDC,
   type Model,
   type ModelType,
@@ -39,7 +40,7 @@ function toModel(row: ApiModel): Model {
     type,
     priceUsdc:
       typeof row.price_usdc === 'number' && row.price_usdc > 0
-        ? row.price_usdc
+        ? Math.min(MAX_PAY_USDC, Math.max(MIN_PAY_USDC, row.price_usdc))
         : MIN_PAY_USDC,
     description: row.description || '',
     icon: provider.slice(0, 1).toUpperCase(),

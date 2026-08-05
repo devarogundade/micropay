@@ -23,6 +23,8 @@ import { SetModelPriceDto, SetTemplatePriceDto } from './dto/pricing.dto';
  * Kept only for reading legacy rules during migration.
  */
 export const TEMPLATE_CLONE_MODEL_ID = '__template_clone__';
+const MIN_MODEL_PRICE_USDC = 0.05;
+const MAX_MODEL_PRICE_USDC = 0.2;
 
 @Injectable()
 export class PricingService {
@@ -46,7 +48,7 @@ export class PricingService {
   /** Fallback USDC amount when a model/template has no active PricingRule. */
   getDefaultAmount(): number {
     const n = Number(this.config.get<number | string>('pricing.defaultAmount'));
-    return Number.isFinite(n) && n > 0 ? n : 0.01;
+    return Number.isFinite(n) && n > 0 ? n : MIN_MODEL_PRICE_USDC;
   }
 
   modelKey(modelId: string): string {
@@ -162,10 +164,17 @@ export class PricingService {
     modelId: string,
     opts?: { network?: string },
   ): Promise<ResolvedPrice & { rule?: PricingRuleEntity }> {
-    return this.resolveByKeyOrSlug(modelId, this.modelKey(modelId), {
+    const resolved = await this.resolveByKeyOrSlug(modelId, this.modelKey(modelId), {
       ...opts,
       keyType: PricingKeyType.model,
     });
+    return {
+      ...resolved,
+      amount: Math.min(
+        MAX_MODEL_PRICE_USDC,
+        Math.max(MIN_MODEL_PRICE_USDC, resolved.amount),
+      ),
+    };
   }
 
   /**
