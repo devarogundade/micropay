@@ -30,7 +30,7 @@ export class CodeTemplateCloneEntity {
   @Column({ type: 'varchar' })
   txId!: string;
 
-  @Column({ type: 'float', default: 0.05 })
+  @Column({ type: 'float', default: 0.1 })
   costUsdc!: number;
 
   @Index()

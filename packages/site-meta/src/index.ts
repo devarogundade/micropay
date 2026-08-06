@@ -344,7 +344,7 @@ export function buildCodeMerchantCard(opts?: {
         path: `${api}/api/v1/clone`,
         serviceName: X402_CODE_ROUTE_META.clone.serviceName,
         description:
-          'Clone an Algorand TypeScript IDE template into your workspace (0.05 USDC).',
+          'Clone an Algorand TypeScript IDE template into your workspace (0.1 USDC).',
         mimeType: 'application/json',
         tags: X402_CODE_ROUTE_META.clone.tags,
       },

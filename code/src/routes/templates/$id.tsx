@@ -30,7 +30,7 @@ export const Route = createFileRoute('/templates/$id')({
       { title: `Template · ${params.id} · IDE · ${SITE_NAME}` },
       {
         name: 'description',
-        content: `Clone Algorand TypeScript template ${params.id} into the Micropay IDE for 0.05 USDC.`,
+        content: `Clone Algorand TypeScript template ${params.id} into the Micropay IDE for 0.1 USDC.`,
       },
     ],
   }),

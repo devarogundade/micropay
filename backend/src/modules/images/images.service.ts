@@ -70,7 +70,9 @@ export class ImagesService {
     };
     const size =
       typeof body.size === 'string' ? body.size : null;
-    const { amount: priceUsdc } = await this.pricing.resolveAmount(model);
+    const { amount: priceUsdc } = await this.pricing.resolveAmount(model, {
+      type: 'image',
+    });
 
     const gate = await this.payments.gatePaidRequest({
       priceUsdc,

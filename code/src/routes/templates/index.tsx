@@ -32,7 +32,7 @@ export const Route = createFileRoute('/templates/')({
       {
         name: 'description',
         content:
-          'Browse Algorand TypeScript IDE templates. Clone into your workspace for 0.05 USDC via x402.',
+          'Browse Algorand TypeScript IDE templates. Clone into your workspace for 0.1 USDC via x402.',
       },
     ],
   }),

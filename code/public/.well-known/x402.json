@@ -26,7 +26,7 @@
       "method": "POST",
       "path": "https://api.micropay.website/api/v1/clone",
       "serviceName": "Micropay Templates",
-      "description": "Clone an Algorand TypeScript IDE template into your workspace (0.05 USDC).",
+      "description": "Clone an Algorand TypeScript IDE template into your workspace (0.1 USDC).",
       "mimeType": "application/json",
       "tags": ["ide", "templates", "puya-ts", "x402", "algorand"]
     }

@@ -1,4 +1,6 @@
 import {
+  AUDIO_TRANSCRIPTION_USDC,
+  IMAGE_GEN_USDC,
   MAX_PAY_USDC,
   MIN_PAY_USDC,
   type Model,
@@ -39,9 +41,13 @@ function toModel(row: ApiModel): Model {
     provider,
     type,
     priceUsdc:
-      typeof row.price_usdc === 'number' && row.price_usdc > 0
-        ? Math.min(MAX_PAY_USDC, Math.max(MIN_PAY_USDC, row.price_usdc))
-        : MIN_PAY_USDC,
+      type === 'Image Gen'
+        ? IMAGE_GEN_USDC
+        : type === 'Audio'
+          ? AUDIO_TRANSCRIPTION_USDC
+          : typeof row.price_usdc === 'number' && row.price_usdc > 0
+            ? Math.min(MAX_PAY_USDC, Math.max(MIN_PAY_USDC, row.price_usdc))
+            : MIN_PAY_USDC,
     description: row.description || '',
     icon: provider.slice(0, 1).toUpperCase(),
     logoSrc: providerLogoSrc({ ownedBy: provider, id: slug }),

@@ -1,10 +1,14 @@
 export type ModelType = "Chat" | "Image Gen" | "Audio";
 
 /** Absolute floor for catalog display and x402 charges (USDC). */
-export const MIN_PAY_USDC = 0.05;
+export const MIN_PAY_USDC = 0.1;
 
 /** Cap for per-use catalog / x402 amounts (USDC). */
-export const MAX_PAY_USDC = 0.2;
+export const MAX_PAY_USDC = 0.5;
+
+export const IMAGE_GEN_USDC = 0.5;
+
+export const AUDIO_TRANSCRIPTION_USDC = 0.4;
 
 export type Model = {
   slug: string;
@@ -34,7 +38,7 @@ export type Model = {
 };
 
 /**
- * Per-model prices in the 0.05-0.2 USDC band.
+ * Per-model prices in the 0.1-0.5 USDC band.
  */
 export function modelMinPayUsdc(
   input: { id: string; name?: string; ownedBy?: string },
@@ -67,15 +71,13 @@ export function modelMinPayUsdc(
         )));
 
   if (type === "Image Gen") {
-    if (isSmall) return 0.05;
-    if (isFrontier || isGptFamily) return 0.2;
-    return 0.1;
+    return IMAGE_GEN_USDC;
   }
   if (type === "Audio") {
-    return isSmall ? 0.05 : 0.1;
+    return AUDIO_TRANSCRIPTION_USDC;
   }
 
-  if (isSmall) return 0.05;
+  if (isSmall) return 0.1;
   if (isFrontier) return 0.2;
   if (isStrong) return 0.15;
   if (/(7b|8b|9b|13b|14b)/.test(hay)) return 0.1;

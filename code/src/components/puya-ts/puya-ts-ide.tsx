@@ -1258,7 +1258,7 @@ export function PuyaTsIde({ models }: { models: Model[] }) {
             <DialogTitle>Quick starters</DialogTitle>
             <DialogDescription>
               Seed the file tree with a free local starter. Or browse the full
-              catalog (0.05 USDC to clone) for clone counts and more templates.
+              catalog (0.1 USDC to clone) for clone counts and more templates.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">

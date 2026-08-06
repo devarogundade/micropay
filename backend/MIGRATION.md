@@ -52,7 +52,7 @@
 
 1. Admin sets `PricingRule` keyed by `model:{modelId}` / `modelSlug` for inference.
 2. Admin sets `PricingRule` keyed by `template:{slug}` for clone (product `code`).
-3. `PricingService.resolveAmountForModel(modelId)` / `resolveAmountForTemplate(slug)` → active rule price, else `DEFAULT_AMOUNT` (env, default `0.05`; model prices are clamped to `0.05`-`0.2`).
+3. `PricingService.resolveAmountForModel(modelId)` / `resolveAmountForTemplate(slug)` → active rule price, else `DEFAULT_AMOUNT` (env, default `0.1`; model prices are clamped to `0.1`-`0.5`, with image generation at `0.5` and audio transcription at `0.4`).
 4. Legacy `__template_clone__` model rule is still honored as a fallback when no per-template rule exists.
 5. All payment gates (chat, images, audio, IDE agent, clone) call resolve helpers.
 6. Public template list includes resolved `priceUsdc`.

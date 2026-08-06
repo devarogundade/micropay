@@ -23,8 +23,10 @@ import { SetModelPriceDto, SetTemplatePriceDto } from './dto/pricing.dto';
  * Kept only for reading legacy rules during migration.
  */
 export const TEMPLATE_CLONE_MODEL_ID = '__template_clone__';
-const MIN_MODEL_PRICE_USDC = 0.05;
-const MAX_MODEL_PRICE_USDC = 0.2;
+const MIN_MODEL_PRICE_USDC = 0.1;
+const MAX_MODEL_PRICE_USDC = 0.5;
+const IMAGE_PRICE_USDC = 0.5;
+const AUDIO_TRANSCRIPTION_PRICE_USDC = 0.4;
 
 @Injectable()
 export class PricingService {
@@ -155,25 +157,34 @@ export class PricingService {
    */
   async resolveAmount(
     modelId: string,
-    opts?: { network?: string },
+    opts?: { network?: string; type?: string },
   ): Promise<ResolvedPrice & { rule?: PricingRuleEntity }> {
     return this.resolveAmountForModel(modelId, opts);
   }
 
   async resolveAmountForModel(
     modelId: string,
-    opts?: { network?: string },
+    opts?: { network?: string; type?: string },
   ): Promise<ResolvedPrice & { rule?: PricingRuleEntity }> {
     const resolved = await this.resolveByKeyOrSlug(modelId, this.modelKey(modelId), {
       ...opts,
       keyType: PricingKeyType.model,
     });
+    const type = (opts?.type ?? '').toLowerCase();
+    const amount =
+      type.includes('image') || type === 'text-to-image'
+        ? IMAGE_PRICE_USDC
+        : type.includes('audio') ||
+            type.includes('speech') ||
+            type.includes('voice')
+          ? AUDIO_TRANSCRIPTION_PRICE_USDC
+          : Math.min(
+              MAX_MODEL_PRICE_USDC,
+              Math.max(MIN_MODEL_PRICE_USDC, resolved.amount),
+            );
     return {
       ...resolved,
-      amount: Math.min(
-        MAX_MODEL_PRICE_USDC,
-        Math.max(MIN_MODEL_PRICE_USDC, resolved.amount),
-      ),
+      amount,
     };
   }
 
@@ -192,7 +203,10 @@ export class PricingService {
       { ...opts, keyType: PricingKeyType.template },
     );
     if (primary.source === PriceResolveSource.rule) {
-      return primary;
+      return {
+        ...primary,
+        amount: Math.max(MIN_MODEL_PRICE_USDC, primary.amount),
+      };
     }
 
     // Legacy single clone price (migration fallback)
@@ -204,13 +218,14 @@ export class PricingService {
     if (legacy.source === PriceResolveSource.rule) {
       return {
         ...legacy,
+        amount: Math.max(MIN_MODEL_PRICE_USDC, legacy.amount),
         keyType: PricingKeyType.template,
         key: this.templateKey(slug),
       };
     }
 
     return {
-      amount: this.getDefaultAmount(),
+      amount: Math.max(MIN_MODEL_PRICE_USDC, this.getDefaultAmount()),
       source: PriceResolveSource.default,
       keyType: PricingKeyType.template,
       key: this.templateKey(slug),

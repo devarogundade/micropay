@@ -68,7 +68,9 @@ export class AiService {
     const list = Array.isArray(data.data) ? data.data : [];
     const enriched: RouterModel[] = [];
     for (const m of list) {
-      const resolved = await this.pricing.resolveAmount(m.id);
+      const resolved = await this.pricing.resolveAmount(m.id, {
+        type: typeof m.type === 'string' ? m.type : undefined,
+      });
       enriched.push({
         ...m,
         price_usdc: resolved.amount,

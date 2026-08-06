@@ -1,4 +1,6 @@
 import {
+  AUDIO_TRANSCRIPTION_USDC,
+  IMAGE_GEN_USDC,
   MAX_PAY_USDC,
   MIN_PAY_USDC,
   modelMinPayUsdc,
@@ -68,9 +70,13 @@ export function routerModelToUi(model: RouterModel): Model {
     provider: brand.label,
     type,
     priceUsdc:
-      typeof model.price_usdc === 'number' && model.price_usdc > 0
-        ? Math.min(MAX_PAY_USDC, Math.max(MIN_PAY_USDC, model.price_usdc))
-        : estimatedPrice(model, type),
+      type === 'Image Gen'
+        ? IMAGE_GEN_USDC
+        : type === 'Audio'
+          ? AUDIO_TRANSCRIPTION_USDC
+          : typeof model.price_usdc === 'number' && model.price_usdc > 0
+            ? Math.min(MAX_PAY_USDC, Math.max(MIN_PAY_USDC, model.price_usdc))
+            : estimatedPrice(model, type),
     description,
     trending: (model.provider_count ?? 0) >= 2,
     recommended: Boolean(model.tee_attested) || (model.provider_count ?? 0) >= 3,

@@ -72,7 +72,9 @@ export class AudioService {
       });
     }
 
-    const { amount: priceUsdc } = await this.pricing.resolveAmount(model);
+    const { amount: priceUsdc } = await this.pricing.resolveAmount(model, {
+      type: 'audio',
+    });
     const gate = await this.payments.gatePaidRequest({
       priceUsdc,
       routeKey: 'POST /api/v1/audio/transcriptions',
