@@ -282,7 +282,8 @@ export class ChatService {
       }
   > {
     this.ai.assertRouterConfigured();
-    const model = String(input.body.model ?? '');
+    const rawBody = input.body ?? {};
+    const model = String(rawBody.model ?? '');
     const { amount: priceUsdc } = await this.pricing.resolveAmountForModel(
       model || 'unknown',
     );
@@ -294,7 +295,7 @@ export class ChatService {
       routeKind: RouteKind.chat,
       description: `OpenAI-compatible chat completion from ${model}, returning assistant messages with optional SSE token streaming.`,
       paymentHeader: input.paymentHeader,
-      body: input.body,
+      body: rawBody,
       walletAddress: input.walletAddress,
       requestId: input.requestId,
     });
@@ -347,8 +348,8 @@ export class ChatService {
     }
 
     // Preferred primary path: async job + WebSocket
-    if (this.wantsAsync(input.body, input.asyncHeader, input.asyncQuery)) {
-      const { async: _a, ...jobBody } = input.body;
+    if (this.wantsAsync(rawBody, input.asyncHeader, input.asyncQuery)) {
+      const { async: _a, ...jobBody } = rawBody;
       const job = await this.ai.createJob({
         type: AiJobType.chat,
         walletAddress: input.walletAddress,
@@ -369,12 +370,12 @@ export class ChatService {
     }
 
     const toolsEnabled = this.toolsRegistry.toolsGloballyEnabled();
-    const wantStream = Boolean(input.body.stream);
+    const wantStream = Boolean(rawBody.stream);
     const clientDisabledTools =
-      input.body.tools === null ||
-      (Array.isArray(input.body.tools) && input.body.tools.length === 0);
+      rawBody.tools === null ||
+      (Array.isArray(rawBody.tools) && rawBody.tools.length === 0);
     const explicitlyRequestedTools =
-      input.body.tools !== undefined || input.body.tool_names !== undefined;
+      rawBody.tools !== undefined || rawBody.tool_names !== undefined;
 
     // Tool path: non-stream multi-round loop. When client asked for stream,
     // only explicit tools opt into the JSON fallback. Omitted tools on a
@@ -386,7 +387,7 @@ export class ChatService {
     ) {
       try {
         const result = await this.toolsOrchestrator.completeWithTools(
-          input.body,
+          rawBody,
         );
         const body: Record<string, unknown> = {
           ...result.data,
@@ -431,7 +432,7 @@ export class ChatService {
     }
 
     if (wantStream) {
-      const upstream = await this.ai.proxyChatCompletionStream(input.body);
+      const upstream = await this.ai.proxyChatCompletionStream(rawBody);
       return {
         paymentRequired: false,
         stream: true,
@@ -441,7 +442,7 @@ export class ChatService {
     }
 
     try {
-      const completion = await this.ai.proxyChatCompletion(input.body);
+      const completion = await this.ai.proxyChatCompletion(rawBody);
       return {
         paymentRequired: false,
         status: completion.status,

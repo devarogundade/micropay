@@ -51,8 +51,9 @@ export class ImagesService {
     asyncOnly?: boolean;
   }) {
     this.ai.assertRouterConfigured();
-    const model = String(input.body.model ?? '');
-    const prompt = String(input.body.prompt ?? '');
+    const body = input.body ?? {};
+    const model = String(body.model ?? '');
+    const prompt = String(body.prompt ?? '');
     if (!model) {
       throw new BadRequestException({
         error: { message: 'model is required', type: 'invalid_request' },
@@ -64,8 +65,8 @@ export class ImagesService {
       });
     }
 
-    const body: Record<string, unknown> = {
-      ...input.body,
+    const requestBody: Record<string, unknown> = {
+      ...body,
       response_format: 'b64_json',
     };
     const size =
@@ -82,7 +83,7 @@ export class ImagesService {
       routeKind: 'images',
       description: `Image generated from a text prompt by ${model}, returned as a base64-encoded PNG.`,
       paymentHeader: input.paymentHeader,
-      body,
+      body: requestBody,
       walletAddress: input.walletAddress,
       requestId: input.requestId,
     });
@@ -169,7 +170,7 @@ export class ImagesService {
       };
     }
 
-    const { data } = await this.ai.generateImageSynced(body);
+    const { data } = await this.ai.generateImageSynced(requestBody);
     const persisted = await this.persistImages(data, {
       walletAddress: input.walletAddress,
       model,
