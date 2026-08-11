@@ -19,7 +19,7 @@ export class HealthController {
     };
   }
 
-  @Get()
+  @Get('docs')
   root() {
     return ok({
       name: 'micropay-backend',
