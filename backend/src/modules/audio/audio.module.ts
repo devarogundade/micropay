@@ -22,5 +22,6 @@ import { AudioService } from './audio.service';
   ],
   controllers: [AudioController],
   providers: [AudioService],
+  exports: [AudioService],
 })
 export class AudioModule {}

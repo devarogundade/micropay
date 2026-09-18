@@ -25,6 +25,7 @@ import { AudioModule } from './modules/audio/audio.module';
 import { HealthModule } from './modules/health/health.module';
 import { McpModule } from './modules/mcp/mcp.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
+import { AgentsModule } from './modules/agents/agents.module';
 
 @Module({
   imports: [
@@ -60,9 +61,10 @@ import { DiscoveryModule } from './modules/discovery/discovery.module';
     ChatModule,
     ImagesModule,
     AudioModule,
-    HealthModule,
+HealthModule,
     McpModule,
     DiscoveryModule,
+    AgentsModule,
   ],
 })
 export class AppModule {}

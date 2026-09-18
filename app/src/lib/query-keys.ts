@@ -30,4 +30,20 @@ export const queryKeys = {
       sessionId: string | null | undefined,
     ) => ['chat', 'session', wallet ?? null, sessionId ?? null] as const,
   },
+
+  agents: {
+    all: ['agents'] as const,
+    list: (query: Record<string, unknown> | undefined) =>
+      ['agents', 'list', query ?? null] as const,
+    detail: (slug: string | null | undefined) =>
+      ['agents', 'detail', slug ?? null] as const,
+    mine: (wallet: string | null | undefined) =>
+      ['agents', 'mine', wallet ?? null] as const,
+    balance: (wallet: string | null | undefined) =>
+      ['agents', 'balance', wallet ?? null] as const,
+    payments: (wallet: string | null | undefined) =>
+      ['agents', 'payments', wallet ?? null] as const,
+    withdrawals: (wallet: string | null | undefined) =>
+      ['agents', 'withdrawals', wallet ?? null] as const,
+  },
 }

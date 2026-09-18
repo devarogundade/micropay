@@ -49,6 +49,17 @@ export class ImagesService {
     walletAddress?: string;
     requestId?: string;
     asyncOnly?: boolean;
+    /** Skip the service's own activity/usage recording (caller records it). */
+    skipActivity?: boolean;
+    /** Override the x402 charge amount (e.g. an agent's price) instead of pricing rules. */
+    priceUsdcOverride?: number;
+    /** Invoked after a successful settlement with the actual charge breakdown. */
+    onCharge?: (charge: {
+      priceUsdc: number;
+      creditAppliedUsdc: number;
+      chargeUsdc: number;
+      txId: string;
+    }) => Promise<void> | void;
   }) {
     this.ai.assertRouterConfigured();
     const body = input.body ?? {};
@@ -71,9 +82,11 @@ export class ImagesService {
     };
     const size =
       typeof body.size === 'string' ? body.size : null;
-    const { amount: priceUsdc } = await this.pricing.resolveAmount(model, {
-      type: 'image',
-    });
+    const priceUsdc =
+      input.priceUsdcOverride ??
+      (await this.pricing.resolveAmount(model, {
+        type: 'image',
+      })).amount;
 
     const gate = await this.payments.gatePaidRequest({
       priceUsdc,
@@ -117,7 +130,16 @@ export class ImagesService {
       throw e;
     }
 
-    if (input.walletAddress) {
+    if (input.onCharge) {
+      await input.onCharge({
+        priceUsdc,
+        creditAppliedUsdc: gate.credit.creditAppliedUsdc,
+        chargeUsdc: gate.priceUsdc,
+        txId,
+      });
+    }
+
+    if (input.walletAddress && !input.skipActivity) {
       await this.activities.record({
         walletAddress: input.walletAddress,
         modelSlug: model,

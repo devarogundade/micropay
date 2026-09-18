@@ -503,6 +503,24 @@ export class PaymentsService {
             output: { example: { template: { slug: 'starter-contract', files: [] } } },
           }),
         };
+      case RouteKind.agent:
+        return {
+          serviceName: 'Micropay Agent',
+          tags: ['ai', 'agent', 'knowledge', 'x402', 'openai-compatible'],
+          extension: declareDiscoveryExtension({
+            bodyType: 'json',
+            input: { messages: [{ role: 'user', content: 'Hello' }] },
+            inputSchema: {
+              type: 'object',
+              properties: {
+                messages: { type: 'array' },
+                stream: { type: 'boolean' },
+              },
+              required: ['messages'],
+            },
+            output: { example: { choices: [{ message: { role: 'assistant', content: 'Hello!' } }] } },
+          }),
+        };
       default:
         return {
           serviceName: 'Micropay IDE',

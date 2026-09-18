@@ -18,8 +18,9 @@ export const Route = createFileRoute('/_shell')({
 function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isModelWorkspace = /^\/models\/[^/]+\/?$/.test(pathname)
+  const isAgentWorkspace = /^\/agents\/(?!new|mine)[^/]+\/?$/.test(pathname)
   const isPlayground = pathname === '/' || pathname === ''
-  const isFullBleed = isModelWorkspace || isPlayground
+  const isFullBleed = isModelWorkspace || isPlayground || isAgentWorkspace
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -56,14 +57,14 @@ function AppShell() {
       </Sheet>
 
       <div className="min-w-0 flex-1">
-        {isModelWorkspace ? null : (
+        {isModelWorkspace || isAgentWorkspace ? null : (
           <WorkspaceHeader onToggleSidebar={toggleSidebar} />
         )}
 
         <main
           className={cn(
             'min-h-0',
-            isModelWorkspace && 'h-dvh overflow-hidden',
+            (isModelWorkspace || isAgentWorkspace) && 'h-dvh overflow-hidden',
             isPlayground &&
               'h-[calc(100dvh-var(--app-header-height))] overflow-hidden',
             !isFullBleed && 'overflow-x-hidden',

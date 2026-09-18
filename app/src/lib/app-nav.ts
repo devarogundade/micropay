@@ -2,6 +2,7 @@ import {
   BookOpen,
   Boxes,
   History,
+  Network,
   Puzzle,
   Sparkles,
   TerminalSquare,
@@ -83,11 +84,8 @@ export const APP_NAV_SECTIONS: AppNavSection[] = [
     id: 'manage',
     label: 'Manage',
     items: [
-      {
-        to: '/api-reference',
-        label: 'Documentation',
-        icon: BookOpen,
-      },
+      { to: '/api-reference', label: 'Documentation', icon: BookOpen },
+      { to: '/mcp', label: 'MCP', icon: Network },
     ],
   },
 ]
@@ -123,8 +121,12 @@ export function pageTitleForPath(pathname: string): string {
   if (pathname.startsWith('/models/')) return 'Model'
   if (pathname === '/models' || pathname.startsWith('/models')) return 'Models'
   if (pathname.startsWith('/activities')) return 'History'
+  if (pathname.startsWith('/agents/new')) return 'Create Agent'
+  if (pathname.startsWith('/agents/mine')) return 'My Agents'
+  if (pathname.startsWith('/agents/')) return 'Agent'
   if (pathname.startsWith('/agents')) return 'Agents'
   if (pathname.startsWith('/api-reference')) return 'Documentation'
+  if (pathname.startsWith('/mcp')) return 'MCP'
   if (pathname.startsWith('/try')) return 'Try'
   const hit = APP_NAV.find((item) => !item.external && navActive(pathname, item.to))
   return hit?.label ?? 'MicroPay'
@@ -135,6 +137,10 @@ export type AppNavPath =
   | '/models'
   | '/activities'
   | '/agents'
+  | '/agents/$slug'
+  | '/agents/new'
+  | '/agents/mine'
   | '/api-reference'
   | '/models/$slug'
+  | '/mcp'
   | '/try'

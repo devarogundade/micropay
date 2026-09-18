@@ -4,7 +4,7 @@ function legacyAppPath(pathname: string): string {
   const rest = pathname.replace(/^\/app\/?/, '')
   if (!rest) return '/'
   // UI lived at /app/mcp; /mcp is the protocol endpoint.
-  if (rest === 'mcp' || rest.startsWith('mcp/')) return '/agents'
+  if (rest === 'mcp' || rest.startsWith('mcp/')) return '/mcp'
   return `/${rest}`
 }
 

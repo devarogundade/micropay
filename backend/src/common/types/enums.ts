@@ -73,6 +73,29 @@ export enum RouteKind {
   audio = 'audio',
   ide = 'ide',
   clone = 'clone',
+  agent = 'agent',
+}
+
+/** Agent capability type — determines the prompt studio + underlying model class. */
+export enum AgentType {
+  chat = 'chat',
+  image = 'image',
+  audio = 'audio',
+}
+
+/** Lifecycle state of a published agent. */
+export enum AgentStatus {
+  draft = 'draft',
+  published = 'published',
+  paused = 'paused',
+}
+
+/** Creator withdrawal request lifecycle. */
+export enum WithdrawalStatus {
+  pending = 'pending',
+  approved = 'approved',
+  paid = 'paid',
+  rejected = 'rejected',
 }
 
 export enum ToolName {

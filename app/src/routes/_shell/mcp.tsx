@@ -5,7 +5,7 @@ import { ListCard, ListCardGroup, ListCardRow } from '#/components/app/list-card
 import { Badge } from '#/components/ui/badge'
 import { getApiUrl } from '#/lib/api-url'
 
-export const Route = createFileRoute('/_shell/agents')({
+export const Route = createFileRoute('/_shell/mcp')({
   component: McpPage,
 })
 

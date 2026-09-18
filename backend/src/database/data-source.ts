@@ -4,6 +4,7 @@ import { ALL_ENTITIES } from './entities';
 import { AddImageJobResult1722600000000 } from './migrations/1722600000000-AddImageJobResult';
 import { AddDailyCredits1722700000000 } from './migrations/1722700000000-AddDailyCredits';
 import { SeedCodeTemplates1722800000000 } from './migrations/1722800000000-SeedCodeTemplates';
+import { AddAgents1722900000000 } from './migrations/1722900000000-AddAgents';
 
 const url = process.env.DATABASE_URL;
 
@@ -24,6 +25,7 @@ export default new DataSource({
     AddImageJobResult1722600000000,
     AddDailyCredits1722700000000,
     SeedCodeTemplates1722800000000,
+    AddAgents1722900000000,
   ],
   synchronize: false,
   ssl: databaseSsl ? { rejectUnauthorized: false } : false,

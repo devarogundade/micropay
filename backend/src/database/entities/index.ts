@@ -1,4 +1,8 @@
 import { ActivityEntity } from './activity.entity';
+import { AgentEntity } from './agent.entity';
+import { AgentPaymentEntity } from './agent-payment.entity';
+import { CreatorBalanceEntity } from './creator-balance.entity';
+import { WithdrawalRequestEntity } from './withdrawal.entity';
 import { AiJobEntity } from './ai-job.entity';
 import { ApiKeyEntity } from './api-key.entity';
 import { ChatMessageEntity } from './chat-message.entity';
@@ -25,6 +29,10 @@ import { WalletDailyCreditEntity } from './wallet-daily-credit.entity';
 export const ALL_ENTITIES = [
   UserEntity,
   ActivityEntity,
+  AgentEntity,
+  AgentPaymentEntity,
+  CreatorBalanceEntity,
+  WithdrawalRequestEntity,
   ChatSessionEntity,
   ChatMessageEntity,
   ImageGenerationEntity,
@@ -51,6 +59,10 @@ export const ALL_ENTITIES = [
 export {
   UserEntity,
   ActivityEntity,
+  AgentEntity,
+  AgentPaymentEntity,
+  CreatorBalanceEntity,
+  WithdrawalRequestEntity,
   ChatSessionEntity,
   ChatMessageEntity,
   ImageGenerationEntity,

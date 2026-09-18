@@ -13,11 +13,15 @@ import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as ShellIndexRouteImport } from './routes/_shell/index'
 import { Route as ShellActivitiesRouteImport } from './routes/_shell/activities'
-import { Route as ShellAgentsRouteImport } from './routes/_shell/agents'
 import { Route as ShellApiReferenceRouteImport } from './routes/_shell/api-reference'
+import { Route as ShellMcpRouteImport } from './routes/_shell/mcp'
 import { Route as ShellPlaygroundRouteImport } from './routes/_shell/playground'
 import { Route as ShellTryRouteImport } from './routes/_shell/try'
 import { Route as AppSplatRouteImport } from './routes/app/$'
+import { Route as ShellAgentsIndexRouteImport } from './routes/_shell/agents/index'
+import { Route as ShellAgentsSlugRouteImport } from './routes/_shell/agents/$slug'
+import { Route as ShellAgentsMineRouteImport } from './routes/_shell/agents/mine'
+import { Route as ShellAgentsNewRouteImport } from './routes/_shell/agents/new'
 import { Route as ShellModelsIndexRouteImport } from './routes/_shell/models/index'
 import { Route as ShellModelsSlugRouteImport } from './routes/_shell/models/$slug'
 
@@ -40,14 +44,14 @@ const ShellActivitiesRoute = ShellActivitiesRouteImport.update({
   path: '/activities',
   getParentRoute: () => ShellRoute,
 } as any)
-const ShellAgentsRoute = ShellAgentsRouteImport.update({
-  id: '/agents',
-  path: '/agents',
-  getParentRoute: () => ShellRoute,
-} as any)
 const ShellApiReferenceRoute = ShellApiReferenceRouteImport.update({
   id: '/api-reference',
   path: '/api-reference',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellMcpRoute = ShellMcpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => ShellRoute,
 } as any)
 const ShellPlaygroundRoute = ShellPlaygroundRouteImport.update({
@@ -65,6 +69,26 @@ const AppSplatRoute = AppSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => AppRoute,
 } as any)
+const ShellAgentsIndexRoute = ShellAgentsIndexRouteImport.update({
+  id: '/agents/',
+  path: '/agents/',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellAgentsSlugRoute = ShellAgentsSlugRouteImport.update({
+  id: '/agents/$slug',
+  path: '/agents/$slug',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellAgentsMineRoute = ShellAgentsMineRouteImport.update({
+  id: '/agents/mine',
+  path: '/agents/mine',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellAgentsNewRoute = ShellAgentsNewRouteImport.update({
+  id: '/agents/new',
+  path: '/agents/new',
+  getParentRoute: () => ShellRoute,
+} as any)
 const ShellModelsIndexRoute = ShellModelsIndexRouteImport.update({
   id: '/models/',
   path: '/models/',
@@ -80,24 +104,32 @@ export interface FileRoutesByFullPath {
   '/': typeof ShellIndexRoute
   '/app': typeof AppRouteWithChildren
   '/activities': typeof ShellActivitiesRoute
-  '/agents': typeof ShellAgentsRoute
   '/api-reference': typeof ShellApiReferenceRoute
+  '/mcp': typeof ShellMcpRoute
   '/playground': typeof ShellPlaygroundRoute
   '/try': typeof ShellTryRoute
   '/app/$': typeof AppSplatRoute
+  '/agents/$slug': typeof ShellAgentsSlugRoute
+  '/agents/mine': typeof ShellAgentsMineRoute
+  '/agents/new': typeof ShellAgentsNewRoute
   '/models/$slug': typeof ShellModelsSlugRoute
+  '/agents/': typeof ShellAgentsIndexRoute
   '/models/': typeof ShellModelsIndexRoute
 }
 export interface FileRoutesByTo {
   '/app': typeof AppRouteWithChildren
   '/activities': typeof ShellActivitiesRoute
-  '/agents': typeof ShellAgentsRoute
   '/api-reference': typeof ShellApiReferenceRoute
+  '/mcp': typeof ShellMcpRoute
   '/playground': typeof ShellPlaygroundRoute
   '/try': typeof ShellTryRoute
   '/app/$': typeof AppSplatRoute
   '/': typeof ShellIndexRoute
+  '/agents/$slug': typeof ShellAgentsSlugRoute
+  '/agents/mine': typeof ShellAgentsMineRoute
+  '/agents/new': typeof ShellAgentsNewRoute
   '/models/$slug': typeof ShellModelsSlugRoute
+  '/agents': typeof ShellAgentsIndexRoute
   '/models': typeof ShellModelsIndexRoute
 }
 export interface FileRoutesById {
@@ -105,13 +137,17 @@ export interface FileRoutesById {
   '/_shell': typeof ShellRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/_shell/activities': typeof ShellActivitiesRoute
-  '/_shell/agents': typeof ShellAgentsRoute
   '/_shell/api-reference': typeof ShellApiReferenceRoute
+  '/_shell/mcp': typeof ShellMcpRoute
   '/_shell/playground': typeof ShellPlaygroundRoute
   '/_shell/try': typeof ShellTryRoute
   '/app/$': typeof AppSplatRoute
   '/_shell/': typeof ShellIndexRoute
+  '/_shell/agents/$slug': typeof ShellAgentsSlugRoute
+  '/_shell/agents/mine': typeof ShellAgentsMineRoute
+  '/_shell/agents/new': typeof ShellAgentsNewRoute
   '/_shell/models/$slug': typeof ShellModelsSlugRoute
+  '/_shell/agents/': typeof ShellAgentsIndexRoute
   '/_shell/models/': typeof ShellModelsIndexRoute
 }
 export interface FileRouteTypes {
@@ -120,37 +156,49 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/activities'
-    | '/agents'
     | '/api-reference'
+    | '/mcp'
     | '/playground'
     | '/try'
     | '/app/$'
+    | '/agents/$slug'
+    | '/agents/mine'
+    | '/agents/new'
     | '/models/$slug'
+    | '/agents/'
     | '/models/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/app'
     | '/activities'
-    | '/agents'
     | '/api-reference'
+    | '/mcp'
     | '/playground'
     | '/try'
     | '/app/$'
     | '/'
+    | '/agents/$slug'
+    | '/agents/mine'
+    | '/agents/new'
     | '/models/$slug'
+    | '/agents'
     | '/models'
   id:
     | '__root__'
     | '/_shell'
     | '/app'
     | '/_shell/activities'
-    | '/_shell/agents'
     | '/_shell/api-reference'
+    | '/_shell/mcp'
     | '/_shell/playground'
     | '/_shell/try'
     | '/app/$'
     | '/_shell/'
+    | '/_shell/agents/$slug'
+    | '/_shell/agents/mine'
+    | '/_shell/agents/new'
     | '/_shell/models/$slug'
+    | '/_shell/agents/'
     | '/_shell/models/'
   fileRoutesById: FileRoutesById
 }
@@ -189,18 +237,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellActivitiesRouteImport
       parentRoute: typeof ShellRoute
     }
-    '/_shell/agents': {
-      id: '/_shell/agents'
-      path: '/agents'
-      fullPath: '/agents'
-      preLoaderRoute: typeof ShellAgentsRouteImport
-      parentRoute: typeof ShellRoute
-    }
     '/_shell/api-reference': {
       id: '/_shell/api-reference'
       path: '/api-reference'
       fullPath: '/api-reference'
       preLoaderRoute: typeof ShellApiReferenceRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/mcp': {
+      id: '/_shell/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof ShellMcpRouteImport
       parentRoute: typeof ShellRoute
     }
     '/_shell/playground': {
@@ -224,6 +272,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSplatRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_shell/agents/': {
+      id: '/_shell/agents/'
+      path: '/agents'
+      fullPath: '/agents/'
+      preLoaderRoute: typeof ShellAgentsIndexRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/agents/$slug': {
+      id: '/_shell/agents/$slug'
+      path: '/agents/$slug'
+      fullPath: '/agents/$slug'
+      preLoaderRoute: typeof ShellAgentsSlugRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/agents/mine': {
+      id: '/_shell/agents/mine'
+      path: '/agents/mine'
+      fullPath: '/agents/mine'
+      preLoaderRoute: typeof ShellAgentsMineRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/agents/new': {
+      id: '/_shell/agents/new'
+      path: '/agents/new'
+      fullPath: '/agents/new'
+      preLoaderRoute: typeof ShellAgentsNewRouteImport
+      parentRoute: typeof ShellRoute
+    }
     '/_shell/models/': {
       id: '/_shell/models/'
       path: '/models'
@@ -243,23 +319,31 @@ declare module '@tanstack/react-router' {
 
 interface ShellRouteChildren {
   ShellActivitiesRoute: typeof ShellActivitiesRoute
-  ShellAgentsRoute: typeof ShellAgentsRoute
   ShellApiReferenceRoute: typeof ShellApiReferenceRoute
+  ShellMcpRoute: typeof ShellMcpRoute
   ShellPlaygroundRoute: typeof ShellPlaygroundRoute
   ShellTryRoute: typeof ShellTryRoute
   ShellIndexRoute: typeof ShellIndexRoute
+  ShellAgentsSlugRoute: typeof ShellAgentsSlugRoute
+  ShellAgentsMineRoute: typeof ShellAgentsMineRoute
+  ShellAgentsNewRoute: typeof ShellAgentsNewRoute
   ShellModelsSlugRoute: typeof ShellModelsSlugRoute
+  ShellAgentsIndexRoute: typeof ShellAgentsIndexRoute
   ShellModelsIndexRoute: typeof ShellModelsIndexRoute
 }
 
 const ShellRouteChildren: ShellRouteChildren = {
   ShellActivitiesRoute: ShellActivitiesRoute,
-  ShellAgentsRoute: ShellAgentsRoute,
   ShellApiReferenceRoute: ShellApiReferenceRoute,
+  ShellMcpRoute: ShellMcpRoute,
   ShellPlaygroundRoute: ShellPlaygroundRoute,
   ShellTryRoute: ShellTryRoute,
   ShellIndexRoute: ShellIndexRoute,
+  ShellAgentsSlugRoute: ShellAgentsSlugRoute,
+  ShellAgentsMineRoute: ShellAgentsMineRoute,
+  ShellAgentsNewRoute: ShellAgentsNewRoute,
   ShellModelsSlugRoute: ShellModelsSlugRoute,
+  ShellAgentsIndexRoute: ShellAgentsIndexRoute,
   ShellModelsIndexRoute: ShellModelsIndexRoute,
 }
 
