@@ -11,6 +11,7 @@ import { ActivitiesModule } from '../activities/activities.module';
 import { UsageModule } from '../usage/usage.module';
 import { ImagesModule } from '../images/images.module';
 import { AudioModule } from '../audio/audio.module';
+import { ToolsModule } from '../tools/tools.module';
 import { AuthModule } from '../auth/auth.module';
 import { AgentsService } from './agents.service';
 import { AgentsController } from './agents.controller';
@@ -31,6 +32,7 @@ import { AgentsAdminController } from './agents.admin.controller';
     UsageModule,
     ImagesModule,
     AudioModule,
+    ToolsModule,
     AuthModule,
   ],
   providers: [AgentsService],

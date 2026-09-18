@@ -22,6 +22,8 @@ import {
   AiJobType,
   PaymentProduct,
   RouteKind,
+  ToolName,
+  ToolScope,
   WithdrawalStatus,
 } from '../../common/types/enums';
 import { PaymentsService, X402SettleError } from '../payments/payments.service';
@@ -31,6 +33,8 @@ import { ActivitiesService } from '../activities/activities.service';
 import { UsageService } from '../usage/usage.service';
 import { ImagesService } from '../images/images.service';
 import { AudioService } from '../audio/audio.service';
+import { ToolsOrchestratorService } from '../tools/tools-orchestrator.service';
+import { ToolsRegistryService } from '../tools/tools-registry.service';
 import { CreateAgentDto, UpdateAgentDto } from './dto/agent.dto';
 
 const MIN_AGENT_PRICE_USDC = 0.01;
@@ -75,6 +79,8 @@ export class AgentsService {
     private readonly usage: UsageService,
     private readonly images: ImagesService,
     private readonly audio: AudioService,
+    private readonly toolsOrchestrator: ToolsOrchestratorService,
+    private readonly toolsRegistry: ToolsRegistryService,
   ) {}
 
   // ── Helpers ────────────────────────────────────────────────
@@ -527,21 +533,56 @@ export class AgentsService {
     });
 
     const messages = this.injectKnowledge(agent, input.body);
-    const { tools: _tools, tool_names: _toolNames, ...cleanBody } = input.body;
-    const providerBody: Record<string, unknown> = {
+    const {
+      tools: clientTools,
+      tool_names: clientToolNames,
+      ...cleanBody
+    } = input.body;
+
+    const clientDisabled =
+      clientTools === null ||
+      (Array.isArray(clientTools) && clientTools.length === 0);
+    const explicitNames = Array.isArray(clientToolNames)
+      ? (clientToolNames as unknown[]).map(String)
+      : null;
+    const hasClientTools = Array.isArray(clientTools) && clientTools.length > 0;
+
+    // Online tool (web_search) is enabled by default under the hood so agents
+    // can look things up live. Clients can still disable or override tools.
+    const effectiveToolNames: string[] | undefined = clientDisabled
+      ? undefined
+      : explicitNames && explicitNames.length > 0
+        ? explicitNames
+        : hasClientTools
+          ? undefined
+          : [ToolName.web_search];
+
+    const availableTools =
+      effectiveToolNames && effectiveToolNames.length > 0
+        ? await this.toolsRegistry.getEnabledTools(ToolScope.chat, {
+            toolNames: effectiveToolNames,
+          })
+        : [];
+
+    const toolRequestBody: Record<string, unknown> = {
       ...cleanBody,
       model: agent.modelId,
       messages,
     };
+    if (effectiveToolNames && effectiveToolNames.length > 0) {
+      toolRequestBody.tool_names = effectiveToolNames;
+    }
+    if (clientTools !== undefined) {
+      toolRequestBody.tools = clientTools;
+    }
 
     if (this.wantsAsync(input.body, input.asyncHeader, input.asyncQuery)) {
-      // tools: null keeps the async chat worker on the plain provider path.
       const job = await this.ai.createJob({
         type: AiJobType.chat,
         walletAddress: input.walletAddress,
         product: PaymentProduct.app,
         model: agent.modelId,
-        payload: { ...providerBody, tools: null },
+        payload: toolRequestBody,
       });
       return {
         paymentRequired: false,
@@ -552,17 +593,38 @@ export class AgentsService {
     }
 
     const wantStream = Boolean(input.body.stream);
-    if (wantStream) {
-      const upstream = await this.ai.proxyChatCompletionStream(providerBody);
+    // True SSE streaming only when no tools are actually in play.
+    if (wantStream && availableTools.length === 0 && !hasClientTools) {
+      const upstream = await this.ai.proxyChatCompletionStream(toolRequestBody);
       return { paymentRequired: false, stream: true, upstream, paymentHeaders };
     }
 
     try {
-      const completion = await this.ai.proxyChatCompletion(providerBody);
+      const result = await this.toolsOrchestrator.completeWithTools(
+        toolRequestBody,
+      );
+      const body: Record<string, unknown> = {
+        ...result.data,
+        micropay_tools: {
+          used: result.usedTools,
+          selected: result.selection.selectedToolNames,
+          unknown: result.selection.unknownToolNames,
+          invocations: result.toolInvocations.map((t) => ({
+            name: t.name,
+            ok: t.ok,
+            durationMs: t.durationMs,
+            error: t.error,
+          })),
+        },
+      };
+      if (wantStream && result.usedTools) {
+        body.micropay_stream_note =
+          'stream=true with tools uses non-stream tool loop; final answer returned as JSON';
+      }
       return {
         paymentRequired: false,
-        status: completion.status,
-        body: completion.data,
+        status: result.status,
+        body,
         paymentHeaders,
       };
     } catch (err) {
