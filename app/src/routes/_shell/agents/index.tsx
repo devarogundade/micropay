@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Bot, Plus, Search } from 'lucide-react'
+import { Bot, CircleUser, Plus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { AgentCard } from '#/components/agents/agent-card'
@@ -78,12 +78,20 @@ function AgentsPage() {
             </p>
           </div>
         </div>
-        <Button asChild>
-          <a href="/agents/new">
-            <Plus className="size-4" />
-            Create agent
-          </a>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline">
+            <Link to="/agents/mine">
+              <CircleUser className="size-4" />
+              My agents &amp; earnings
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/agents/new">
+              <Plus className="size-4" />
+              Create agent
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:gap-3">
