@@ -15,6 +15,7 @@ import {
 import { CodeUserModelUsageEntity } from '../../database/entities/code-user-model-usage.entity';
 import {
   PaymentsService,
+  X402GateResult,
   X402SettleError,
 } from '../payments/payments.service';
 import { UsageService } from '../usage/usage.service';
@@ -40,6 +41,24 @@ export type TemplateSort =
   | 'clones-asc'
   | 'clones-desc';
 
+/**
+ * A paid IDE agent loop. Round 0 gates + settles once; subsequent rounds in
+ * the same loop reuse that payment instead of charging again (which previously
+ * stalled multi-round agent turns on a second wallet approval).
+ */
+type PaidAgentSession = {
+  walletAddress: string;
+  requestId: string;
+  priceUsdc: number;
+  txId: string;
+  roundsUsed: number;
+  maxRounds: number;
+  createdAt: number;
+};
+
+const AGENT_SESSION_TTL_MS = 10 * 60_000;
+const AGENT_SESSION_DEFAULT_MAX_ROUNDS = 8;
+
 @Injectable()
 export class IdeService {
   constructor(
@@ -59,6 +78,53 @@ export class IdeService {
     private readonly pricing: PricingService,
     private readonly appActivities: ActivitiesService,
   ) {}
+
+  /** Session-id → paid agent loop. Kept in memory (single-instance gateway). */
+  private readonly agentSessions = new Map<string, PaidAgentSession>();
+
+  private sweepExpiredAgentSessions(now = Date.now()) {
+    for (const [id, s] of this.agentSessions) {
+      if (now - s.createdAt > AGENT_SESSION_TTL_MS) {
+        this.agentSessions.delete(id);
+      }
+    }
+  }
+
+  private getAgentSession(sessionId: string, walletAddress?: string) {
+    this.sweepExpiredAgentSessions();
+    const s = this.agentSessions.get(sessionId);
+    if (!s) return null;
+    if (walletAddress && s.walletAddress !== walletAddress) return null;
+    if (Date.now() - s.createdAt > AGENT_SESSION_TTL_MS) {
+      this.agentSessions.delete(sessionId);
+      return null;
+    }
+    if (s.roundsUsed >= s.maxRounds) {
+      this.agentSessions.delete(sessionId);
+      return null;
+    }
+    return s;
+  }
+
+  private createAgentSession(input: {
+    sessionId: string;
+    walletAddress: string;
+    requestId?: string;
+    priceUsdc: number;
+    txId: string;
+    maxRounds: number;
+  }) {
+    this.sweepExpiredAgentSessions();
+    this.agentSessions.set(input.sessionId, {
+      walletAddress: input.walletAddress,
+      requestId: input.requestId ?? '',
+      priceUsdc: input.priceUsdc,
+      txId: input.txId,
+      roundsUsed: 1,
+      maxRounds: input.maxRounds,
+      createdAt: Date.now(),
+    });
+  }
 
   async ensureCodeUser(address: string): Promise<CodeUserEntity> {
     let user = await this.codeUsers.findOne({ where: { address } });
@@ -349,6 +415,11 @@ export class IdeService {
   /**
    * IDE agent — payment gate + provider completion (sync) or async AiJob.
    * Injects active IDE knowledge docs into system context when present.
+   *
+   * A client may run a multi-round tool loop. Round 0 (`round` absent or 0)
+   * is gated + settled once and a paid session is recorded under
+   * `agentSessionId`. Later rounds that carry the same session id skip the
+   * payment gate (already paid) and are capped at `maxRounds`.
    */
   async runAgent(input: {
     body: Record<string, unknown>;
@@ -359,22 +430,69 @@ export class IdeService {
   }) {
     this.ai.assertRouterConfigured();
     const model = String(input.body.model ?? '');
+    const sessionId =
+      typeof input.body.agentSessionId === 'string'
+        ? input.body.agentSessionId.trim()
+        : '';
+    const round = Number(input.body.agentRound ?? 0);
+    const maxRounds =
+      typeof input.body.agentMaxRounds === 'number' &&
+      input.body.agentMaxRounds > 0
+        ? Math.min(Math.floor(input.body.agentMaxRounds), 12)
+        : AGENT_SESSION_DEFAULT_MAX_ROUNDS;
+    const continuation =
+      Boolean(sessionId) &&
+      round > 0 &&
+      Number.isFinite(round) &&
+      input.walletAddress
+        ? this.getAgentSession(sessionId, input.walletAddress)
+        : null;
+
     const { amount: priceUsdc } = await this.pricing.resolveAmount(
       model || 'unknown',
     );
 
-    const gate = await this.payments.gatePaidRequest({
-      priceUsdc,
-      routeKey: 'POST /api/v1/ide/agent',
-      path: '/api/v1/ide/agent',
-      product: PaymentProduct.code,
-      routeKind: RouteKind.ide,
-      description: `Algorand TypeScript IDE assistance from ${model}, returning code guidance with project file and compile tool support.`,
-      paymentHeader: input.paymentHeader,
-      body: input.body,
-      walletAddress: input.walletAddress,
-      requestId: input.requestId,
-    });
+    let gate: X402GateResult | null = null;
+    if (continuation) {
+      // Already paid on round 0 — reuse the charge, no new x402 gate.
+      gate = {
+        ok: true,
+        payTo: '',
+        priceUsdc: continuation.priceUsdc,
+        paymentPayload: {} as never,
+        paymentRequirements: {} as never,
+        credit: {
+          allowanceUsdc: 0,
+          usedUsdc: 0,
+          remainingUsdc: 0,
+          listPriceUsdc: continuation.priceUsdc,
+          creditAppliedUsdc: 0,
+          chargeUsdc: 0,
+          resetsAt: new Date(Date.now() + 86_400_000).toISOString(),
+        },
+        settle: async () => ({
+          headers: {
+            'X-Credit-Applied': '0',
+            'X-Credit-Remaining': '0',
+            'X-Agent-Session-Id': sessionId,
+          },
+          txId: continuation.txId,
+        }),
+      };
+    } else {
+      gate = await this.payments.gatePaidRequest({
+        priceUsdc,
+        routeKey: 'POST /api/v1/ide/agent',
+        path: '/api/v1/ide/agent',
+        product: PaymentProduct.code,
+        routeKind: RouteKind.ide,
+        description: `Algorand TypeScript IDE assistance from ${model}, returning code guidance with project file and compile tool support.`,
+        paymentHeader: input.paymentHeader,
+        body: input.body,
+        walletAddress: input.walletAddress,
+        requestId: input.requestId,
+      });
+    }
 
     if (!gate.ok) {
       return {
@@ -405,7 +523,24 @@ export class IdeService {
       throw e;
     }
 
+    if (sessionId && input.walletAddress) {
+      const existing = this.getAgentSession(sessionId, input.walletAddress);
+      if (existing) {
+        existing.roundsUsed += 1;
+      } else if (!continuation) {
+        this.createAgentSession({
+          sessionId,
+          walletAddress: input.walletAddress,
+          requestId: input.requestId,
+          priceUsdc: gate.priceUsdc,
+          txId,
+          maxRounds,
+        });
+      }
+    }
+
     if (input.walletAddress) {
+      const ledgerCostUsdc = continuation ? 0 : gate.priceUsdc;
       const user = await this.ensureCodeUser(input.walletAddress);
       await this.activities.save(
         this.activities.create({
@@ -414,7 +549,7 @@ export class IdeService {
           modelSlug: model || 'unknown',
           modelName: model || 'unknown',
           type: 'IDE',
-          costUsdc: gate.priceUsdc,
+          costUsdc: ledgerCostUsdc,
           status: CodeActivityStatus.settled,
           txId,
         }),
@@ -424,7 +559,7 @@ export class IdeService {
         modelSlug: model || 'unknown',
         modelName: model || 'unknown',
         type: 'IDE',
-        costUsdc: gate.priceUsdc,
+        costUsdc: ledgerCostUsdc,
         status: ActivityStatus.settled,
         txId,
         requestId: input.requestId,
@@ -435,7 +570,7 @@ export class IdeService {
         userId: user.id,
         product: 'code',
         model,
-        costUsdc: gate.priceUsdc,
+        costUsdc: ledgerCostUsdc,
         endpoint: '/api/v1/ide/agent',
       });
     }
@@ -447,7 +582,13 @@ export class IdeService {
       input.body.async === '1';
 
     if (wantsAsync) {
-      const { async: _a, ...jobBody } = input.body;
+      const {
+        async: _a,
+        agentSessionId: _s,
+        agentRound: _r,
+        agentMaxRounds: _m,
+        ...jobBody
+      } = input.body;
       const job = await this.ai.createJob({
         type: AiJobType.ide_agent,
         walletAddress: input.walletAddress,
@@ -468,7 +609,13 @@ export class IdeService {
       };
     }
 
-    const enrichedBody = await this.ai.enrichIdeAgentBody(input.body);
+    const {
+      agentSessionId: _s,
+      agentRound: _r,
+      agentMaxRounds: _m,
+      ...providerBody
+    } = input.body;
+    const enrichedBody = await this.ai.enrichIdeAgentBody(providerBody);
 
     try {
       const completion = await this.ai.proxyChatCompletion({

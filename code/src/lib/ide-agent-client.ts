@@ -66,6 +66,9 @@ async function postIdeAgent(input: {
   tools?: readonly unknown[]
   fetchImpl?: typeof fetch | null
   signal?: AbortSignal
+  agentSessionId?: string
+  agentRound?: number
+  agentMaxRounds?: number
 }): Promise<{
   ok: boolean
   status: number
@@ -88,6 +91,13 @@ async function postIdeAgent(input: {
       messages: input.messages,
       stream: false,
       ...(input.tools ? { tools: input.tools } : {}),
+      ...(input.agentSessionId ? { agentSessionId: input.agentSessionId } : {}),
+      ...(typeof input.agentRound === 'number'
+        ? { agentRound: input.agentRound }
+        : {}),
+      ...(typeof input.agentMaxRounds === 'number'
+        ? { agentMaxRounds: input.agentMaxRounds }
+        : {}),
     }),
     signal: input.signal,
   })
@@ -303,6 +313,10 @@ export async function runIdeAgentLoop(input: {
   onTool?: (name: string, detail: string) => void
 }): Promise<IdeAgentTurnResult> {
   const maxRounds = input.maxRounds ?? 8
+  const agentSessionId =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
   const messages: IdeAgentMessage[] = [
     {
       role: 'system',
@@ -347,6 +361,9 @@ export async function runIdeAgentLoop(input: {
       tools: IDE_AGENT_TOOLS,
       fetchImpl: input.fetchImpl,
       signal: input.signal,
+      agentSessionId,
+      agentRound: round,
+      agentMaxRounds: maxRounds,
     })
     lastStatus = turn.status
     lastRaw = turn.raw
